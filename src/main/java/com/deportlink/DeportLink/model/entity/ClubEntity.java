@@ -1,5 +1,6 @@
 package com.deportlink.DeportLink.model.entity;
 
+import com.deportlink.DeportLink.model.CompanyType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,7 +21,15 @@ public class ClubEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
     private String name;
+    private String legalName;
+
+    @Enumerated(EnumType.STRING)
+    private CompanyType companyType;
+
+    private String cuit;
+    private boolean verified;
 
     @ManyToMany(mappedBy = "clubs")
     private Set<OwnerEntity> owners = new HashSet<>();

@@ -1,5 +1,6 @@
 package com.deportlink.DeportLink.model.entity;
 
+import com.deportlink.DeportLink.model.VerificationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,6 +18,12 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OwnerEntity extends UserEntity {
+
+    private String dni;
+    private String cuil;
+
+    @Enumerated(EnumType.STRING)
+    private VerificationStatus verificationStatus;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

@@ -8,5 +8,8 @@ import lombok.Setter;
 public class ClubRequestDto {
 
     private String name;
+    private String legalName;
+    private String companyType;
+    private String cuit;
 
 }

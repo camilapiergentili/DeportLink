@@ -9,6 +9,8 @@ import java.util.List;
 @Getter
 public class OwnerResponseDto extends UserResponseDto {
 
+    private String dni;
+    private String cuil;
     private List<ClubResponseDto> clubs;
 
 }
