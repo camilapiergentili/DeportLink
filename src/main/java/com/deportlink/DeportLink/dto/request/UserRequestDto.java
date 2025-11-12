@@ -17,6 +17,5 @@ public class UserRequestDto {
     private String password;
     private String confirmPassword;
     private String phone;
-    private Rol role;
 
 }

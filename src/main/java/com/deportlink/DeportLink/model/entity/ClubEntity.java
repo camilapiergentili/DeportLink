@@ -1,6 +1,8 @@
 package com.deportlink.DeportLink.model.entity;
 
-import com.deportlink.DeportLink.model.CompanyType;
+import com.deportlink.DeportLink.model.ActiveStatus;
+import com.deportlink.DeportLink.model.ClubType;
+import com.deportlink.DeportLink.model.VerificationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,16 +26,20 @@ public class ClubEntity {
 
     private String name;
     private String legalName;
+    private String cuit;
 
     @Enumerated(EnumType.STRING)
-    private CompanyType companyType;
+    private ClubType clubType;
 
-    private String cuit;
-    private boolean verified;
+    @Enumerated(EnumType.STRING)
+    private VerificationStatus verificationStatus;
+
+    @Enumerated(EnumType.STRING)
+    private ActiveStatus activeStatus;
 
     @ManyToMany(mappedBy = "clubs")
     private Set<OwnerEntity> owners = new HashSet<>();
 
-    @OneToMany(mappedBy = "clubs", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "club", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BranchEntity> branches = new HashSet<>();
 }

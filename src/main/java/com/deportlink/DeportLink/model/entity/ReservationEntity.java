@@ -30,6 +30,9 @@ public class ReservationEntity {
     @Convert(converter = DurationConverter.class)
     private Duration duration;
 
+    @Enumerated(EnumType.STRING)
+    private StatusReservation status;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "court_id")
     private CourtEntity court;
@@ -37,9 +40,6 @@ public class ReservationEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id")
     private PlayerEntity player;
-
-    @Enumerated(EnumType.STRING)
-    private StatusReservation status;
 
     public LocalTime getEndTime() {
         return (startTime == null || duration == null) ?
@@ -50,5 +50,4 @@ public class ReservationEntity {
         return (duration == null || court.getPricePerHour() < 0.0) ?
                 0.00 : (duration.toMinutes() / 60.0) * court.getPricePerHour();
     }
-
 }

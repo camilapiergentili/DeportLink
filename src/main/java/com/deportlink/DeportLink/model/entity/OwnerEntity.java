@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,11 +20,9 @@ import java.util.List;
 @NoArgsConstructor
 public class OwnerEntity extends UserEntity {
 
-    private String dni;
+    private long dni;
     private String cuil;
-
-    @Enumerated(EnumType.STRING)
-    private VerificationStatus verificationStatus;
+    private LocalDate dateOfBirth;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

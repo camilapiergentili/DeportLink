@@ -1,6 +1,7 @@
 package com.deportlink.DeportLink.model.entity;
 
 
+import com.deportlink.DeportLink.model.ActiveStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -32,6 +33,9 @@ public class CourtEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sport_id")
     private SportEntity sport;
+
+    @Enumerated(EnumType.STRING)
+    private ActiveStatus activeStatus;
 
     @OneToMany(mappedBy = "court", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<AvailabilityEntity> availabilities = new HashSet<>();

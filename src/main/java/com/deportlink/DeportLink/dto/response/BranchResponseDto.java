@@ -1,5 +1,7 @@
 package com.deportlink.DeportLink.dto.response;
 
+import com.deportlink.DeportLink.model.ActiveStatus;
+import com.deportlink.DeportLink.model.VerificationStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,4 +15,6 @@ public class BranchResponseDto {
     private String name;
     private List<CourtResponseDto> courts;
     private AddressResponseDto address;
+    private VerificationStatus verificationStatus;
+    private ActiveStatus activeStatus;
 }

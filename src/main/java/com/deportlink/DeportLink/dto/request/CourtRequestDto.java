@@ -14,4 +14,5 @@ public class CourtRequestDto {
     private double pricePerHour;
     private long idBranch;
     private long idSport;
+
 }

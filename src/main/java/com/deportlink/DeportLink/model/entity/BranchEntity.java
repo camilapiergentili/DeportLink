@@ -1,5 +1,7 @@
 package com.deportlink.DeportLink.model.entity;
 
+import com.deportlink.DeportLink.model.ActiveStatus;
+import com.deportlink.DeportLink.model.VerificationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,6 +31,12 @@ public class BranchEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "club_id", nullable = false)
     private ClubEntity club;
+
+    @Enumerated(EnumType.STRING)
+    private VerificationStatus verificationStatus;
+
+    @Enumerated(EnumType.STRING)
+    private ActiveStatus activeStatus;
 
     @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CourtEntity> courts = new ArrayList<>();

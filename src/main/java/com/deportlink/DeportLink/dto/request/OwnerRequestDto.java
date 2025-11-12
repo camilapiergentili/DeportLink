@@ -7,7 +7,8 @@ import lombok.Setter;
 @Setter
 public class OwnerRequestDto extends UserRequestDto {
 
-    private String dni;
+    private long dni;
+    private String dateOfBirth;
     private String cuil;
 
 }
