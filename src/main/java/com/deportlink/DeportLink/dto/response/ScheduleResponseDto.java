@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class AvailabilityResponseDto {
+public class ScheduleResponseDto {
 
     private long id;
     private String day;

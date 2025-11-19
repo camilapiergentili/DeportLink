@@ -38,7 +38,7 @@ public class CourtEntity {
     private ActiveStatus activeStatus;
 
     @OneToMany(mappedBy = "court", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<AvailabilityEntity> availabilities = new HashSet<>();
+    private Set<ScheduleEntity> schedules = new HashSet<>();
 
     @OneToMany(mappedBy = "court", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ReservationEntity> reservations = new HashSet<>();

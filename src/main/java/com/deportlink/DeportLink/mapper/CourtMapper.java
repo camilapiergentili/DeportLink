@@ -6,7 +6,7 @@ import com.deportlink.DeportLink.model.entity.CourtEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {BranchMapper.class, SportMapper.class, AvailabilityMapper.class})
+@Mapper(componentModel = "spring", uses = {BranchMapper.class, SportMapper.class, ScheduleMapper.class})
 public interface CourtMapper {
 
     CourtEntity toModel(CourtRequestDto dto);

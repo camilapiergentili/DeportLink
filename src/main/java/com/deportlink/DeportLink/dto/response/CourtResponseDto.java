@@ -13,6 +13,6 @@ public class CourtResponseDto {
     private String name;
     private double pricePerHour;
     private String sport;
-    private Set<AvailabilityResponseDto> availabilities;
+    private Set<ScheduleResponseDto> availabilities;
 
 }
