@@ -4,6 +4,8 @@ import com.deportlink.DeportLink.model.ActiveStatus;
 import com.deportlink.DeportLink.model.VerificationStatus;
 import com.deportlink.DeportLink.model.entity.CourtEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,5 +21,11 @@ public interface CourtRepository extends JpaRepository<CourtEntity, Long> {
             ActiveStatus activeStatus);
 
     List<CourtEntity> findByBranch_IdAndSport_Id(long idBranch, long idSport);
+
+    @Query("SELECT DISTINCT c FROM CourtEntity c " +
+    "LEFT JOIN FETCH c.schedules " +
+    "WHERE c.id = :idCourt")
+    Optional<CourtEntity> findByCourtWithSchedule(@Param("idCourt") long idCourt);
+
     List<CourtEntity> findBySport_Id(long idSport);
 }

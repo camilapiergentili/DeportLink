@@ -13,7 +13,8 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AddressEntity {
+public class
+AddressEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +27,6 @@ public class AddressEntity {
     private int postalCode;
     private double latitude;
     private double longitude;
-
 
     @ManyToMany(mappedBy = "addresses")
     Set<PlayerEntity> players = new HashSet<>();

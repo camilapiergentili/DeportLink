@@ -1,6 +1,5 @@
 package com.deportlink.DeportLink.model.entity;
 
-import com.deportlink.DeportLink.model.VerificationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

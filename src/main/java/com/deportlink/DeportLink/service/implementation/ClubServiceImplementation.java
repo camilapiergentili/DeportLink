@@ -13,6 +13,7 @@ import com.deportlink.DeportLink.model.entity.ClubEntity;
 import com.deportlink.DeportLink.model.entity.OwnerEntity;
 import com.deportlink.DeportLink.persistence.repository.ClubRepository;
 import com.deportlink.DeportLink.service.ClubService;
+import com.deportlink.DeportLink.service.OwnerService;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -28,7 +29,7 @@ public class ClubServiceImplementation implements ClubService {
 
     private final ClubRepository clubRepository;
     private final ClubMapper clubMapper;
-    private final OwnerServiceImplementation ownerService;
+    private final OwnerService ownerService;
 
     @Transactional
     public void createClub(ClubRequestDto clubDto){

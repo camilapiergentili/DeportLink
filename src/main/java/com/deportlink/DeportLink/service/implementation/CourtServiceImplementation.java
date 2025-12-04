@@ -139,6 +139,11 @@ public class CourtServiceImplementation implements CourtService {
                 .collect(Collectors.toList());
     }
 
+    public CourtEntity getCourtByIdWithSchedule(long idCourt) {
+        return courtRepository.findByCourtWithSchedule(idCourt)
+                .orElseThrow(() -> new CourtNotFoundException("La cancha que esta buscando no se encuentra registrada"));
+    }
+
     public void delete(long idCourt){
         CourtEntity courtToDelete = getById(idCourt);
         courtRepository.delete(courtToDelete);
