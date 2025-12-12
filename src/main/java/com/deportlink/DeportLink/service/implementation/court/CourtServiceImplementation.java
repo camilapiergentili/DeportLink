@@ -1,4 +1,4 @@
-package com.deportlink.DeportLink.service.implementation;
+package com.deportlink.DeportLink.service.implementation.court;
 
 import com.deportlink.DeportLink.dto.request.CourtRequestDto;
 import com.deportlink.DeportLink.dto.response.CourtResponseDto;
@@ -6,6 +6,7 @@ import com.deportlink.DeportLink.exception.BranchNotApprovedException;
 import com.deportlink.DeportLink.exception.CourtAlreadyExistsException;
 import com.deportlink.DeportLink.exception.CourtNotFoundException;
 import com.deportlink.DeportLink.exception.NegativePriceExcepcion;
+import com.deportlink.DeportLink.mapper.BranchMapper;
 import com.deportlink.DeportLink.mapper.CourtMapper;
 import com.deportlink.DeportLink.model.ActiveStatus;
 import com.deportlink.DeportLink.model.VerificationStatus;
@@ -14,7 +15,8 @@ import com.deportlink.DeportLink.model.entity.CourtEntity;
 import com.deportlink.DeportLink.model.entity.SportEntity;
 import com.deportlink.DeportLink.persistence.repository.CourtRepository;
 import com.deportlink.DeportLink.service.CourtService;
-import com.deportlink.DeportLink.service.SportService;
+import com.deportlink.DeportLink.service.implementation.BranchServiceImplementation;
+import com.deportlink.DeportLink.service.implementation.SportServiceImplementation;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +32,7 @@ public class CourtServiceImplementation implements CourtService {
     private final BranchServiceImplementation branchService;
     private final SportServiceImplementation sportService;
 
-    public void createCourt(CourtRequestDto courtDto) {
+    public void create(CourtRequestDto courtDto) {
 
         BranchEntity branchEntity = branchService.getById(courtDto.getIdBranch());
         SportEntity sportEntity = sportService.getById(courtDto.getIdSport());
@@ -55,12 +57,7 @@ public class CourtServiceImplementation implements CourtService {
                 .orElseThrow(() -> new CourtNotFoundException("No se encontro la cancha"));
     }
 
-    public CourtResponseDto getByIdResponseForAdmin(long idCourt){
-        CourtEntity courtEntity = getById(idCourt);
-        return courtMapper.toResponse(courtEntity);
-    }
-
-    public CourtResponseDto getByIdResponseForPlayer(long idCourt){
+    public CourtResponseDto getByIdApprovedAndActive(long idCourt){
         CourtEntity courtEntity = getById(idCourt);
 
         boolean isVisible = verifyBranchIsVisibleForPlayer(courtEntity.getBranch().getVerificationStatus(), courtEntity.getBranch().getActiveStatus());
@@ -72,7 +69,16 @@ public class CourtServiceImplementation implements CourtService {
         return courtMapper.toResponse(courtEntity);
     }
 
-    public List<CourtResponseDto> getAllResponseForAdmin(){
+    public List<CourtResponseDto> getAllBranch(long idBranch){
+        BranchEntity branchEntity = branchService.getById(idBranch);
+
+        return branchEntity.getCourts().stream()
+                .map(courtMapper::toResponse)
+                .collect(Collectors.toList());
+
+    }
+
+    public List<CourtResponseDto> getAll(){
         List<CourtEntity> courtEntities = courtRepository.findAll();
 
         return courtEntities.stream()
@@ -80,7 +86,8 @@ public class CourtServiceImplementation implements CourtService {
                 .collect(Collectors.toList());
     }
 
-    public List<CourtResponseDto> getAllResponseForPlayer(){
+
+    public List<CourtResponseDto> getAllActiveAndApproved(){
 
         List<CourtEntity> courtEntities = courtRepository
                 .findByBranch_VerificationStatusAndBranch_ActiveStatus(
@@ -93,21 +100,7 @@ public class CourtServiceImplementation implements CourtService {
                 .collect(Collectors.toList());
     }
 
-    public List<CourtResponseDto> getAllByBranchForAdmin(long idBranch){
-        BranchEntity branchEntity = branchService.getById(idBranch);
-
-        List<CourtEntity> courts = branchEntity.getCourts();
-
-        if(courts.isEmpty()){
-            throw new CourtNotFoundException("No se encontraron canchas asociadas a la sucursal");
-        }
-
-        return courts.stream()
-                .map(courtMapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    public List<CourtResponseDto> getAllByBranchForPlayer(long idBranch){
+    public List<CourtResponseDto> getAllByBranchActiveAndApproved(long idBranch){
         BranchEntity branchEntity = branchService.getById(idBranch);
 
         boolean isVisible = verifyBranchIsVisibleForPlayer(branchEntity.getVerificationStatus(), branchEntity.getActiveStatus());
@@ -127,7 +120,7 @@ public class CourtServiceImplementation implements CourtService {
                 .collect(Collectors.toList());
     }
 
-    public List<CourtResponseDto> getCourtsByBranchAndSportForPlayer(long idBranch, long idSport){
+    public List<CourtResponseDto> getCourtsByBranchAndSport(long idBranch, long idSport){
         List<CourtEntity> courtEntityList = courtRepository.findByBranch_IdAndSport_Id(idBranch, idSport);
 
         if(courtEntityList.isEmpty()){

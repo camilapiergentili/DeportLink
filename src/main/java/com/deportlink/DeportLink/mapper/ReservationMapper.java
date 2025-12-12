@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter;
 @Mapper(componentModel = "spring")
 public interface ReservationMapper {
 
-    @Mapping(source = "duration", target = "durationMinutes", qualifiedByName = "durationToMinutes")
+    @Mapping(source = "duration", target = "duration", qualifiedByName = "durationToMinutes")
     @Mapping(source = "day", target = "day", qualifiedByName = "localDateToString")
     @Mapping(source = "startTime", target = "startTime", qualifiedByName = "localTimeToString")
     @Mapping(source = "court.name", target = "nameCourt")

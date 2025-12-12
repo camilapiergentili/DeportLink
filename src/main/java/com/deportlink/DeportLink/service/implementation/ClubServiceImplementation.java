@@ -82,7 +82,7 @@ public class ClubServiceImplementation implements ClubService {
         return clubMapper.toResponse(clubEntity);
     }
 
-    public List<ClubResponseDto> getAllForPlayer(){
+    public List<ClubResponseDto> getAllClubsActiveAndApproved(){
          return clubRepository.findAll()
                  .stream()
                  .filter(club -> club.getVerificationStatus() == VerificationStatus.APPROVED
@@ -91,7 +91,7 @@ public class ClubServiceImplementation implements ClubService {
                  .collect(Collectors.toList());
     }
 
-    public List<ClubResponseDto> getAllForAdmin(){
+    public List<ClubResponseDto> getAll(){
         List<ClubEntity> clubEntities = clubRepository.findAll();
 
         return clubEntities
@@ -167,16 +167,16 @@ public class ClubServiceImplementation implements ClubService {
         clubRepository.save(clubEntity);
     }
 
-    public void deactivateClubByOwner(long idOwner, long idClub){
-        activateAndDesactivateClubByOwner(idOwner, idClub, ActiveStatus.DESACTIVE);
+    public void deactivateClub(long idOwner, long idClub){
+        activateAndDesactivateClub(idOwner, idClub, ActiveStatus.DESACTIVE);
     }
 
-    public void activateClubByOwner(long idOwner, long idClub){
-        activateAndDesactivateClubByOwner(idOwner, idClub, ActiveStatus.ACTIVE);
+    public void activateClub(long idOwner, long idClub){
+        activateAndDesactivateClub(idOwner, idClub, ActiveStatus.ACTIVE);
     }
 
     @Transactional
-    private void activateAndDesactivateClubByOwner(long idOwner, long idClub, ActiveStatus status){
+    private void activateAndDesactivateClub(long idOwner, long idClub, ActiveStatus status){
         OwnerEntity owner = ownerService.getById(idOwner);
         List<ClubEntity> clubsByOwner = owner.getClubs();
 

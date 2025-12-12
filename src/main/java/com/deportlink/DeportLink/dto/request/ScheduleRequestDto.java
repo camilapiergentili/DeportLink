@@ -8,6 +8,6 @@ import lombok.Setter;
 public class ScheduleRequestDto {
 
     private String day;
-    private String openingDay;
+    private String openingTime;
     private String closingTime;
 }

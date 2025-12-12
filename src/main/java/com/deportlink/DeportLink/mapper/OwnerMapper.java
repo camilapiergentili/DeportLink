@@ -14,20 +14,24 @@ import java.time.format.DateTimeFormatter;
 @Mapper(componentModel = "spring", uses = {ClubMapper.class})
 public interface OwnerMapper extends UserMapper {
 
-    @Mapping(source = "dateOfBirth", target = "dateOfBirth", qualifiedByName = "localDateToString")
+    @Mapping(source = "dateOfBirth", target = "dateOfBirth", qualifiedByName = "stringToLocalDate")
     @Mapping(target = "role", expression = "java(com.deportlink.DeportLink.model.Rol.OWNER)")
     OwnerEntity toModel(OwnerRequestDto ownerRequestDto);
 
-    @Mapping(source = "dateOfBirth", target = "dateOfBirth", qualifiedByName = "stringToLocalDate")
+    @Mapping(source = "dateOfBirth", target = "dateOfBirth", qualifiedByName = "localDateToString")
     OwnerResponseDto toResponse(OwnerEntity ownerEntity);
 
     @Named("localDateToString")
-    static String localDateToString(LocalDate localDate){
-        return localDate == null ? null : localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    default String localDateToString(LocalDate localDate){
+        return localDate == null ? null :
+                localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 
     @Named("stringToLocalDate")
-    static LocalDate stringToLocalDate(String date){
-        return date == null ? null : LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    default LocalDate stringToLocalDate(String date){
+        return date == null ? null : LocalDate.parse(date,
+                DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 }
+
+

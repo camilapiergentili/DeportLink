@@ -1,6 +1,7 @@
 package com.deportlink.DeportLink.service.implementation;
 
 import com.deportlink.DeportLink.dto.request.ScheduleRequestDto;
+import com.deportlink.DeportLink.dto.response.ScheduleResponseDto;
 import com.deportlink.DeportLink.exception.InvalidTimeRangeException;
 import com.deportlink.DeportLink.exception.ReservationNotUpdateException;
 import com.deportlink.DeportLink.exception.ScheduleAlreadyExistsException;
@@ -11,16 +12,15 @@ import com.deportlink.DeportLink.model.entity.ReservationEntity;
 import com.deportlink.DeportLink.model.entity.ScheduleEntity;
 import com.deportlink.DeportLink.persistence.repository.ScheduleRepository;
 import com.deportlink.DeportLink.service.ScheduleService;
+import com.deportlink.DeportLink.service.implementation.court.CourtServiceImplementation;
 import lombok.AllArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -31,7 +31,9 @@ public class ScheduleServiceImplementacion implements ScheduleService {
     private ScheduleMapper scheduleMapper;
     private ScheduleRepository scheduleRepository;
 
-    public void addScheduleToCourt(long idCourt, List<ScheduleRequestDto> schedulesDto){
+
+    //validar que la cancha este aproabada y activa para agregar la agenda
+    public void addSchedule(long idCourt, List<ScheduleRequestDto> schedulesDto){
         CourtEntity courtEntity = courtService.getById(idCourt);
 
         List<ScheduleEntity> scheduleEntityList = scheduleMapper.toModelList(schedulesDto);
@@ -46,7 +48,7 @@ public class ScheduleServiceImplementacion implements ScheduleService {
                 .stream()
                 .filter(newSchedule -> courtEntity.getSchedules().stream()
                         .noneMatch(s -> s.getDay().equals(newSchedule.getDay()) &&
-                                isTimeRangeValid(s.getOpeningTime(), s.getClosingTime(),
+                                isvalidateTimeRange(s.getOpeningTime(), s.getClosingTime(),
                                         newSchedule.getOpeningTime(), newSchedule.getClosingTime()))
                 ).toList();
 
@@ -113,6 +115,20 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
     }
 
+    public List<ScheduleResponseDto> getAllByCourt(long idCourt){
+        CourtEntity courtEntity = courtService.getById(idCourt);
+
+        List<ScheduleEntity> scheduleEntityList = new ArrayList<>(courtEntity.getSchedules());
+
+        if(scheduleEntityList.isEmpty()){
+            throw new ScheduleNotFoundException("La cancha aun no tiene agenda disponible");
+        }
+
+        return scheduleEntityList.stream()
+                .map(scheduleMapper::toResponse).toList();
+
+    }
+
     private boolean isOpeningTimeBeforeClosingTime(LocalTime open, LocalTime close){
         return open.isAfter(close);
     }
@@ -126,7 +142,7 @@ public class ScheduleServiceImplementacion implements ScheduleService {
                 .orElseThrow(() -> new ScheduleNotFoundException("No se encontro la agenda"));
     }
 
-    private boolean isTimeRangeValid(LocalTime startTimeExists, LocalTime endTimeExists, LocalTime startTimeNew, LocalTime endTimeNew){
+    private boolean isvalidateTimeRange(LocalTime startTimeExists, LocalTime endTimeExists, LocalTime startTimeNew, LocalTime endTimeNew){
         return !(endTimeExists.isBefore(startTimeNew) || startTimeExists.isAfter(endTimeNew));
 
     }

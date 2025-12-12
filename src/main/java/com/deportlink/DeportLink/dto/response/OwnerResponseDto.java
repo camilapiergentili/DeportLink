@@ -11,6 +11,7 @@ public class OwnerResponseDto extends UserResponseDto {
 
     private String dni;
     private String cuil;
+    private String dateOfBirth;
     private List<ClubResponseDto> clubs;
 
 }

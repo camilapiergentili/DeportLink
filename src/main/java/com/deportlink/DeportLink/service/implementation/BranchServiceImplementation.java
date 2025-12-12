@@ -63,9 +63,9 @@ public class BranchServiceImplementation implements BranchService {
                 .orElseThrow(() -> new BranchNotFoundException("No se encontro registro de la cancha"));
     }
 
-    public List<BranchResponseDto> getAllByClubId(long clubId){
+    public List<BranchResponseDto> getAllActiveAndApproved(long idClub){
 
-        List<BranchEntity> branchesEntity = branchRepository.findAllByClubId(clubId);
+        List<BranchEntity> branchesEntity = branchRepository.findAllByClubId(idClub);
 
         if(branchesEntity.isEmpty()){
             throw new BranchNotFoundException("El club aun no tiene sucursales registradas");
@@ -79,7 +79,9 @@ public class BranchServiceImplementation implements BranchService {
 
     }
 
-    public List<BranchResponseDto> getAllByClubForAdmin(long idClub){
+    public List<BranchResponseDto> getAll(long idClub){
+
+        clubService.getById(idClub);
         List<BranchEntity> branchesEntity = branchRepository.findAllByClubId(idClub);
 
         return branchesEntity.stream()
@@ -87,13 +89,13 @@ public class BranchServiceImplementation implements BranchService {
                 .collect(Collectors.toList());
     }
 
-    public BranchResponseDto getByIdForAdminResponse(long id){
+    public BranchResponseDto getByIdResponse(long id){
         BranchEntity branchEntity = getById(id);
 
         return branchMapper.toResponse(branchEntity);
     }
 
-    public BranchResponseDto getByIdForPlayerResponse(long id){
+    public BranchResponseDto getByIdApproved(long id){
         BranchEntity branchEntity = getById(id);
 
         switch (branchEntity.getVerificationStatus()) {

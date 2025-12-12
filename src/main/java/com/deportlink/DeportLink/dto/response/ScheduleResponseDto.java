@@ -10,6 +10,6 @@ public class ScheduleResponseDto {
     private long id;
     private String day;
     private String openingTime;
-    private String endingTime;
+    private String closingTime;
 
 }
