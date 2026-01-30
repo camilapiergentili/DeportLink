@@ -2,11 +2,10 @@ package com.deportlink.DeportLink.service.implementation;
 
 import com.deportlink.DeportLink.dto.request.ScheduleRequestDto;
 import com.deportlink.DeportLink.dto.response.ScheduleResponseDto;
-import com.deportlink.DeportLink.exception.InvalidTimeRangeException;
-import com.deportlink.DeportLink.exception.ReservationNotUpdateException;
-import com.deportlink.DeportLink.exception.ScheduleAlreadyExistsException;
-import com.deportlink.DeportLink.exception.ScheduleNotFoundException;
+import com.deportlink.DeportLink.exception.*;
 import com.deportlink.DeportLink.mapper.ScheduleMapper;
+import com.deportlink.DeportLink.model.ActiveStatus;
+import com.deportlink.DeportLink.model.VerificationStatus;
 import com.deportlink.DeportLink.model.entity.CourtEntity;
 import com.deportlink.DeportLink.model.entity.ReservationEntity;
 import com.deportlink.DeportLink.model.entity.ScheduleEntity;
@@ -32,34 +31,35 @@ public class ScheduleServiceImplementacion implements ScheduleService {
     private ScheduleRepository scheduleRepository;
 
 
-    //validar que la cancha este aproabada y activa para agregar la agenda
     public void addSchedule(long idCourt, List<ScheduleRequestDto> schedulesDto){
+
+        //Busco en la base de datos que la cancha exista
         CourtEntity courtEntity = courtService.getById(idCourt);
 
+        if(!courtEntity.getActiveStatus().equals(ActiveStatus.ACTIVE)){
+            throw new ClubNotActivedException("No puede agregar agenda, porque la cancha no se encuentra activa");
+        }
+
+        if(!courtEntity.getBranch().getVerificationStatus().equals(VerificationStatus.APPROVED)){
+            throw new ClubNotApprovedException("No puede agregar agenda, porque la cancha no se encuentra aprobada");
+        }
+
+        // Mappeo la lista que el usuario envio como DTO a ENTITY
         List<ScheduleEntity> scheduleEntityList = scheduleMapper.toModelList(schedulesDto);
 
-        for(ScheduleEntity s : scheduleEntityList){
-            if(isOpeningTimeBeforeClosingTime(s.getOpeningTime(), s.getClosingTime())){
-                throw new InvalidTimeRangeException("El horario de inicio no puede ser posterior al horario de fin");
-            }
-        }
+        //Valido que el horario de apertura no sea posterior al horario de cierra
+        rangeTimeValid(scheduleEntityList);
 
-        List<ScheduleEntity> uniqueSchedule = scheduleEntityList
-                .stream()
-                .filter(newSchedule -> courtEntity.getSchedules().stream()
-                        .noneMatch(s -> s.getDay().equals(newSchedule.getDay()) &&
-                                isvalidateTimeRange(s.getOpeningTime(), s.getClosingTime(),
-                                        newSchedule.getOpeningTime(), newSchedule.getClosingTime()))
-                ).toList();
+        //Valido que los horarios que me envia el usuario no coincidan con horarios anteriores de esa cancha.
+        List<ScheduleEntity> uniqueSchedule = validateAndFilterSchedules(scheduleEntityList, courtEntity);
 
-        if(uniqueSchedule.isEmpty()){
-            throw new ScheduleAlreadyExistsException("Los horarios ya existen para la cancha " + courtEntity.getName());
-        }
-
+        // Obtengo la agenda de cada cancha
         Set<ScheduleEntity> scheduleSet = courtEntity.getSchedules();
 
+        // a la lista de agenda de cada cancha, le setteo la nueva agenda
         scheduleSet.addAll(uniqueSchedule);
 
+        //Por cada agenda se le settea la cancha
         for(ScheduleEntity s : scheduleSet){
             s.setCourt(courtEntity);
         }
@@ -67,6 +67,7 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         scheduleRepository.saveAll(scheduleSet);
 
     }
+
 
     public void deleteSchedule(long idCourt,  long idSchedule){
 
@@ -89,15 +90,27 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         LocalTime openingTime = LocalTime.parse(openingNew);
         LocalTime closingTime = LocalTime.parse(closingNew);
 
-        if(isOpeningTimeBeforeClosingTime(openingTime, closingTime)){
-            throw new InvalidTimeRangeException("El horario de inicio no puede ser posterior al horario de fin");
-        }
+        isValidTimeRange(openingTime, closingTime);
 
         List<ReservationEntity> reservationEntities = reservationService.getAllReservationForCount(idCourt);
+        List<ReservationEntity> reservationForDay = filterReservationPerDay(reservationEntities, scheduleEntity);
 
-        List<ReservationEntity> reservationForDay = reservationEntities.stream()
+        reservationTimeValid(reservationForDay, openingTime, closingTime);
+
+        scheduleEntity.setOpeningTime(openingTime);
+        scheduleEntity.setClosingTime(closingTime);
+
+        scheduleRepository.save(scheduleEntity);
+
+    }
+
+    private List<ReservationEntity> filterReservationPerDay( List<ReservationEntity> reservationEntities, ScheduleEntity scheduleEntity ){
+        return reservationEntities.stream()
                 .filter(r -> r.getDay().getDayOfWeek().equals(scheduleEntity.getDay()))
                 .toList();
+    }
+
+    private void reservationTimeValid(List<ReservationEntity> reservationForDay, LocalTime openingTime, LocalTime closingTime){
 
         for(ReservationEntity r : reservationForDay){
             LocalTime startReservation = r.getStartTime();
@@ -107,11 +120,6 @@ public class ScheduleServiceImplementacion implements ScheduleService {
                 throw new ReservationNotUpdateException("Los horarios reservados no estan dentro del nuevo rango horario");
             }
         }
-
-        scheduleEntity.setOpeningTime(openingTime);
-        scheduleEntity.setClosingTime(closingTime);
-
-        scheduleRepository.save(scheduleEntity);
 
     }
 
@@ -150,5 +158,36 @@ public class ScheduleServiceImplementacion implements ScheduleService {
     private int mapJavaDayToMySQL(DayOfWeek dayOfWeek) {
         return (dayOfWeek.getValue() % 7) + 1;
     }
+
+    private void rangeTimeValid(List<ScheduleEntity> scheduleEntityList){
+        for(ScheduleEntity s : scheduleEntityList){
+            isValidTimeRange(s.getOpeningTime(), s.getClosingTime());
+        }
+    }
+
+    private void isValidTimeRange(LocalTime opening, LocalTime close){
+        if(isOpeningTimeBeforeClosingTime(opening, close)){
+            throw new InvalidTimeRangeException("El horario de inicio no puede ser posterior al horario de fin");
+        }
+
+    }
+
+    private List<ScheduleEntity> validateAndFilterSchedules(List<ScheduleEntity> scheduleEntityList, CourtEntity courtEntity){
+
+        List<ScheduleEntity> uniqueSchedule = scheduleEntityList
+                .stream()
+                .filter(newSchedule -> courtEntity.getSchedules().stream()
+                        .noneMatch(s -> s.getDay().equals(newSchedule.getDay()) &&
+                                isvalidateTimeRange(s.getOpeningTime(), s.getClosingTime(),
+                                        newSchedule.getOpeningTime(), newSchedule.getClosingTime()))
+                ).toList();
+
+        if(uniqueSchedule.isEmpty()){
+            throw new ScheduleAlreadyExistsException("Los horarios ya existen para la cancha " + courtEntity.getName());
+        }
+
+        return uniqueSchedule;
+    }
+
 
 }

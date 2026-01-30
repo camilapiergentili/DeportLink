@@ -1,7 +1,9 @@
 package com.deportlink.DeportLink.service.implementation;
 
+import com.deportlink.DeportLink.dto.request.ReservationRequestDto;
 import com.deportlink.DeportLink.exception.ReservationEmptyException;
 import com.deportlink.DeportLink.mapper.ReservationMapper;
+import com.deportlink.DeportLink.model.entity.CourtEntity;
 import com.deportlink.DeportLink.model.entity.ReservationEntity;
 import com.deportlink.DeportLink.persistence.repository.ReservationRepository;
 import com.deportlink.DeportLink.service.ReservationService;
@@ -27,6 +29,11 @@ public class ReservationServiceImplementation implements ReservationService {
         }
 
         return listReservation;
+    }
+
+    public void createReservation(ReservationRequestDto reservationDto){
+        CourtEntity courtEntity = courtService.getById(reservationDto.getIdCourt());
+
     }
 
 
