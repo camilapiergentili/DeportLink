@@ -38,7 +38,8 @@ public class BranchServiceImplementation implements BranchService {
             throw new ClubNotApprovedException("El club " + clubEntity.getLegalName() + " aun no esta autorizado para agregar sucursales");
         }
 
-        boolean existsAddress = branchEntity.getAddress().equals(addressMapper.toModel(branchDto.getAddressRequestDto()));
+        boolean existsAddress = branchEntity.getAddress()
+                .equals(addressMapper.toModel(branchDto.getAddressRequestDto()));
 
         if(existsAddress){
             throw new BranchAlreadyExistsException("Ya existe una sucursal en esta dirección");

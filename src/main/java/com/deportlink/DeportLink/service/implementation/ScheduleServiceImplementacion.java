@@ -104,25 +104,6 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
     }
 
-    private List<ReservationEntity> filterReservationPerDay( List<ReservationEntity> reservationEntities, ScheduleEntity scheduleEntity ){
-        return reservationEntities.stream()
-                .filter(r -> r.getDay().getDayOfWeek().equals(scheduleEntity.getDay()))
-                .toList();
-    }
-
-    private void reservationTimeValid(List<ReservationEntity> reservationForDay, LocalTime openingTime, LocalTime closingTime){
-
-        for(ReservationEntity r : reservationForDay){
-            LocalTime startReservation = r.getStartTime();
-            LocalTime endReservation = r.getEndTime();
-
-            if(startReservation.isBefore(openingTime) || endReservation.isAfter(closingTime)){
-                throw new ReservationNotUpdateException("Los horarios reservados no estan dentro del nuevo rango horario");
-            }
-        }
-
-    }
-
     public List<ScheduleResponseDto> getAllByCourt(long idCourt){
         CourtEntity courtEntity = courtService.getById(idCourt);
 
@@ -187,6 +168,25 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         }
 
         return uniqueSchedule;
+    }
+
+    private List<ReservationEntity> filterReservationPerDay( List<ReservationEntity> reservationEntities, ScheduleEntity scheduleEntity ){
+        return reservationEntities.stream()
+                .filter(r -> r.getDay().getDayOfWeek().equals(scheduleEntity.getDay()))
+                .toList();
+    }
+
+    private void reservationTimeValid(List<ReservationEntity> reservationForDay, LocalTime openingTime, LocalTime closingTime){
+
+        for(ReservationEntity r : reservationForDay){
+            LocalTime startReservation = r.getStartTime();
+            LocalTime endReservation = r.getEndTime();
+
+            if(startReservation.isBefore(openingTime) || endReservation.isAfter(closingTime)){
+                throw new ReservationNotUpdateException("Los horarios reservados no estan dentro del nuevo rango horario");
+            }
+        }
+
     }
 
 

@@ -15,6 +15,7 @@ import com.deportlink.DeportLink.model.entity.OwnerEntity;
 import com.deportlink.DeportLink.persistence.repository.OwnerRepository;
 import com.deportlink.DeportLink.service.OwnerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -29,6 +30,7 @@ public class OwnerServiceImplementation implements OwnerService {
     private final OwnerMapper ownerMapper;
     private final ClubMapper clubMapper;
     private final OwnerRepository ownerRepository;
+    private PasswordEncoder passwordEncoder;
 
 
     public OwnerResponseDto register(OwnerRequestDto ownerDto) throws OwnerAlreadyExistsException {
@@ -52,6 +54,7 @@ public class OwnerServiceImplementation implements OwnerService {
         }
 
         ownerEntity.setRole(Rol.OWNER);
+        ownerEntity.setPassword(passwordEncoder.encode(ownerDto.getPassword()));
 
         ownerRepository.save(ownerEntity);
 
