@@ -18,10 +18,10 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class PlayerServiceImplementation implements PlayerService {
 
-    private PlayerMapper playerMapper;
-    private AddressMapper addressMapper;
-    private PasswordEncoder passwordEncoder;
-    private PlayerRepository playerRepository;
+    private final PlayerMapper playerMapper;
+    private final AddressMapper addressMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final PlayerRepository playerRepository;
 
     public PlayerEntity register(PlayerRequestDto playerDto){
 

@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +26,10 @@ import java.util.Set;
 @AllArgsConstructor
 public class ScheduleServiceImplementacion implements ScheduleService {
 
-    private CourtServiceImplementation courtService;
-    private ReservationServiceImplementation reservationService;
-    private ScheduleMapper scheduleMapper;
-    private ScheduleRepository scheduleRepository;
+    private final CourtServiceImplementation courtService;
+    private final ReservationServiceImplementation reservationService;
+    private final ScheduleMapper scheduleMapper;
+    private final ScheduleRepository scheduleRepository;
 
 
     public void addSchedule(long idCourt, List<ScheduleRequestDto> schedulesDto){
@@ -116,6 +117,17 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         return scheduleEntityList.stream()
                 .map(scheduleMapper::toResponse).toList();
 
+    }
+
+    public ScheduleResponseDto getByDay(long idCourt, LocalDate day){
+
+        DayOfWeek dayOfWeek = day.getDayOfWeek();
+
+        CourtEntity courtEntity = courtService.getById(idCourt);
+        ScheduleEntity scheduleEntityList = scheduleRepository.findByCourtIdAndDay(courtEntity.getId(), dayOfWeek)
+                .orElseThrow(() -> new ScheduleNotFoundException(" No se encontro agenda para el dia seleccionado"));
+
+        return scheduleMapper.toResponse(scheduleEntityList);
     }
 
     private boolean isOpeningTimeBeforeClosingTime(LocalTime open, LocalTime close){

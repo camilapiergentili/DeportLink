@@ -11,7 +11,10 @@ import com.deportlink.DeportLink.service.implementation.court.CourtServiceImplem
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -31,10 +34,21 @@ public class ReservationServiceImplementation implements ReservationService {
         return listReservation;
     }
 
-    public void createReservation(ReservationRequestDto reservationDto){
-        CourtEntity courtEntity = courtService.getById(reservationDto.getIdCourt());
+    public List<LocalTime> getByDay(long idCourt, String day){
+        CourtEntity courtEntity = courtService.getById(idCourt);
+        LocalDate dayOfReservation = LocalDate.parse(day);
 
+        List<ReservationEntity> listReservation = reservationRepository.findByCourtAndDay(idCourt,dayOfReservation);
+
+        if(listReservation.isEmpty()){
+            return List.of();
+        }
+
+        return listReservation.stream().map(ReservationEntity::getStartTime)
+                .collect(Collectors.toList());
     }
+
+
 
 
 }

@@ -11,5 +11,6 @@ public class ScheduleResponseDto {
     private String day;
     private String openingTime;
     private String closingTime;
+    private long slotDuration;
 
 }

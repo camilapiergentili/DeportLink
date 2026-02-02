@@ -5,10 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ScheduleRequestDto {
-
+public class AppointmentRequestDto {
     private String day;
-    private String openingTime;
-    private String closingTime;
-    private Long slotDuration;
+    private long idCourt;
 }
