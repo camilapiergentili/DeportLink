@@ -1,6 +1,7 @@
 package com.deportlink.DeportLink.service.implementation;
 
 import com.deportlink.DeportLink.dto.request.PlayerRequestDto;
+import com.deportlink.DeportLink.dto.response.PlayerResponseDto;
 import com.deportlink.DeportLink.exception.PlayerAlreadyExistsException;
 import com.deportlink.DeportLink.exception.UserNotFoundException;
 import com.deportlink.DeportLink.mapper.AddressMapper;
@@ -23,7 +24,7 @@ public class PlayerServiceImplementation implements PlayerService {
     private final PasswordEncoder passwordEncoder;
     private final PlayerRepository playerRepository;
 
-    public PlayerEntity register(PlayerRequestDto playerDto){
+    public PlayerResponseDto register(PlayerRequestDto playerDto){
 
         PlayerEntity playerEntity = playerMapper.toModel(playerDto);
 
@@ -35,7 +36,7 @@ public class PlayerServiceImplementation implements PlayerService {
 
         playerRepository.save(playerEntity);
 
-        return playerEntity;
+        return playerMapper.toResponse(playerEntity);
     }
 
     public PlayerEntity getById(long idPlayer){
@@ -43,7 +44,12 @@ public class PlayerServiceImplementation implements PlayerService {
                 .orElseThrow(() -> new UserNotFoundException("El jugador no se encontro"));
     }
 
-    public PlayerEntity update(long idPlayer, PlayerRequestDto playerDto){
+    public PlayerResponseDto getByIdResponse(long idPlayer){
+        PlayerEntity playerEntity = getById(idPlayer);
+        return playerMapper.toResponse(playerEntity);
+    }
+
+    public PlayerResponseDto update(long idPlayer, PlayerRequestDto playerDto){
         PlayerEntity playerEntity = getById(idPlayer);
 
         playerEntity.setFirstName(playerDto.getFirstName());
@@ -57,7 +63,7 @@ public class PlayerServiceImplementation implements PlayerService {
 
         playerRepository.save(playerEntity);
 
-        return playerEntity;
+        return playerMapper.toResponse(playerEntity);
     }
 
     public void delete(long idPlayer){

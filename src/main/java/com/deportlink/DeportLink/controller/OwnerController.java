@@ -5,6 +5,7 @@ import com.deportlink.DeportLink.dto.response.OwnerResponseDto;
 import com.deportlink.DeportLink.exception.OwnerAlreadyExistsException;
 import com.deportlink.DeportLink.service.OwnerService;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -14,7 +15,7 @@ import java.net.URI;
 
 @RestController
 @RequestMapping("/owners")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class OwnerController {
 
     private final OwnerService ownerService;
@@ -31,5 +32,4 @@ public class OwnerController {
                 .created(location)
                 .body(response);
     }
-
 }

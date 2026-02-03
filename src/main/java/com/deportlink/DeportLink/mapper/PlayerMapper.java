@@ -2,6 +2,7 @@ package com.deportlink.DeportLink.mapper;
 
 import com.deportlink.DeportLink.dto.request.AddressRequestDto;
 import com.deportlink.DeportLink.dto.request.PlayerRequestDto;
+import com.deportlink.DeportLink.dto.response.PlayerResponseDto;
 import com.deportlink.DeportLink.model.entity.AddressEntity;
 import com.deportlink.DeportLink.model.entity.PlayerEntity;
 import org.mapstruct.Mapper;
@@ -18,6 +19,8 @@ public interface PlayerMapper extends UserMapper {
             expression = "java(toAddressSet(playerRequestDto.getAddressRequestDto()))"
     )
     PlayerEntity toModel(PlayerRequestDto playerRequestDto);
+
+    PlayerResponseDto toResponse(PlayerEntity playerEntity);
 
     default Set<AddressEntity> toAddressSet(AddressRequestDto dto){
         if(dto == null) return new HashSet<>();

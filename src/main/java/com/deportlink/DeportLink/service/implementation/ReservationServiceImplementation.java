@@ -1,6 +1,5 @@
 package com.deportlink.DeportLink.service.implementation;
 
-import com.deportlink.DeportLink.dto.request.ReservationRequestDto;
 import com.deportlink.DeportLink.exception.ReservationEmptyException;
 import com.deportlink.DeportLink.mapper.ReservationMapper;
 import com.deportlink.DeportLink.model.entity.CourtEntity;

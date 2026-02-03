@@ -1,15 +1,11 @@
 package com.deportlink.DeportLink.service.implementation;
 
 import com.deportlink.DeportLink.dto.request.AppointmentRequestDto;
-import com.deportlink.DeportLink.dto.request.ScheduleRequestDto;
-import com.deportlink.DeportLink.dto.response.AppointmentResponseDto;
 import com.deportlink.DeportLink.dto.response.ScheduleResponseDto;
 import com.deportlink.DeportLink.mapper.AppointmentMapper;
 import com.deportlink.DeportLink.model.entity.CourtEntity;
-import com.deportlink.DeportLink.model.entity.ScheduleEntity;
 import com.deportlink.DeportLink.service.implementation.court.CourtServiceImplementation;
 import lombok.AllArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -29,8 +25,6 @@ public class AppointmentServiceImplementation {
     public List<LocalTime> available(AppointmentRequestDto appointmentDto){
         List<LocalTime> allTimes = generate(appointmentDto);
         List<LocalTime> busyTimes = reservationService.getByDay(appointmentDto.getIdCourt(), appointmentDto.getDay());
-
-        List<LocalTime> newList = new ArrayList<>();
 
         allTimes.removeIf(busyTimes::contains);
 
