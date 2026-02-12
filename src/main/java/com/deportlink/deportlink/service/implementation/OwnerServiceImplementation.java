@@ -1,0 +1,120 @@
+package com.deportlink.deportlink.service.implementation;
+
+import com.deportlink.deportlink.dto.request.OwnerRequestDto;
+import com.deportlink.deportlink.dto.response.ClubResponseDto;
+import com.deportlink.deportlink.dto.response.OwnerResponseDto;
+import com.deportlink.deportlink.exception.ClubNotFoundException;
+import com.deportlink.deportlink.exception.OwnerAlreadyExistsException;
+import com.deportlink.deportlink.exception.UnderageException;
+import com.deportlink.deportlink.exception.UserNotFoundException;
+import com.deportlink.deportlink.mapper.ClubMapper;
+import com.deportlink.deportlink.mapper.OwnerMapper;
+import com.deportlink.deportlink.model.Rol;
+import com.deportlink.deportlink.model.entity.ClubEntity;
+import com.deportlink.deportlink.model.entity.OwnerEntity;
+import com.deportlink.deportlink.persistence.repository.OwnerRepository;
+import com.deportlink.deportlink.service.OwnerService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class OwnerServiceImplementation implements OwnerService {
+
+    private final OwnerMapper ownerMapper;
+    private final ClubMapper clubMapper;
+    private final OwnerRepository ownerRepository;
+    private PasswordEncoder passwordEncoder;
+
+
+    public OwnerResponseDto register(OwnerRequestDto ownerDto) throws OwnerAlreadyExistsException {
+
+        OwnerEntity ownerEntity = ownerMapper.toModel(ownerDto);
+
+        if(ownerRepository.findByDni(ownerEntity.getDni()).isPresent()){
+            throw new OwnerAlreadyExistsException("El dueño con dni " + ownerEntity.getDni() + " ya se encuentra registrado");
+        }
+
+        if(ownerRepository.findByCuil(ownerEntity.getCuil()).isPresent()){
+            throw new OwnerAlreadyExistsException("El dueño con número de cuil: " + ownerEntity.getCuil() + " ya se encuentra registrado");
+        }
+
+        if(ownerRepository.findByEmail(ownerEntity.getEmail()).isPresent()){
+            throw new OwnerAlreadyExistsException("El dueño con email: " + ownerEntity.getEmail() + " ya se encuentra registrado");
+        }
+
+        if(!isOfLegalAge(ownerEntity.getDateOfBirth())){
+            throw new UnderageException("Para registrar un club debes ser mayor de edad");
+        }
+
+        ownerEntity.setRole(Rol.OWNER);
+        ownerEntity.setPassword(passwordEncoder.encode(ownerDto.getPassword()));
+
+        ownerRepository.save(ownerEntity);
+
+        return ownerMapper.toResponse(ownerEntity);
+    }
+
+    public void deleteById(long id){
+        OwnerEntity ownerEntity = ownerRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("El usuario no fue encontrado"));
+
+        ownerRepository.delete(ownerEntity);
+    }
+
+    public OwnerEntity getById(long id){
+        return ownerRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("El usuario no fue encontrado"));
+    }
+
+    public OwnerResponseDto getByIdResponse(long id){
+        OwnerEntity ownerEntity = getById(id);
+
+        return ownerMapper.toResponse(ownerEntity);
+    }
+
+    public void update(long id, OwnerRequestDto ownerDto){
+
+        OwnerEntity ownerEntity = ownerRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("El usuario no fue encontrado"));
+
+        ownerEntity.setFirstName(ownerDto.getFirstName());
+        ownerEntity.setLastName(ownerDto.getLastName());
+        ownerEntity.setPhone(ownerDto.getPhone());
+        ownerEntity.setDni(ownerDto.getDni());
+        ownerEntity.setCuil(ownerDto.getCuil());
+
+        ownerRepository.save(ownerEntity);
+    }
+
+    public List<OwnerResponseDto> getAll(){
+
+        return ownerRepository.findAll().
+                stream().
+                map(ownerMapper::toResponse).
+                collect(Collectors.toList());
+    }
+
+    public List<ClubResponseDto> getAllClubsByOwner(long idOwner){
+        OwnerEntity ownerEntity = getById(idOwner);
+
+        List<ClubEntity> clubFromOwner = ownerEntity.getClubs();
+        if(clubFromOwner.isEmpty()){
+            throw new ClubNotFoundException("La persona no tiene Clubs registrados a su nombre");
+        }
+
+        return clubFromOwner.stream()
+                .map(clubMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    private boolean isOfLegalAge(LocalDate dateOfBirth){
+        return Period.between(dateOfBirth, LocalDate.now()).getYears() >= 18;
+    }
+}
