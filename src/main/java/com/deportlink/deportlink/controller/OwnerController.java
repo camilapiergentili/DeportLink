@@ -15,14 +15,14 @@ import java.net.URI;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/owners")
+@RequestMapping("/api/owners")
 @RequiredArgsConstructor
 public class OwnerController {
 
     private final OwnerService ownerService;
 
     @PostMapping
-    public ResponseEntity<OwnerResponseDto> register(@Valid @RequestBody OwnerRequestDto dto)
+    public ResponseEntity<OwnerResponseDto> register(@RequestBody @Valid OwnerRequestDto dto)
             throws OwnerAlreadyExistsException {
 
         OwnerResponseDto response = ownerService.register(dto);
@@ -35,20 +35,20 @@ public class OwnerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OwnerResponseDto> getById(@Valid @PathVariable long id){
+    public ResponseEntity<OwnerResponseDto> getById(@PathVariable long id){
         OwnerResponseDto ownerResponse = ownerService.getByIdResponse(id);
         return ResponseEntity.ok(ownerResponse);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Object> update(@Valid @PathVariable long id,
-                                         @RequestBody OwnerRequestDto ownerDto){
+    public ResponseEntity<Object> update(@PathVariable long id,
+                                         @RequestBody @Valid OwnerRequestDto ownerDto){
         ownerService.update(id, ownerDto);
         return ResponseEntity.ok(Map.of("message", "Owner actualizado con exito"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> delete(@Valid @PathVariable long id){
+    public ResponseEntity<Object> delete(@PathVariable long id){
         ownerService.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Owner eliminado con exito"));
     }

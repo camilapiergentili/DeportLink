@@ -37,7 +37,7 @@ public class ReservationServiceImplementation implements ReservationService {
     }
 
     public List<LocalTime> getForDay(long idCourt, String day){
-        CourtEntity courtEntity = courtService.getById(idCourt);
+        courtService.getById(idCourt);
         LocalDate dayOfReservation = LocalDate.parse(day);
 
         List<ReservationEntity> listReservation = reservationRepository.findByCourtAndDay(idCourt,dayOfReservation);
@@ -50,6 +50,7 @@ public class ReservationServiceImplementation implements ReservationService {
                 .collect(Collectors.toList());
     }
 
+    //terminar
     public void bookReservation(ReservationRequestDto reservationDto){
         CourtEntity courtEntity = courtService.getById(reservationDto.getIdCourt());
         PlayerEntity playerEntity = playerService.getById(reservationDto.getIdPlayer());

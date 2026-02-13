@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
+
 @Service
 @AllArgsConstructor
 public class BranchServiceImplementation implements BranchService {
@@ -62,19 +64,25 @@ public class BranchServiceImplementation implements BranchService {
                 .orElseThrow(() -> new BranchNotFoundException("No se encontro registro de la cancha"));
     }
 
+    public BranchResponseDto getByIdResponse(long id){
+        BranchEntity branchEntity = getById(id);
+        return branchMapper.toResponse(branchEntity);
+    }
+
     public List<BranchResponseDto> getAllActiveAndApproved(long idClub){
 
-        List<BranchEntity> branchesEntity = branchRepository.findAllByClubId(idClub);
+        List<BranchEntity> branchesEntity = branchRepository.
+                findActiveAndApprovedByClubId(idClub,
+                ActiveStatus.ACTIVE,
+                VerificationStatus.APPROVED);
 
         if(branchesEntity.isEmpty()){
-            throw new BranchNotFoundException("El club aun no tiene sucursales registradas");
+            throw new BranchNotFoundException("El club no tiene sucursales activas y aprobadas");
         }
 
         return branchesEntity.stream()
-                .filter(b -> b.getActiveStatus() == ActiveStatus.ACTIVE
-                        && b.getVerificationStatus() == VerificationStatus.APPROVED)
                 .map(branchMapper::toResponse)
-                .collect(Collectors.toList());
+                .toList();
 
     }
 
@@ -85,13 +93,7 @@ public class BranchServiceImplementation implements BranchService {
 
         return branchesEntity.stream()
                 .map(branchMapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    public BranchResponseDto getByIdResponse(long id){
-        BranchEntity branchEntity = getById(id);
-
-        return branchMapper.toResponse(branchEntity);
+                .toList();
     }
 
     public BranchResponseDto getByIdApproved(long id){
