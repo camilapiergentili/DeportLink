@@ -1,152 +1,189 @@
-# DeportLink
+# 🏟️ DeportLink – Plataforma de Reservas Deportivas
 
-API para gestionar clubes, sucursales, canchas, agendas y reservas deportivas, con sistema de usuarios, verificación documental y activación de establecimientos.
+API REST backend para gestionar clubes, sucursales, canchas y reservas deportivas. Incluye sistema de verificación documental, activación de establecimientos y control de acceso por roles.
+
+> **Stack:** Java 17 · Spring Boot · Spring Security · JWT · Spring Data JPA · Hibernate · MySQL · Docker
+
+---
+
+## ✨ ¿Qué resuelve DeportLink?
+
+DeportLink conecta jugadores con clubes deportivos, permitiendo que dueños de clubes administren sus instalaciones y que jugadores encuentren y reserven canchas disponibles de forma simple.
+
+- **Owners (dueños)** → registran clubes, sucursales y canchas, cargan documentación y gestionan disponibilidad
+- **Players (jugadores)** → buscan canchas disponibles, hacen reservas y las cancelan
+- **Admin global** → verifica y aprueba establecimientos antes de que salgan al público
+- **Sistema de estados** → cada entidad tiene su propio ciclo de vida (pendiente → aprobado → activo)
+
+---
 
 ## 🧩 Modelo de Dominio
 
+### Jerarquía de usuarios
+
+```
+User (base)
+├── Owner  →  administra clubes y sucursales
+└── Player →  realiza y consulta reservas
+```
+
+### Jerarquía de establecimientos
+
+```
+Club
+└── Branch (Sucursal)
+    └── Court (Cancha)
+        ├── Schedule (Agenda de horarios)
+        └── Reservation (Reserva)
+```
+
+### Estados del sistema
 
-- **👤 User (Clase base)**
-
-Representa a cualquier usuario del sistema.
-
-Herencia:
-
-Owner (Dueño / Administrador de clubes)
-
-Player (Jugador que realiza reservas)
-
-🧑‍💼 Owner
-
-El Owner administra la parte “operativa” de clubes y sucursales.
-
-Funcionalidades:
-
-Puede tener muchos clubes.
-
-Puede activar/desactivar clubes, sucursales y canchas.
-
-Puede cargar documentación para verificación.
-
-Comparte club con otros Owners (relación muchos a muchos).
-
-🧑‍🦽 Player
-
-El jugador puede:
-
-Buscar canchas disponibles.
-
-Crear reservas.
-
-Cancelar o consultar sus reservas.
-
-🏢 Club
-
-Entidad central del sistema.
-
-Relaciones:
-
-Un Owner puede tener varios clubes.
-
-Un Club puede tener varios Owners.
-
-Un Club tiene muchas sucursales.
-
-Estados:
-
-verificationStatus (VerificationStatus):
-Verificado por el dueño de la aplicación (admin global).
-
-PENDING
-
-APPROVED
-
-REJECTED
-
-activeStatus (ActiveStatus):
-Controlado por los Owners del club.
-
-ACTIVE
-
-DESACTIVE
-
-🏪 Branch (Sucursal)
-
-Una sucursal pertenece a un club.
-
-Características:
-
-Puede tener muchas canchas.
-
-Debe presentar documentación.
-
-Debe pasar por verificación.
-
-Estados:
-
-verificationStatus
-
-activeStatus
-
-🏟️ Court (Cancha)
-
-Pertenece a una sucursal.
-
-Relaciones:
-
-Una sucursal tiene muchas canchas.
-
-Una cancha pertenece a un deporte.
-
-Un deporte puede tener muchas canchas.
-
-Una cancha tiene muchas agendas (Schedule).
-
-Una cancha puede tener muchas reservas.
-
-Estado:
-
-activeStatus: activado/desactivado por la sucursal.
-
-🏅 Sport
-
-Define un tipo de deporte (ej: Fútbol, Padel, Tenis).
-
-Un deporte → muchas canchas.
-
-🕒 Schedule (Agenda)
-
-Representa los días y horarios de atención de una cancha.
-
-Relación:
-
-1 cancha → muchas agendas.
-
-Datos típicos:
-
-Día (LocalDate o enum)
-
-Hora inicio
-
-Hora fin
-
-📅 Reservation (Reserva)
-
-Une Player + Court.
-
-Relación:
-
-1 jugador → muchas reservas
-
-1 cancha → muchas reservas
-
-Campos:
-
-Día de la reserva (date)
-
-Horario (startTime)
-
-Duración (duration)
-
-statusReservation (StatusReservation)
-
-PENDING, CONFIRMED, CANCELLED
+Cada entidad tiene dos dimensiones de estado independientes:
+
+| Estado | Valores | Controlado por |
+|---|---|---|
+| `verificationStatus` | PENDING · APPROVED · REJECTED | Admin global |
+| `activeStatus` | ACTIVE · DESACTIVE | Owner del club |
+| `statusReservation` | PENDING · CONFIRMED · CANCELLED | Sistema / Player |
+
+---
+
+## 🔐 Seguridad: JWT + Roles
+
+Autenticación stateless con JSON Web Tokens. El rol del usuario determina qué endpoints puede consumir.
+
+### Flujo de autenticación
+
+```
+POST /auth/login
+→ Body: { "email": "...", "password": "..." }
+← Response: { "token": "eyJhbGci..." }
+```
+
+Incluir en cada request:
+```
+Authorization: Bearer <token>
+```
+
+### Permisos por rol
+
+| Rol | Capacidades |
+|---|---|
+| `ADMIN` | Verificar/rechazar clubes y sucursales, gestión global |
+| `OWNER` | Crear y administrar sus clubes, sucursales y canchas |
+| `PLAYER` | Buscar canchas disponibles, crear y cancelar reservas |
+
+---
+
+## 🛠️ Tecnologías
+
+| Tecnología | Uso |
+|---|---|
+| Java 17 | Lenguaje principal |
+| Spring Boot | Framework base |
+| Spring Security | Seguridad y autenticación |
+| JWT | Tokens de sesión stateless |
+| Spring Data JPA + Hibernate | Persistencia ORM |
+| MySQL | Base de datos relacional |
+| Maven | Gestión de dependencias |
+| Docker / Docker Compose | Contenedores y orquestación |
+
+---
+
+## 🚀 Cómo ejecutar el proyecto
+
+### Opción 1: Con Docker (recomendado)
+
+```bash
+git clone https://github.com/camilapiergentili/DeportLink.git
+cd DeportLink
+git checkout development
+docker-compose up --build
+```
+
+### Opción 2: Local con Maven
+
+**1. Clonar el repositorio**
+```bash
+git clone https://github.com/camilapiergentili/DeportLink.git
+cd DeportLink
+git checkout development
+```
+
+**2. Crear el archivo `.env` en la raíz**
+```env
+DB_URL=jdbc:mysql://localhost:3306/deportlink?useSSL=false&serverTimezone=UTC
+DB_USERNAME=root
+DB_PASSWORD=tu_contraseña
+JWT_SECRET=mi_clave_super_secreta
+SERVER_PORT=8080
+```
+
+**3. Crear la base de datos**
+```sql
+CREATE DATABASE deportlink;
+```
+
+**4. Compilar y ejecutar**
+```bash
+./mvnw clean install
+./mvnw spring-boot:run
+```
+
+La API quedará disponible en: `http://localhost:8080`
+
+---
+
+## 📁 Estructura del proyecto
+
+```
+DeportLink/
+├── src/
+│   └── main/
+│       ├── java/
+│       │   └── com/deportlink/
+│       │       ├── auth/         # JWT y seguridad
+│       │       ├── controllers/  # Endpoints REST
+│       │       ├── models/       # Entidades JPA (User, Club, Branch, Court...)
+│       │       ├── repositories/ # Acceso a datos
+│       │       └── services/     # Lógica de negocio
+│       └── resources/
+│           └── application.properties
+├── compose.yaml
+├── pom.xml
+└── .env
+```
+
+---
+
+## 📌 Endpoints principales
+
+### Autenticación
+| Método | Endpoint | Descripción | Acceso |
+|---|---|---|---|
+| `POST` | `/auth/login` | Login y obtención de token | Público |
+| `POST` | `/auth/register` | Registro de usuario | Público |
+
+### Clubes
+| Método | Endpoint | Descripción | Rol |
+|---|---|---|---|
+| `POST` | `/clubs` | Crear club | Owner |
+| `GET` | `/clubs` | Listar clubes aprobados | Público |
+| `PATCH` | `/clubs/{id}/verify` | Aprobar/rechazar club | Admin |
+| `PATCH` | `/clubs/{id}/activate` | Activar/desactivar club | Owner |
+
+### Canchas y reservas
+| Método | Endpoint | Descripción | Rol |
+|---|---|---|---|
+| `GET` | `/courts/available` | Buscar canchas disponibles | Player |
+| `POST` | `/reservations` | Crear reserva | Player |
+| `GET` | `/reservations/my` | Ver mis reservas | Player |
+| `DELETE` | `/reservations/{id}` | Cancelar reserva | Player |
+
+---
+
+## 👩‍💻 Autora
+
+**Camila Piergentili**  
+Técnica Universitaria en Programación · Profesora de Matemática  
