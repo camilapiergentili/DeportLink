@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/branches")
@@ -48,6 +49,33 @@ public class BranchController {
     public ResponseEntity<BranchResponseDto> getApprovedById(@PathVariable long idBranch){
         BranchResponseDto branch = branchService.getByIdApproved(idBranch);
         return ResponseEntity.ok(branch);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> delete(@PathVariable long id){
+        branchService.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "Sucursal eliminada con exito"));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> update(@PathVariable long id,
+                                         @Valid @RequestBody BranchRequestDto branchDto){
+        branchService.update(id, branchDto);
+        return ResponseEntity.ok("Sucursal eliminada con exito");
+    }
+
+    @PatchMapping("/{idBranch}/activate")
+    public ResponseEntity<Object> activate(@RequestParam long idBranch,
+                                           @PathVariable long idClub){
+        branchService.activedBranch(idBranch, idClub);
+        return ResponseEntity.ok(Map.of("message", "El club fue activado con exito"));
+    }
+
+    @PatchMapping("/{idBranch}/desactivate")
+    public ResponseEntity<Object> desactivate(@RequestParam long idBranch,
+                                              @PathVariable long idClub){
+        branchService.desactivedBranch(idBranch, idClub);
+        return ResponseEntity.ok(Map.of("message", "El club fue activado con exito"));
     }
 
 
