@@ -31,7 +31,7 @@ public class CourtServiceImplementation implements CourtService {
     private final BranchServiceImplementation branchService;
     private final SportServiceImplementation sportService;
 
-    public void create(CourtRequestDto courtDto) {
+    public CourtResponseDto create(CourtRequestDto courtDto) {
 
         BranchEntity branchEntity = branchService.getById(courtDto.getIdBranch());
         SportEntity sportEntity = sportService.getById(courtDto.getIdSport());
@@ -49,11 +49,18 @@ public class CourtServiceImplementation implements CourtService {
         courtEntity.setActiveStatus(ActiveStatus.ACTIVE);
 
         courtRepository.save(courtEntity);
+
+        return courtMapper.toResponse(courtEntity);
     }
 
     public CourtEntity getById(long idCourt){
         return courtRepository.findById(idCourt)
                 .orElseThrow(() -> new CourtNotFoundException("No se encontro la cancha"));
+    }
+
+    public CourtResponseDto getByIdResponse(long idCourt){
+        CourtEntity courtEntity = getById(idCourt);
+        return courtMapper.toResponse(courtEntity);
     }
 
     public CourtResponseDto getByIdApprovedAndActive(long idCourt){
@@ -126,9 +133,17 @@ public class CourtServiceImplementation implements CourtService {
             throw new CourtNotFoundException("No se encontraron datos con los filros seleccionados");
         }
 
-        return courtEntityList.stream().filter(c -> verifyBranchIsVisibleForPlayer(c.getBranch().getVerificationStatus(), c.getActiveStatus()))
+        List<CourtResponseDto> result = courtEntityList.stream()
+                .filter(c -> verifyBranchIsVisibleForPlayer(c.getBranch().getVerificationStatus(),
+                        c.getBranch().getActiveStatus()))
                 .map(courtMapper::toResponse)
                 .collect(Collectors.toList());
+
+        if(result.isEmpty()){
+            throw new BranchNotApprovedException("La sucursal no está disponible");
+        }
+
+        return result;
     }
 
     public CourtEntity getCourtByIdWithSchedule(long idCourt) {

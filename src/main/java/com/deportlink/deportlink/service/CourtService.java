@@ -8,8 +8,8 @@ import java.util.List;
 
 
 public interface CourtService {
-    void create(CourtRequestDto courtDto);
-    CourtEntity getById(long idCourt);
+    CourtResponseDto create(CourtRequestDto courtDto);
+    CourtResponseDto getByIdResponse(long idCourt);
     CourtEntity getCourtByIdWithSchedule(long idCourt);
     void delete(long idCourt);
     CourtResponseDto update(long idCourt, CourtRequestDto courtDto);

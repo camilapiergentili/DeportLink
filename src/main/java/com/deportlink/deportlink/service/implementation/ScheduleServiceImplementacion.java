@@ -66,11 +66,10 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         }
 
         scheduleRepository.saveAll(scheduleSet);
-
     }
 
 
-    public void deleteSchedule(long idCourt,  long idSchedule){
+    public void deleteSchedule(long idSchedule, long idCourt){
 
         ScheduleEntity scheduleEntity = getScheduleForCourt(idCourt, idSchedule);
 
@@ -81,10 +80,9 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         }
 
         scheduleRepository.delete(scheduleEntity);
-
     }
 
-    public void updateSchedule(long idCourt, long idSchedule, String openingNew, String closingNew){
+    public void updateSchedule(long idSchedule, long idCourt, String openingNew, String closingNew){
 
         ScheduleEntity scheduleEntity = getScheduleForCourt(idCourt, idSchedule);
 
@@ -162,7 +160,6 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         if(isOpeningTimeBeforeClosingTime(opening, close)){
             throw new InvalidTimeRangeException("El horario de inicio no puede ser posterior al horario de fin");
         }
-
     }
 
     private List<ScheduleEntity> validateAndFilterSchedules(List<ScheduleEntity> scheduleEntityList, CourtEntity courtEntity){
@@ -198,7 +195,6 @@ public class ScheduleServiceImplementacion implements ScheduleService {
                 throw new ReservationNotUpdateException("Los horarios reservados no estan dentro del nuevo rango horario");
             }
         }
-
     }
 
 

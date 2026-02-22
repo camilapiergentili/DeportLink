@@ -21,7 +21,7 @@ public class SportServiceImplementation implements SportService {
     private final SportRepository sportRepository;
     private final SportMapper sportMapper;
 
-    public void create(SportRequestDto sportDto){
+    public SportResponseDto create(SportRequestDto sportDto){
 
         SportEntity sportEntity = sportMapper.toModel(sportDto);
 
@@ -32,6 +32,8 @@ public class SportServiceImplementation implements SportService {
         }
 
         sportRepository.save(sportEntity);
+
+        return sportMapper.toResponse(sportEntity);
     }
 
     public SportEntity getById(long id){
