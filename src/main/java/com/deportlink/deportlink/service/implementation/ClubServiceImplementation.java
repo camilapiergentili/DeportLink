@@ -7,7 +7,6 @@ import com.deportlink.deportlink.dto.response.OwnerResponseDto;
 import com.deportlink.deportlink.exception.*;
 import com.deportlink.deportlink.mapper.ClubMapper;
 import com.deportlink.deportlink.model.ActiveStatus;
-import com.deportlink.deportlink.model.ClubType;
 import com.deportlink.deportlink.model.VerificationStatus;
 import com.deportlink.deportlink.model.entity.ClubEntity;
 import com.deportlink.deportlink.model.entity.OwnerEntity;
@@ -32,7 +31,7 @@ public class ClubServiceImplementation implements ClubService {
     private final OwnerService ownerService;
 
     @Transactional
-    public void createClub(ClubRequestDto clubDto){
+    public ClubResponseDto createClub(ClubRequestDto clubDto){
 
         if (CollectionUtils.isEmpty(clubDto.getOwnerIds())) {
             throw new IllegalArgumentException("El club debe estar asociado a al menos un dueño");
@@ -58,7 +57,9 @@ public class ClubServiceImplementation implements ClubService {
         clubEntity.setOwners(owners);
         owners.forEach(owner -> owner.getClubs().add(clubEntity));
 
-        clubRepository.save(clubEntity);
+        save(clubEntity);
+
+        return clubMapper.toResponse(clubEntity);
     }
 
     public ClubEntity getById(long id){
@@ -112,11 +113,11 @@ public class ClubServiceImplementation implements ClubService {
 
         boolean requiresReview = !clubEntity.getLegalName().equals(clubDto.getLegalName()) ||
                 !clubEntity.getCuit().equals(clubDto.getCuit()) ||
-                !clubEntity.getClubType().name().equals(clubDto.getClubType());
+                !clubEntity.getClubType().equals(clubDto.getClubType());
 
         clubEntity.setName(clubDto.getName());
         clubEntity.setLegalName(clubDto.getLegalName());
-        clubEntity.setClubType(ClubType.valueOf(clubDto.getClubType()));
+        clubEntity.setClubType(clubDto.getClubType());
         clubEntity.setCuit(clubDto.getCuit());
 
         if(requiresReview) {
@@ -124,7 +125,7 @@ public class ClubServiceImplementation implements ClubService {
             clubEntity.setActiveStatus(ActiveStatus.DESACTIVE);
         }
 
-        clubRepository.save(clubEntity);
+        save(clubEntity);
     }
 
     @Transactional
@@ -145,7 +146,7 @@ public class ClubServiceImplementation implements ClubService {
         clubEntity.getOwners().add(ownerEntity);
         ownerEntity.getClubs().add(clubEntity);
 
-        clubRepository.save(clubEntity);
+        save(clubEntity);
     }
 
     @Transactional
@@ -164,7 +165,7 @@ public class ClubServiceImplementation implements ClubService {
         clubEntity.getOwners().remove(ownerEntity);
         ownerEntity.getClubs().remove(clubEntity);
 
-        clubRepository.save(clubEntity);
+        save(clubEntity);
     }
 
     public void deactivateClub(long idOwner, long idClub){
@@ -175,7 +176,10 @@ public class ClubServiceImplementation implements ClubService {
         activateAndDesactivateClub(idOwner, idClub, ActiveStatus.ACTIVE);
     }
 
-    @Transactional
+    public void save(ClubEntity club){
+        clubRepository.save(club);
+    }
+
     private void activateAndDesactivateClub(long idOwner, long idClub, ActiveStatus status){
         OwnerEntity owner = ownerService.getById(idOwner);
         List<ClubEntity> clubsByOwner = owner.getClubs();
@@ -195,7 +199,7 @@ public class ClubServiceImplementation implements ClubService {
         }
 
         club.setActiveStatus(status);
-        clubRepository.save(club);
+        save(club);
     }
 
 }

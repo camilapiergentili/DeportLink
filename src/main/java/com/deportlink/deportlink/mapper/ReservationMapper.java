@@ -27,9 +27,11 @@ public interface ReservationMapper {
     @Mapping(source = "court.branch.address", target = "address", qualifiedByName = "address")
     ReservationResponseDto toResponse(ReservationEntity reservationEntity);
 
-    @Mapping(source = "day", target = "day", qualifiedByName = "stringToLocalDate")
-    @Mapping(source = "startTime",target = "startTime", qualifiedByName = "stringToLocalTime")
-    @Mapping(source = "durationMinutes", target = "duration", qualifiedByName = "minutesToDuration")
+
+    @Mapping(target = "court", ignore = true)
+    @Mapping(target = "player", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "duration", ignore = true)
     ReservationEntity toModel(ReservationRequestDto reservationRequestDto);
 
     @Named("durationToMinutes")
@@ -37,29 +39,14 @@ public interface ReservationMapper {
         return duration == null ? null : duration.toMinutes();
     }
 
-    @Named("minutesToDuration")
-    static Duration minutesToDuration(Long min){
-        return min == null ? null : Duration.ofMinutes(min);
-    }
-
     @Named("localDateToString")
     static String localDateToString(LocalDate localDate){
         return localDate == null ? null : localDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 
-    @Named("stringToLocalDate")
-    static LocalDate stringToLocalDate(String date){
-        return date == null ? null : LocalDate.parse(date, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-    }
-
     @Named("localTimeToString")
     static String localTimeToString(LocalTime localTime){
         return localTime == null ? null : localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
-    }
-
-    @Named("stringToLocalTime")
-    static LocalTime stringToLocalTime(String time){
-        return time == null ? null : LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"));
     }
 
     @Named("fullName")

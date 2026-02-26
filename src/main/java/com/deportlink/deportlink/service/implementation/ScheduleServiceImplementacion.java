@@ -32,16 +32,16 @@ public class ScheduleServiceImplementacion implements ScheduleService {
     private final ScheduleRepository scheduleRepository;
 
 
-    public void addSchedule(long idCourt, List<ScheduleRequestDto> schedulesDto){
+    public void addSchedule(long idCourt, List<ScheduleRequestDto> schedulesDto) {
 
         //Busco en la base de datos que la cancha exista
         CourtEntity courtEntity = courtService.getById(idCourt);
 
-        if(!courtEntity.getActiveStatus().equals(ActiveStatus.ACTIVE)){
+        if (!courtEntity.getActiveStatus().equals(ActiveStatus.ACTIVE)) {
             throw new ClubNotActivedException("No puede agregar agenda, porque la cancha no se encuentra activa");
         }
 
-        if(!courtEntity.getBranch().getVerificationStatus().equals(VerificationStatus.APPROVED)){
+        if (!courtEntity.getBranch().getVerificationStatus().equals(VerificationStatus.APPROVED)) {
             throw new ClubNotApprovedException("No puede agregar agenda, porque la cancha no se encuentra aprobada");
         }
 
@@ -61,7 +61,7 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         scheduleSet.addAll(uniqueSchedule);
 
         //Por cada agenda se le settea la cancha
-        for(ScheduleEntity s : scheduleSet){
+        for (ScheduleEntity s : scheduleSet) {
             s.setCourt(courtEntity);
         }
 
@@ -69,20 +69,20 @@ public class ScheduleServiceImplementacion implements ScheduleService {
     }
 
 
-    public void deleteSchedule(long idSchedule, long idCourt){
+    public void deleteSchedule(long idSchedule, long idCourt) {
 
         ScheduleEntity scheduleEntity = getScheduleForCourt(idCourt, idSchedule);
 
         int dayMySql = mapJavaDayToMySQL(scheduleEntity.getDay());
 
-        if(scheduleRepository.existsReservationForDay(idCourt, dayMySql)){
+        if (scheduleRepository.existsReservationForDay(idCourt, dayMySql)) {
             throw new IllegalArgumentException("No se puede eliminar, ya que existen reservas para ese dia");
         }
 
         scheduleRepository.delete(scheduleEntity);
     }
 
-    public void updateSchedule(long idSchedule, long idCourt, String openingNew, String closingNew){
+    public void updateSchedule(long idSchedule, long idCourt, String openingNew, String closingNew) {
 
         ScheduleEntity scheduleEntity = getScheduleForCourt(idCourt, idSchedule);
 
@@ -103,12 +103,12 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
     }
 
-    public List<ScheduleResponseDto> getAllByCourt(long idCourt){
+    public List<ScheduleResponseDto> getAllByCourt(long idCourt) {
         CourtEntity courtEntity = courtService.getById(idCourt);
 
         List<ScheduleEntity> scheduleEntityList = new ArrayList<>(courtEntity.getSchedules());
 
-        if(scheduleEntityList.isEmpty()){
+        if (scheduleEntityList.isEmpty()) {
             throw new ScheduleNotFoundException("La cancha aun no tiene agenda disponible");
         }
 
@@ -117,7 +117,7 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
     }
 
-    public ScheduleResponseDto getByDay(long idCourt, LocalDate day){
+    public ScheduleResponseDto getByDay(long idCourt, LocalDate day) {
 
         DayOfWeek dayOfWeek = day.getDayOfWeek();
 
@@ -126,6 +126,11 @@ public class ScheduleServiceImplementacion implements ScheduleService {
                 .orElseThrow(() -> new ScheduleNotFoundException(" No se encontro agenda para el dia seleccionado"));
 
         return scheduleMapper.toResponse(scheduleEntityList);
+    }
+
+    public ScheduleEntity getEntityByDay(long idCourt, DayOfWeek dayOfWeek){
+        return scheduleRepository.findByCourtIdAndDay(idCourt, dayOfWeek)
+                .orElseThrow(() -> new ScheduleNotFoundException("No se encontró agenda para el día seleccionado"));
     }
 
     private boolean isOpeningTimeBeforeClosingTime(LocalTime open, LocalTime close){

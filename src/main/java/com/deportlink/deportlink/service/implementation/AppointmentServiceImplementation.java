@@ -32,13 +32,12 @@ public class AppointmentServiceImplementation {
     private List<LocalTime> generate(AppointmentRequestDto appointmentDto){
 
         CourtEntity courtEntity = courtService.getById(appointmentDto.getIdCourt());
-        LocalDate dayOfAppointment = LocalDate.parse(appointmentDto.getDay());
-        ScheduleResponseDto schedulesByDay = scheduleService.getByDay(courtEntity.getId(), dayOfAppointment);
+        ScheduleResponseDto schedulesByDay = scheduleService.getByDay(courtEntity.getId(), appointmentDto.getDay());
 
         List<LocalTime> appointment = new ArrayList<>();
 
-        LocalTime open = LocalTime.parse(schedulesByDay.getOpeningTime());
-        LocalTime close = LocalTime.parse(schedulesByDay.getClosingTime());
+        LocalTime open = schedulesByDay.getOpeningTime();
+        LocalTime close = schedulesByDay.getClosingTime();
 
         long duration = schedulesByDay.getSlotDuration();
 

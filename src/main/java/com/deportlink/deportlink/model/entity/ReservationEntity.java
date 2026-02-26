@@ -13,7 +13,11 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name= "reservation")
+@Table(name = "reservation",
+        uniqueConstraints = @UniqueConstraint(
+                columnNames = {"court_id", "day", "start_time"}
+        )
+)
 @Getter
 @Setter
 @AllArgsConstructor
@@ -47,7 +51,7 @@ public class ReservationEntity {
     }
 
     public Double getTotalPrice(){
-        return (duration == null || court.getPricePerHour() < 0.0) ?
+        return (duration == null || court.getPricePerHour() <= 0.0) ?
                 0.00 : (duration.toMinutes() / 60.0) * court.getPricePerHour();
     }
 }

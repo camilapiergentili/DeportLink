@@ -170,6 +170,7 @@ public class CourtServiceImplementation implements CourtService {
 
         courtEntity.setName(courtDto.getName());
         courtEntity.setSport(sportEntity);
+        courtEntity.setBranch(branchEntity);
 
         courtRepository.save(courtEntity);
 
@@ -179,8 +180,8 @@ public class CourtServiceImplementation implements CourtService {
     public void updatePrice(long idCourt, double newPrice){
         CourtEntity courtEntity = getById(idCourt);
 
-        if(newPrice < 0){
-            throw new NegativePriceExcepcion("El precio no pueder ser negativo");
+        if(newPrice <= 0){
+            throw new NegativePriceExcepcion("El precio no pueder ser negativo o cero");
         }
 
         courtEntity.setPricePerHour(newPrice);

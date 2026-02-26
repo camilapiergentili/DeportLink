@@ -30,7 +30,7 @@ public class OwnerServiceImplementation implements OwnerService {
     private final OwnerMapper ownerMapper;
     private final ClubMapper clubMapper;
     private final OwnerRepository ownerRepository;
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
 
     public OwnerResponseDto register(OwnerRequestDto ownerDto) throws OwnerAlreadyExistsException {

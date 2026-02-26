@@ -23,10 +23,10 @@ public class ClubController {
     private final ClubServiceImplementation clubService;
 
     @PostMapping
-    public ResponseEntity<Object> create(@RequestBody @Valid ClubRequestDto clubDto){
-        clubService.createClub(clubDto);
+    public ResponseEntity<ClubResponseDto> create(@RequestBody @Valid ClubRequestDto clubDto){
+        ClubResponseDto clubResponse = clubService.createClub(clubDto);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("El club fue creado con exito");
+                .body(clubResponse);
     }
 
     @GetMapping("/{id}")

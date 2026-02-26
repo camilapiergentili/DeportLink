@@ -2,7 +2,6 @@ package com.deportlink.deportlink.model;
 
 public enum StatusReservation {
 
-    DISPONIBLE,
     RESERVADO,
     SEÑADO,
     CANCELADO,

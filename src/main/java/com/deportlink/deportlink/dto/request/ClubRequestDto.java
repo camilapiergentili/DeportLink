@@ -1,5 +1,6 @@
 package com.deportlink.deportlink.dto.request;
 
+import com.deportlink.deportlink.model.ClubType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,7 +12,7 @@ public class ClubRequestDto {
 
     private String name;
     private String legalName;
-    private String clubType;
+    private ClubType clubType;
     private String cuit;
     private Set<Long> ownerIds;
 
