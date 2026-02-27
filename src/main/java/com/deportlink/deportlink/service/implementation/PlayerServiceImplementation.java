@@ -73,4 +73,6 @@ public class PlayerServiceImplementation implements PlayerService {
         PlayerEntity playerEntity = getById(idPlayer);
         playerRepository.delete(playerEntity);
     }
+
+
 }
