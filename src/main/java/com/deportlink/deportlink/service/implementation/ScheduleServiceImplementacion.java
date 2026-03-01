@@ -91,7 +91,7 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
         isValidTimeRange(openingTime, closingTime);
 
-        List<ReservationEntity> reservationEntities = reservationService.getAllReservationForCount(idCourt);
+        List<ReservationEntity> reservationEntities = reservationService.getAllForCount(idCourt);
         List<ReservationEntity> reservationForDay = filterReservationPerDay(reservationEntities, scheduleEntity);
 
         reservationTimeValid(reservationForDay, openingTime, closingTime);

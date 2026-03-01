@@ -43,7 +43,6 @@ public class ReservationServiceImplementation implements ReservationService {
         validateFutureDate(reservationEntity.getDay());
         validateAvailability(courtEntity.getId(), reservationEntity.getDay(), reservationEntity.getStartTime());
 
-
         ScheduleEntity schedule = getAndValidateSchedule(
                 courtEntity.getId(),
                 reservationEntity.getDay(),
@@ -113,7 +112,7 @@ public class ReservationServiceImplementation implements ReservationService {
         return reservationMapper.toResponse(reservationEntity);
     }
 
-    public List<ReservationEntity> getAllReservationForCount(long idCourt){
+    public List<ReservationEntity> getAllForCount(long idCourt){
         List<ReservationEntity> listReservation = reservationRepository.findReservationForCountAndDay(idCourt);
         if(listReservation.isEmpty()){
             throw new ReservationEmptyException("No existen reservaciones activas");
