@@ -7,6 +7,7 @@ import com.deportlink.deportlink.mapper.AddressMapper;
 import com.deportlink.deportlink.mapper.BranchMapper;
 import com.deportlink.deportlink.model.ActiveStatus;
 import com.deportlink.deportlink.model.VerificationStatus;
+import com.deportlink.deportlink.model.entity.AddressEntity;
 import com.deportlink.deportlink.model.entity.BranchEntity;
 import com.deportlink.deportlink.model.entity.ClubEntity;
 import com.deportlink.deportlink.persistence.repository.BranchRepository;
@@ -32,29 +33,25 @@ public class BranchServiceImplementation implements BranchService {
     public void create(BranchRequestDto branchDto){
 
         ClubEntity clubEntity = clubService.getById(branchDto.getIdClub());
-        BranchEntity branchEntity = branchMapper.toModel(branchDto);
 
         if(clubEntity.getVerificationStatus() != VerificationStatus.APPROVED){
             throw new ClubNotApprovedException("El club " + clubEntity.getLegalName() + " aun no esta autorizado para agregar sucursales");
         }
 
-        boolean existsAddress = branchEntity.getAddress()
-                .equals(addressMapper.toModel(branchDto.getAddressRequestDto()));
+        BranchEntity branchEntity = branchMapper.toModel(branchDto);
 
-        if(existsAddress){
+        if(branchRepository.existsByAddressAndClub(branchEntity.getAddress(), clubEntity)){
             throw new BranchAlreadyExistsException("Ya existe una sucursal en esta dirección");
         }
 
-        boolean existsName = branchEntity.getName().equalsIgnoreCase(branchDto.getName());
-
-        if(existsName){
+        if(branchRepository.existsByNameIgnoreCaseAndClub(branchDto.getName(), clubEntity)){
             throw new BranchAlreadyExistsException("Ya existe una sucursal con el nombre " + branchDto.getName());
         }
 
         branchEntity.setClub(clubEntity);
-        clubEntity.getBranches().add(branchEntity);
-
         branchEntity.setVerificationStatus(VerificationStatus.PENDING);
+        branchEntity.setActiveStatus(ActiveStatus.DESACTIVE);
+        clubEntity.getBranches().add(branchEntity);
 
         branchRepository.save(branchEntity);
     }
@@ -121,13 +118,12 @@ public class BranchServiceImplementation implements BranchService {
     @Transactional
     public void update(long id, BranchRequestDto branchDto){
         BranchEntity branchEntity = getById(id);
+        AddressEntity newAddress = addressMapper.toModel(branchDto.getAddressRequestDto());
 
-        BranchEntity branchDtoToModel = branchMapper.toModel(branchDto);
+        boolean requiresReview = !branchEntity.getAddress().equals(newAddress);
 
-        boolean requiresReview = !branchEntity.getAddress().equals(branchDtoToModel.getAddress());
-
-        branchEntity.setName(branchDtoToModel.getName());
-        branchEntity.setAddress(branchDtoToModel.getAddress());
+        branchEntity.setName(branchDto.getName());
+        branchEntity.setAddress(newAddress);
 
         if(requiresReview){
             branchEntity.setVerificationStatus(VerificationStatus.PENDING);
@@ -146,7 +142,7 @@ public class BranchServiceImplementation implements BranchService {
     }
 
     @Transactional
-    private void activateAndDesactivateBranchByClub(long idClub, long idBranch, ActiveStatus status){
+    private void activateAndDesactivateBranchByClub(long idBranch, long idClub, ActiveStatus status){
         ClubEntity clubEntity = clubService.getById(idClub);
 
         BranchEntity branchEntity = clubEntity.getBranches()
