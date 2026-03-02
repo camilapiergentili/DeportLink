@@ -56,7 +56,8 @@ public class AdministratorServiceImplementation implements AdministratorService 
             throw new IllegalStateException("Solo se pueden aprobar/rechazar clubs en estado PENDING");
         }
 
-        if(clubEntity.getActiveStatus().equals(activeStatus) && clubEntity.getVerificationStatus().equals(verificationStatus)){
+        if(clubEntity.getActiveStatus().equals(activeStatus) &&
+                clubEntity.getVerificationStatus().equals(verificationStatus)){
             throw new StatusAlreadyExistsException("El club ya se encuentra " + activeStatus + " y " + verificationStatus);
         }
 

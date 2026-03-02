@@ -29,10 +29,7 @@ AddressEntity {
     private int postalCode;
     private double latitude;
     private double longitude;
-
-    @ManyToOne
-    @JoinColumn(name = "id_player")
-    private PlayerEntity player;
+    private boolean isDefault;
 
     @Override
     public boolean equals(Object o) {

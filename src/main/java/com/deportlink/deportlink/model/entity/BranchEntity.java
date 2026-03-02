@@ -25,7 +25,7 @@ public class BranchEntity {
     private String name;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "address_id", referencedColumnName = "id")
+    @JoinColumn(name = "address_id")
     private AddressEntity address;
 
     @ManyToOne(fetch = FetchType.LAZY)

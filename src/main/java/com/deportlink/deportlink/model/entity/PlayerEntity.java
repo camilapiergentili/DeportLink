@@ -18,8 +18,9 @@ import java.util.Set;
 @NoArgsConstructor
 public class PlayerEntity extends UserEntity {
 
-    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<AddressEntity> addresses;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "id_player")
+    private Set<AddressEntity> addresses = new HashSet<>();
 
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ReservationEntity> reservations = new HashSet<>();
