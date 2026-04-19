@@ -8,14 +8,14 @@ import java.util.List;
 
 
 public interface CourtService {
-    CourtResponseDto create(CourtRequestDto courtDto);
+
+    CourtEntity getById(long idCourt);
     CourtResponseDto getByIdResponse(long idCourt);
     CourtEntity getCourtByIdWithSchedule(long idCourt);
-    void delete(long idCourt);
-    CourtResponseDto update(long idCourt, CourtRequestDto courtDto);
-    void updatePrice(long idCourt, double newPrice);
-    void activateCourt(long idBranch, long idCourt);
-    void desactivedCourt(long idBranch, long idCourt);
-    List<CourtResponseDto> getAll();
+    CourtResponseDto getByIdApprovedAndActive(long idCourt);
+    List<CourtResponseDto> getAllBranch(long idBranch);
+    List<CourtResponseDto> getAllActiveAndApproved();
+    List<CourtResponseDto> getAllByBranchActiveAndApproved(long idBranch);
+    List<CourtResponseDto> getCourtsByBranchAndSport(long idBranch, long idSport);
 
 }

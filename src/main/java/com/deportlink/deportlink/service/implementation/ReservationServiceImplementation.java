@@ -11,10 +11,10 @@ import com.deportlink.deportlink.model.entity.ReservationEntity;
 import com.deportlink.deportlink.model.entity.ScheduleEntity;
 import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import com.deportlink.deportlink.service.ReservationService;
-import com.deportlink.deportlink.service.implementation.court.CourtServiceImplementation;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -22,6 +22,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+//FALTA:
+//Algún método que cambie reservas RESERVADO o REPROGRAMADO a FINALIZADO cuando ya pasó la fecha
 
 
 @Service
@@ -53,9 +55,12 @@ public class ReservationServiceImplementation implements ReservationService {
         reservationEntity.setStatus(StatusReservation.RESERVADO);
         reservationEntity.setDuration(schedule.getSlotDuration());
 
+
         reservationRepository.save(reservationEntity);
 
-        return reservationMapper.toResponse(reservationEntity);
+        ReservationResponseDto reservationResponse = reservationMapper.toResponse(reservationEntity);
+        reservationResponse.setTotalPrice(getTotalPrice(reservationEntity.getDuration(), courtEntity));
+        return reservationResponse;
     }
 
     public void cancel(long idReservation, long idPlayer){
@@ -93,6 +98,14 @@ public class ReservationServiceImplementation implements ReservationService {
             throw new IllegalStateException("La reserva no puede modificarse");
         }
 
+        if(reservationEntity.getStatus().equals(StatusReservation.CANCELADO)){
+            throw new IllegalStateException("No se puede modificar una reserva cancelada");
+        }
+
+        if(reservationEntity.getDay().equals(day) && reservationEntity.getStartTime().equals(time)){
+            throw new IllegalStateException("El nuevo horario es igual al actual");
+        }
+
         validateFutureDate(day);
         validateAvailability(reservationEntity.getCourt().getId(), day, time);
 
@@ -113,15 +126,23 @@ public class ReservationServiceImplementation implements ReservationService {
     }
 
     public List<ReservationEntity> getAllForCount(long idCourt){
-        List<ReservationEntity> listReservation = reservationRepository.findReservationForCountAndDay(idCourt);
-        if(listReservation.isEmpty()){
-            throw new ReservationEmptyException("No existen reservaciones activas");
-        }
-
-        return listReservation;
+        return reservationRepository.findReservationForCountAndDay(idCourt);
     }
 
-    public List<LocalTime> getForDay(long idCourt, LocalDate day){
+    public List<ReservationResponseDto> getByPlayer(long idPlayer){
+        PlayerEntity player = playerService.getById(idPlayer);
+        List<ReservationEntity> reservations = new ArrayList<>(player.getReservations());
+
+        if(reservations.isEmpty()){
+            throw new ReservationNotFoundException("El jugador " + player.getLastName() + " no tiene reservaciones");
+        }
+
+        return reservations.stream()
+                .map(reservationMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<LocalTime> getByCourtAndDay(long idCourt, LocalDate day){
         courtService.getById(idCourt);
 
         List<ReservationEntity> listReservation = reservationRepository.findByCourtAndDay(idCourt,day);
@@ -144,6 +165,11 @@ public class ReservationServiceImplementation implements ReservationService {
     }
 
 
+    private Double getTotalPrice(Duration duration, CourtEntity court){
+        return (duration == null || court.getPricePerHour() <= 0.0) ?
+                0.00 : (duration.toMinutes() / 60.0) * court.getPricePerHour();
+    }
+
     private void slotValido(ScheduleEntity schedule, LocalTime time){
         List<LocalTime>  slotsValid = new ArrayList<>();
         LocalTime current = schedule.getOpeningTime();
@@ -160,7 +186,7 @@ public class ReservationServiceImplementation implements ReservationService {
     }
 
     private void validateAvailability(long idCourt, LocalDate day, LocalTime time){
-        List<LocalTime> appointmentsForDay = getForDay(idCourt, day);
+        List<LocalTime> appointmentsForDay = getByCourtAndDay(idCourt, day);
         if(appointmentsForDay.contains(time)){
             throw new SlotNotAvailableException("El horario ya esta reservado");
         }

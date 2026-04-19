@@ -2,11 +2,9 @@ package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.dto.request.CourtRequestDto;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
-import com.deportlink.deportlink.service.implementation.court.CourtServiceImplementation;
+import com.deportlink.deportlink.service.implementation.CourtServiceImplementation;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.apache.coyote.Response;
-import org.apache.logging.log4j.spi.ObjectThreadContextMap;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -23,7 +23,6 @@ public interface ReservationMapper {
     @Mapping(source = "court.name", target = "nameCourt")
     @Mapping(source = "court.sport.nameSport", target = "sport")
     @Mapping(source = "player", target = "namePlayer", qualifiedByName = "fullName")
-    @Mapping(target = "totalPrice", expression = "java(reservationEntity.getTotalPrice())")
     @Mapping(source = "court.branch.address", target = "address", qualifiedByName = "address")
     ReservationResponseDto toResponse(ReservationEntity reservationEntity);
 

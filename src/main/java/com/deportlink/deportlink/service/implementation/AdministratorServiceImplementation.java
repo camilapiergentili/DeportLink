@@ -1,10 +1,11 @@
 package com.deportlink.deportlink.service.implementation;
 
+import com.deportlink.deportlink.dto.response.BranchResponseDto;
 import com.deportlink.deportlink.dto.response.ClubResponseDto;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
 import com.deportlink.deportlink.exception.CourtNotFoundException;
 import com.deportlink.deportlink.exception.StatusAlreadyExistsException;
-import com.deportlink.deportlink.mapper.ClubMapper;
+import com.deportlink.deportlink.mapper.BranchMapper;
 import com.deportlink.deportlink.mapper.CourtMapper;
 import com.deportlink.deportlink.model.ActiveStatus;
 import com.deportlink.deportlink.model.VerificationStatus;
@@ -12,12 +13,10 @@ import com.deportlink.deportlink.model.entity.BranchEntity;
 import com.deportlink.deportlink.model.entity.ClubEntity;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.service.AdministratorService;
-import com.deportlink.deportlink.service.BranchService;
-import com.deportlink.deportlink.service.CourtService;
-import com.deportlink.deportlink.service.implementation.court.CourtServiceImplementation;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,7 +28,7 @@ public class AdministratorServiceImplementation implements AdministratorService 
     private final CourtServiceImplementation courtService;
     private final BranchServiceImplementation branchService;
     private final CourtMapper courtMapper;
-    private final ClubMapper clubMapper;
+    private final BranchMapper branchMapper;
 
     // CLUB
     public List<ClubResponseDto> getAllClubs(){
@@ -37,39 +36,58 @@ public class AdministratorServiceImplementation implements AdministratorService 
     }
 
     public ClubResponseDto getClubById(long idClub){
-        ClubEntity clubEntity = clubService.getById(idClub);
-        return clubMapper.toResponse(clubEntity);
+        return clubService.getByIdResponse(idClub);
     }
 
     public void approveClub(long idClub){
-        modifyStatusClub(idClub, ActiveStatus.ACTIVE, VerificationStatus.APPROVED);
+        clubService.approve(idClub);
     }
 
     public void rejectClub(long idClub){
-        modifyStatusClub(idClub, ActiveStatus.DESACTIVE, VerificationStatus.REJECTED);
+        clubService.reject(idClub);
     }
 
-    private void modifyStatusClub(long idClub, ActiveStatus activeStatus, VerificationStatus verificationStatus){
-        ClubEntity clubEntity = clubService.getById(idClub);
 
-        if(!clubEntity.getVerificationStatus().equals(VerificationStatus.PENDING)){
-            throw new IllegalStateException("Solo se pueden aprobar/rechazar clubs en estado PENDING");
-        }
-
-        if(clubEntity.getActiveStatus().equals(activeStatus) &&
-                clubEntity.getVerificationStatus().equals(verificationStatus)){
-            throw new StatusAlreadyExistsException("El club ya se encuentra " + activeStatus + " y " + verificationStatus);
-        }
-
-        clubEntity.setActiveStatus(activeStatus);
-        clubEntity.setVerificationStatus(verificationStatus);
-        clubService.save(clubEntity);
-    }
 
     //BRANCH
 
+    public BranchResponseDto getBranchById(long idBranch){
+        BranchEntity branchEntity = branchService.getById(idBranch);
+        return branchMapper.toResponse(branchEntity);
+    }
 
+    public List<BranchResponseDto> getAllByClub(long idClub){
+        ClubEntity clubEntity = clubService.getById(idClub);
+        List<BranchEntity> branchesByClub = new ArrayList<>(clubEntity.getBranches());
+        return branchesByClub.stream().map(branchMapper::toResponse)
+                .toList();
 
+    }
+
+    public void approveBranch(long idBranch){
+        modifyStatusBranch(idBranch, ActiveStatus.ACTIVE, VerificationStatus.APPROVED);
+    }
+
+    public void rejectBranch(long idBranch){
+        modifyStatusBranch(idBranch, ActiveStatus.DESACTIVE, VerificationStatus.REJECTED);
+    }
+
+    private void modifyStatusBranch(long idBranch, ActiveStatus activeStatus, VerificationStatus verificationStatus){
+        BranchEntity branchEntity = branchService.getById(idBranch);
+
+        if(!branchEntity.getVerificationStatus().equals(VerificationStatus.PENDING)){
+            throw new IllegalStateException("Solo se pueden aprobar/rechazar sucursales en estado PENDING");
+        }
+
+        if(branchEntity.getActiveStatus().equals(activeStatus) &&
+                branchEntity.getVerificationStatus().equals(verificationStatus)){
+            throw new StatusAlreadyExistsException("La sucursal ya se encuentra " + activeStatus + " y " + verificationStatus);
+        }
+
+        branchEntity.setActiveStatus(activeStatus);
+        branchEntity.setVerificationStatus(verificationStatus);
+        branchService.save(branchEntity);
+    }
 
     //COURT
     public CourtResponseDto getCourtById(long idCourt){

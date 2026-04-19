@@ -9,9 +9,9 @@ import com.deportlink.deportlink.model.VerificationStatus;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.model.entity.ReservationEntity;
 import com.deportlink.deportlink.model.entity.ScheduleEntity;
+import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import com.deportlink.deportlink.persistence.repository.ScheduleRepository;
 import com.deportlink.deportlink.service.ScheduleService;
-import com.deportlink.deportlink.service.implementation.court.CourtServiceImplementation;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +27,7 @@ import java.util.Set;
 public class ScheduleServiceImplementacion implements ScheduleService {
 
     private final CourtServiceImplementation courtService;
-    private final ReservationServiceImplementation reservationService;
+    private final ReservationRepository reservationRepository;
     private final ScheduleMapper scheduleMapper;
     private final ScheduleRepository scheduleRepository;
 
@@ -57,7 +57,7 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         // Obtengo la agenda de cada cancha
         Set<ScheduleEntity> scheduleSet = courtEntity.getSchedules();
 
-        // a la lista de agenda de cada cancha, le setteo la nueva agenda
+        // a la lista de agenda de cada cancha, le setteamos la nueva agenda
         scheduleSet.addAll(uniqueSchedule);
 
         //Por cada agenda se le settea la cancha
@@ -67,7 +67,6 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
         scheduleRepository.saveAll(scheduleSet);
     }
-
 
     public void deleteSchedule(long idSchedule, long idCourt) {
 
@@ -91,7 +90,7 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
         isValidTimeRange(openingTime, closingTime);
 
-        List<ReservationEntity> reservationEntities = reservationService.getAllForCount(idCourt);
+        List<ReservationEntity> reservationEntities = reservationRepository.findReservationForCountAndDay(idCourt);
         List<ReservationEntity> reservationForDay = filterReservationPerDay(reservationEntities, scheduleEntity);
 
         reservationTimeValid(reservationForDay, openingTime, closingTime);
@@ -168,7 +167,6 @@ public class ScheduleServiceImplementacion implements ScheduleService {
     }
 
     private List<ScheduleEntity> validateAndFilterSchedules(List<ScheduleEntity> scheduleEntityList, CourtEntity courtEntity){
-
         List<ScheduleEntity> uniqueSchedule = scheduleEntityList
                 .stream()
                 .filter(newSchedule -> courtEntity.getSchedules().stream()
@@ -193,10 +191,14 @@ public class ScheduleServiceImplementacion implements ScheduleService {
     private void reservationTimeValid(List<ReservationEntity> reservationForDay, LocalTime openingTime, LocalTime closingTime){
 
         for(ReservationEntity r : reservationForDay){
-            LocalTime startReservation = r.getStartTime();
-            LocalTime endReservation = r.getEndTime();
+            LocalTime start = r.getStartTime();
+            if (start == null || r.getDuration() == null) {
+                throw new IllegalStateException("La reserva con id " + r.getId() + " tiene datos incompletos");
+            }
 
-            if(startReservation.isBefore(openingTime) || endReservation.isAfter(closingTime)){
+            LocalTime end = start.plusMinutes(r.getDuration().toMinutes());
+
+            if(start.isBefore(openingTime) || end.isAfter(closingTime)){
                 throw new ReservationNotUpdateException("Los horarios reservados no estan dentro del nuevo rango horario");
             }
         }

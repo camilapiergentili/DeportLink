@@ -2,11 +2,9 @@ package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.dto.request.BranchRequestDto;
 import com.deportlink.deportlink.dto.response.BranchResponseDto;
-import com.deportlink.deportlink.persistence.repository.BranchRepository;
 import com.deportlink.deportlink.service.implementation.BranchServiceImplementation;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,7 +51,7 @@ public class BranchController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Object> delete(@PathVariable long id){
-        branchService.deleteById(id);
+        branchService.delete(id);
         return ResponseEntity.ok(Map.of("message", "Sucursal eliminada con exito"));
     }
 
@@ -67,14 +65,14 @@ public class BranchController {
     @PatchMapping("/{idBranch}/activate")
     public ResponseEntity<Object> activate(@RequestParam long idBranch,
                                            @PathVariable long idClub){
-        branchService.activedBranch(idBranch, idClub);
+        branchService.active(idBranch, idClub);
         return ResponseEntity.ok(Map.of("message", "El club fue activado con exito"));
     }
 
     @PatchMapping("/{idBranch}/desactivate")
     public ResponseEntity<Object> desactivate(@RequestParam long idBranch,
                                               @PathVariable long idClub){
-        branchService.desactivedBranch(idBranch, idClub);
+        branchService.desactive(idBranch, idClub);
         return ResponseEntity.ok(Map.of("message", "El club fue activado con exito"));
     }
 
