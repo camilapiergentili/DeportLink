@@ -45,4 +45,7 @@ public class ReservationEntity {
     @JoinColumn(name = "player_id")
     private PlayerEntity player;
 
+    @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL)
+    private TicketEntity ticket;
+
 }

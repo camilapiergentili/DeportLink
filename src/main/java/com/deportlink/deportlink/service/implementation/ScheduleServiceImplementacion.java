@@ -14,6 +14,7 @@ import com.deportlink.deportlink.persistence.repository.ScheduleRepository;
 import com.deportlink.deportlink.service.ScheduleService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -31,7 +32,8 @@ public class ScheduleServiceImplementacion implements ScheduleService {
     private final ScheduleMapper scheduleMapper;
     private final ScheduleRepository scheduleRepository;
 
-
+    @Override
+    @Transactional
     public void addSchedule(long idCourt, List<ScheduleRequestDto> schedulesDto) {
 
         //Busco en la base de datos que la cancha exista
@@ -68,6 +70,8 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         scheduleRepository.saveAll(scheduleSet);
     }
 
+    @Override
+    @Transactional
     public void deleteSchedule(long idSchedule, long idCourt) {
 
         ScheduleEntity scheduleEntity = getScheduleForCourt(idCourt, idSchedule);
@@ -81,6 +85,8 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         scheduleRepository.delete(scheduleEntity);
     }
 
+    @Override
+    @Transactional
     public void updateSchedule(long idSchedule, long idCourt, String openingNew, String closingNew) {
 
         ScheduleEntity scheduleEntity = getScheduleForCourt(idCourt, idSchedule);
@@ -102,6 +108,8 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<ScheduleResponseDto> getAllByCourt(long idCourt) {
         CourtEntity courtEntity = courtService.getById(idCourt);
 
@@ -116,6 +124,8 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public ScheduleResponseDto getByDay(long idCourt, LocalDate day) {
 
         DayOfWeek dayOfWeek = day.getDayOfWeek();
@@ -127,7 +137,9 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         return scheduleMapper.toResponse(scheduleEntityList);
     }
 
-    public ScheduleEntity getEntityByDay(long idCourt, DayOfWeek dayOfWeek){
+    @Override
+    @Transactional(readOnly = true)
+    public ScheduleEntity getByDay(long idCourt, DayOfWeek dayOfWeek){
         return scheduleRepository.findByCourtIdAndDay(idCourt, dayOfWeek)
                 .orElseThrow(() -> new ScheduleNotFoundException("No se encontró agenda para el día seleccionado"));
     }

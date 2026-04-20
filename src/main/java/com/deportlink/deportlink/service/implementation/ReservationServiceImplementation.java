@@ -2,6 +2,7 @@ package com.deportlink.deportlink.service.implementation;
 
 import com.deportlink.deportlink.dto.request.ReservationRequestDto;
 import com.deportlink.deportlink.dto.response.ReservationResponseDto;
+import com.deportlink.deportlink.dto.response.TicketResponseDto;
 import com.deportlink.deportlink.exception.*;
 import com.deportlink.deportlink.mapper.ReservationMapper;
 import com.deportlink.deportlink.model.StatusReservation;
@@ -13,6 +14,7 @@ import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import com.deportlink.deportlink.service.ReservationService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -22,8 +24,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-//FALTA:
-//Algún método que cambie reservas RESERVADO o REPROGRAMADO a FINALIZADO cuando ya pasó la fecha
+
 
 
 @Service
@@ -35,7 +36,10 @@ public class ReservationServiceImplementation implements ReservationService {
     private final CourtServiceImplementation courtService;
     private final PlayerServiceImplementation playerService;
     private final ScheduleServiceImplementacion scheduleService;
+    private final TicketServiceImplementation ticketService;
 
+    @Override
+    @Transactional
     public ReservationResponseDto bookReservation(ReservationRequestDto reservationDto){
 
         CourtEntity courtEntity = courtService.getById(reservationDto.getIdCourt());
@@ -58,11 +62,18 @@ public class ReservationServiceImplementation implements ReservationService {
 
         reservationRepository.save(reservationEntity);
 
+        Double total = getTotalPrice(reservationEntity.getDuration(), courtEntity);
+
+        TicketResponseDto ticket = ticketService.generateTicket(reservationEntity, total);
+
         ReservationResponseDto reservationResponse = reservationMapper.toResponse(reservationEntity);
-        reservationResponse.setTotalPrice(getTotalPrice(reservationEntity.getDuration(), courtEntity));
+        reservationResponse.setTicket(ticket);
+
         return reservationResponse;
     }
 
+    @Override
+    @Transactional
     public void cancel(long idReservation, long idPlayer){
         ReservationEntity reservationEntity = getById(idReservation);
         playerService.getById(idPlayer);
@@ -86,6 +97,8 @@ public class ReservationServiceImplementation implements ReservationService {
         reservationRepository.save(reservationEntity);
     }
 
+    @Override
+    @Transactional
     public ReservationResponseDto change(long idReservation, long idPlayer, LocalDate day, LocalTime time){
         playerService.getById(idPlayer);
         ReservationEntity reservationEntity = getById(idReservation);
@@ -125,16 +138,22 @@ public class ReservationServiceImplementation implements ReservationService {
         return reservationMapper.toResponse(reservationEntity);
     }
 
+    //Obtengo todas las reservas de una cancha en particular.
+    @Override
+    @Transactional(readOnly = true)
     public List<ReservationEntity> getAllForCount(long idCourt){
         return reservationRepository.findReservationForCountAndDay(idCourt);
     }
 
+    //Obtengo todas las reservas de un jugador
+    @Override
+    @Transactional(readOnly = true)
     public List<ReservationResponseDto> getByPlayer(long idPlayer){
         PlayerEntity player = playerService.getById(idPlayer);
         List<ReservationEntity> reservations = new ArrayList<>(player.getReservations());
 
         if(reservations.isEmpty()){
-            throw new ReservationNotFoundException("El jugador " + player.getLastName() + " no tiene reservaciones");
+            throw new ReservationNotFoundException(player.getLastName() + " no tiene reservaciones");
         }
 
         return reservations.stream()
@@ -142,6 +161,9 @@ public class ReservationServiceImplementation implements ReservationService {
                 .collect(Collectors.toList());
     }
 
+    //Obtengo las reservas de una cancha un dia particular
+    @Override
+    @Transactional(readOnly = true)
     public List<LocalTime> getByCourtAndDay(long idCourt, LocalDate day){
         courtService.getById(idCourt);
 
@@ -155,11 +177,16 @@ public class ReservationServiceImplementation implements ReservationService {
                 .collect(Collectors.toList());
     }
 
+    //Buscar reservacion por id
+    @Override
+    @Transactional(readOnly = true)
     public ReservationEntity getById(long id){
         return reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException("No existe reservación con el id recibido"));
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public ReservationResponseDto getByIdResponse(long id){
         return reservationMapper.toResponse(getById(id));
     }
@@ -199,7 +226,7 @@ public class ReservationServiceImplementation implements ReservationService {
     }
 
     private ScheduleEntity getAndValidateSchedule(long idCourt, LocalDate day, LocalTime time){
-        ScheduleEntity schedule = scheduleService.getEntityByDay(idCourt, day.getDayOfWeek());
+        ScheduleEntity schedule = scheduleService.getByDay(idCourt, day.getDayOfWeek());
         slotValido(schedule, time);
         return schedule;
     }

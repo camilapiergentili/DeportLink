@@ -20,10 +20,6 @@ public interface ReservationMapper {
     @Mapping(source = "duration", target = "duration", qualifiedByName = "durationToMinutes")
     @Mapping(source = "day", target = "day", qualifiedByName = "localDateToString")
     @Mapping(source = "startTime", target = "startTime", qualifiedByName = "localTimeToString")
-    @Mapping(source = "court.name", target = "nameCourt")
-    @Mapping(source = "court.sport.nameSport", target = "sport")
-    @Mapping(source = "player", target = "namePlayer", qualifiedByName = "fullName")
-    @Mapping(source = "court.branch.address", target = "address", qualifiedByName = "address")
     ReservationResponseDto toResponse(ReservationEntity reservationEntity);
 
 
@@ -31,6 +27,7 @@ public interface ReservationMapper {
     @Mapping(target = "player", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "duration", ignore = true)
+    @Mapping(target = "ticket", ignore = true)
     ReservationEntity toModel(ReservationRequestDto reservationRequestDto);
 
     @Named("durationToMinutes")
@@ -48,15 +45,4 @@ public interface ReservationMapper {
         return localTime == null ? null : localTime.format(DateTimeFormatter.ofPattern("HH:mm"));
     }
 
-    @Named("fullName")
-    static String fullName(PlayerEntity player){
-        if(player == null) return null;
-        return player.getFirstName() + " " + player.getLastName();
-    }
-
-    @Named("address")
-    static String address(AddressEntity addressEntity){
-        if(addressEntity == null) return null;
-        return addressEntity.getStreetName() + " " + addressEntity.getNumber();
-    }
 }
