@@ -6,6 +6,7 @@ import com.deportlink.deportlink.model.entity.ScheduleEntity;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 public interface ScheduleService {
@@ -15,6 +16,7 @@ public interface ScheduleService {
     List<ScheduleResponseDto> getAllByCourt(long idCourt);
     ScheduleResponseDto getByDay(long idCourt, LocalDate day);
     ScheduleEntity getByDay(long idCourt, DayOfWeek dayOfWeek);
+    ScheduleEntity getAndValidateSchedule(long idCourt, LocalDate day, LocalTime time);
 
 
 }

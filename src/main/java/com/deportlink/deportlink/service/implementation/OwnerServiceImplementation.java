@@ -65,9 +65,7 @@ public class OwnerServiceImplementation implements OwnerService {
     @Override
     @Transactional
     public void deleteById(long id){
-        OwnerEntity ownerEntity = ownerRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("El usuario no fue encontrado"));
-
+        OwnerEntity ownerEntity = getById(id);
         ownerRepository.delete(ownerEntity);
     }
 

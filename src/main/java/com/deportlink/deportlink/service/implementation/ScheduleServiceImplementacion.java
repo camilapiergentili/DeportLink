@@ -144,6 +144,29 @@ public class ScheduleServiceImplementacion implements ScheduleService {
                 .orElseThrow(() -> new ScheduleNotFoundException("No se encontró agenda para el día seleccionado"));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ScheduleEntity getAndValidateSchedule(long idCourt, LocalDate day, LocalTime time){
+        ScheduleEntity schedule = getByDay(idCourt, day.getDayOfWeek());
+        slotValido(schedule, time);
+        return schedule;
+    }
+
+    private void slotValido(ScheduleEntity schedule, LocalTime time){
+        List<LocalTime>  slotsValid = new ArrayList<>();
+        LocalTime current = schedule.getOpeningTime();
+        long duration = schedule.getSlotDuration().toMinutes();
+
+        while(!current.plusMinutes(duration).isAfter(schedule.getClosingTime())){
+            slotsValid.add(current);
+            current = current.plusMinutes(duration);
+        }
+
+        if(!slotsValid.contains(time)){
+            throw new SlotNotAvailableException("El horario no corresponde a un turno válido");
+        }
+    }
+
     private boolean isOpeningTimeBeforeClosingTime(LocalTime open, LocalTime close){
         return open.isAfter(close);
     }
