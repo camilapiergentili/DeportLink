@@ -1,4 +1,4 @@
-package com.deportlink.deportlink.service.implementation.court;
+package com.deportlink.deportlink.service.implementation;
 
 import com.deportlink.deportlink.dto.request.CourtRequestDto;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
@@ -13,24 +13,27 @@ import com.deportlink.deportlink.model.entity.BranchEntity;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.model.entity.SportEntity;
 import com.deportlink.deportlink.persistence.repository.CourtRepository;
+import com.deportlink.deportlink.service.CourtAdminService;
+import com.deportlink.deportlink.service.CourtOwnerService;
 import com.deportlink.deportlink.service.CourtService;
-import com.deportlink.deportlink.service.implementation.BranchServiceImplementation;
-import com.deportlink.deportlink.service.implementation.SportServiceImplementation;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
-public class CourtServiceImplementation implements CourtService {
+public class CourtServiceImplementation implements CourtService, CourtOwnerService, CourtAdminService {
 
     private final CourtRepository courtRepository;
     private final CourtMapper courtMapper;
     private final BranchServiceImplementation branchService;
     private final SportServiceImplementation sportService;
 
+    @Override
+    @Transactional
     public CourtResponseDto create(CourtRequestDto courtDto) {
 
         BranchEntity branchEntity = branchService.getById(courtDto.getIdBranch());
@@ -53,16 +56,21 @@ public class CourtServiceImplementation implements CourtService {
         return courtMapper.toResponse(courtEntity);
     }
 
+    @Transactional(readOnly = true)
     public CourtEntity getById(long idCourt){
         return courtRepository.findById(idCourt)
                 .orElseThrow(() -> new CourtNotFoundException("No se encontro la cancha"));
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public CourtResponseDto getByIdResponse(long idCourt){
         CourtEntity courtEntity = getById(idCourt);
         return courtMapper.toResponse(courtEntity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public CourtResponseDto getByIdApprovedAndActive(long idCourt){
         CourtEntity courtEntity = getById(idCourt);
 
@@ -75,6 +83,8 @@ public class CourtServiceImplementation implements CourtService {
         return courtMapper.toResponse(courtEntity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<CourtResponseDto> getAllBranch(long idBranch){
         BranchEntity branchEntity = branchService.getById(idBranch);
 
@@ -84,6 +94,8 @@ public class CourtServiceImplementation implements CourtService {
 
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<CourtResponseDto> getAll(){
         List<CourtEntity> courtEntities = courtRepository.findAll();
 
@@ -93,6 +105,8 @@ public class CourtServiceImplementation implements CourtService {
     }
 
 
+    @Override
+    @Transactional(readOnly = true)
     public List<CourtResponseDto> getAllActiveAndApproved(){
 
         List<CourtEntity> courtEntities = courtRepository
@@ -106,6 +120,8 @@ public class CourtServiceImplementation implements CourtService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<CourtResponseDto> getAllByBranchActiveAndApproved(long idBranch){
         BranchEntity branchEntity = branchService.getById(idBranch);
 
@@ -126,6 +142,8 @@ public class CourtServiceImplementation implements CourtService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<CourtResponseDto> getCourtsByBranchAndSport(long idBranch, long idSport){
         List<CourtEntity> courtEntityList = courtRepository.findByBranch_IdAndSport_Id(idBranch, idSport);
 
@@ -146,16 +164,15 @@ public class CourtServiceImplementation implements CourtService {
         return result;
     }
 
-    public CourtEntity getCourtByIdWithSchedule(long idCourt) {
-        return courtRepository.findByCourtWithSchedule(idCourt)
-                .orElseThrow(() -> new CourtNotFoundException("La cancha que esta buscando no se encuentra registrada"));
-    }
-
+    @Override
+    @Transactional
     public void delete(long idCourt){
         CourtEntity courtToDelete = getById(idCourt);
         courtRepository.delete(courtToDelete);
     }
 
+    @Override
+    @Transactional
     public CourtResponseDto update(long idCourt, CourtRequestDto courtDto) {
         CourtEntity courtEntity = getById(idCourt);
         BranchEntity branchEntity = branchService.getById(courtDto.getIdBranch());
@@ -177,6 +194,8 @@ public class CourtServiceImplementation implements CourtService {
         return courtMapper.toResponse(courtEntity);
     }
 
+    @Override
+    @Transactional
     public void updatePrice(long idCourt, double newPrice){
         CourtEntity courtEntity = getById(idCourt);
 
@@ -188,14 +207,24 @@ public class CourtServiceImplementation implements CourtService {
         courtRepository.save(courtEntity);
     }
 
+    @Override
+    @Transactional
     public void activateCourt(long idBranch, long idCourt){
         ActiveStatus status = ActiveStatus.ACTIVE;
         activateAndDesactivateCourtByBranch(idCourt, idBranch, status);
     }
 
+    @Override
+    @Transactional
     public void desactivedCourt(long idBranch, long idCourt){
         ActiveStatus status = ActiveStatus.DESACTIVE;
         activateAndDesactivateCourtByBranch(idCourt, idBranch, status);
+    }
+
+    @Transactional(readOnly = true)
+    public CourtEntity getCourtByIdWithSchedule(long idCourt) {
+        return courtRepository.findByCourtWithSchedule(idCourt)
+                .orElseThrow(() -> new CourtNotFoundException("La cancha que esta buscando no se encuentra registrada"));
     }
 
     private void activateAndDesactivateCourtByBranch(long idCourt, long idBranch, ActiveStatus status){

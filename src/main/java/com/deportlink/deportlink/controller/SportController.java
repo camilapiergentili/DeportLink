@@ -2,6 +2,7 @@ package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.dto.request.SportRequestDto;
 import com.deportlink.deportlink.dto.response.SportResponseDto;
+import com.deportlink.deportlink.service.SportService;
 import com.deportlink.deportlink.service.implementation.SportServiceImplementation;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class SportController {
 
-    private final SportServiceImplementation sportService;
+    private final SportService sportService;
 
     @PostMapping
     public ResponseEntity<SportResponseDto> create(@Valid @RequestBody SportRequestDto sportDto){

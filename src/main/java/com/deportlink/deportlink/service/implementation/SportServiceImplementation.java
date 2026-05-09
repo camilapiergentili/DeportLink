@@ -10,6 +10,7 @@ import com.deportlink.deportlink.persistence.repository.SportRepository;
 import com.deportlink.deportlink.service.SportService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +22,8 @@ public class SportServiceImplementation implements SportService {
     private final SportRepository sportRepository;
     private final SportMapper sportMapper;
 
+    @Override
+    @Transactional
     public SportResponseDto create(SportRequestDto sportDto){
 
         SportEntity sportEntity = sportMapper.toModel(sportDto);
@@ -36,22 +39,29 @@ public class SportServiceImplementation implements SportService {
         return sportMapper.toResponse(sportEntity);
     }
 
+    @Transactional(readOnly = true)
     public SportEntity getById(long id){
         return sportRepository.findById(id)
                 .orElseThrow(() -> new SportNotFoundException("No se encontro el deporte"));
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public SportResponseDto getByIdResponse(long id) {
         SportEntity sportEntity = getById(id);
         return sportMapper.toResponse(sportEntity);
     }
 
+    @Override
+    @Transactional
     public void delete(long id){
         SportEntity sportEntity = getById(id);
 
         sportRepository.delete(sportEntity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<SportResponseDto> getAll(){
 
         List<SportEntity> sportsEntity = sportRepository.findAll();

@@ -11,25 +11,26 @@ import com.deportlink.deportlink.model.entity.AddressEntity;
 import com.deportlink.deportlink.model.entity.BranchEntity;
 import com.deportlink.deportlink.model.entity.ClubEntity;
 import com.deportlink.deportlink.persistence.repository.BranchRepository;
+import com.deportlink.deportlink.service.BranchAdminService;
+import com.deportlink.deportlink.service.BranchOwnerService;
 import com.deportlink.deportlink.service.BranchService;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
 
 @Service
 @AllArgsConstructor
-public class BranchServiceImplementation implements BranchService {
+public class BranchServiceImplementation implements BranchService, BranchOwnerService, BranchAdminService {
 
     private final BranchRepository branchRepository;
     private final BranchMapper branchMapper;
     private final AddressMapper addressMapper;
     private final ClubServiceImplementation clubService;
 
+    @Override
+    @Transactional
     public void create(BranchRequestDto branchDto){
 
         ClubEntity clubEntity = clubService.getById(branchDto.getIdClub());
@@ -53,19 +54,29 @@ public class BranchServiceImplementation implements BranchService {
         branchEntity.setActiveStatus(ActiveStatus.DESACTIVE);
         clubEntity.getBranches().add(branchEntity);
 
+        save(branchEntity);
+    }
+
+    @Transactional
+    public void save(BranchEntity branchEntity){
         branchRepository.save(branchEntity);
     }
 
+    @Transactional(readOnly = true)
     public BranchEntity getById(long id){
         return branchRepository.findById(id)
                 .orElseThrow(() -> new BranchNotFoundException("No se encontro registro de la cancha"));
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public BranchResponseDto getByIdResponse(long id){
         BranchEntity branchEntity = getById(id);
         return branchMapper.toResponse(branchEntity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<BranchResponseDto> getAllActiveAndApproved(long idClub){
 
         List<BranchEntity> branchesEntity = branchRepository.
@@ -83,6 +94,8 @@ public class BranchServiceImplementation implements BranchService {
 
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<BranchResponseDto> getAll(long idClub){
 
         clubService.getById(idClub);
@@ -93,8 +106,10 @@ public class BranchServiceImplementation implements BranchService {
                 .toList();
     }
 
-    public BranchResponseDto getByIdApproved(long id){
-        BranchEntity branchEntity = getById(id);
+    @Override
+    @Transactional(readOnly = true)
+    public BranchResponseDto getByIdApproved(long idBranch){
+        BranchEntity branchEntity = getById(idBranch);
 
         switch (branchEntity.getVerificationStatus()) {
             case PENDING -> throw new BranchNotApprovedException("La sucursal no se puede mostrar, la documentación está siendo revisada");
@@ -109,12 +124,17 @@ public class BranchServiceImplementation implements BranchService {
         return branchMapper.toResponse(branchEntity);
     }
 
-    public void deleteById(long id){
+
+
+    @Override
+    @Transactional
+    public void delete(long id){
         BranchEntity branchEntity = getById(id);
 
         branchRepository.delete(branchEntity);
     }
 
+    @Override
     @Transactional
     public void update(long id, BranchRequestDto branchDto){
         BranchEntity branchEntity = getById(id);
@@ -130,18 +150,51 @@ public class BranchServiceImplementation implements BranchService {
             branchEntity.setActiveStatus(ActiveStatus.DESACTIVE);
         }
 
-        branchRepository.save(branchEntity);
+        save(branchEntity);
     }
 
-    public void desactivedBranch(long idBranch, long idClub){
+    @Override
+    @Transactional
+    public void desactive(long idBranch, long idClub){
         activateAndDesactivateBranchByClub(idBranch, idClub, ActiveStatus.DESACTIVE);
     }
 
-    public void activedBranch(long idBranch, long idClub){
+    @Override
+    @Transactional
+    public void active(long idBranch, long idClub){
         activateAndDesactivateBranchByClub(idBranch, idClub, ActiveStatus.ACTIVE);
     }
 
+    @Override
     @Transactional
+    public void approve(long idBranch){
+        modifyStatus(idBranch, ActiveStatus.ACTIVE, VerificationStatus.APPROVED);
+    }
+
+    @Override
+    @Transactional
+    public void reject(long idBranch){
+        modifyStatus(idBranch, ActiveStatus.DESACTIVE, VerificationStatus.REJECTED);
+    }
+
+    private void modifyStatus(long idBranch, ActiveStatus activeStatus, VerificationStatus verificationStatus){
+        BranchEntity branchEntity = getById(idBranch);
+
+        if(!branchEntity.getVerificationStatus().equals(VerificationStatus.PENDING)){
+            throw new IllegalStateException("Solo se pueden aprobar/rechazar clubs en estado PENDING");
+        }
+
+        if(branchEntity.getActiveStatus().equals(activeStatus) &&
+                branchEntity.getVerificationStatus().equals(verificationStatus)){
+            throw new StatusAlreadyExistsException("El club ya se encuentra " + activeStatus + " y " + verificationStatus);
+        }
+
+        branchEntity.setActiveStatus(activeStatus);
+        branchEntity.setVerificationStatus(verificationStatus);
+        save(branchEntity);
+    }
+
+
     private void activateAndDesactivateBranchByClub(long idBranch, long idClub, ActiveStatus status){
         ClubEntity clubEntity = clubService.getById(idClub);
 
@@ -161,6 +214,6 @@ public class BranchServiceImplementation implements BranchService {
         }
 
         branchEntity.setActiveStatus(status);
-        branchRepository.save(branchEntity);
+        save(branchEntity);
     }
 }

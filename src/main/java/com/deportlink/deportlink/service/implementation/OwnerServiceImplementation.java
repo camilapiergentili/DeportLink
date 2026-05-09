@@ -14,12 +14,12 @@ import com.deportlink.deportlink.model.entity.ClubEntity;
 import com.deportlink.deportlink.model.entity.OwnerEntity;
 import com.deportlink.deportlink.persistence.repository.OwnerRepository;
 import com.deportlink.deportlink.service.OwnerService;
+import com.deportlink.deportlink.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.Period;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,7 +32,8 @@ public class OwnerServiceImplementation implements OwnerService {
     private final OwnerRepository ownerRepository;
     private final PasswordEncoder passwordEncoder;
 
-
+    @Override
+    @Transactional
     public OwnerResponseDto register(OwnerRequestDto ownerDto) throws OwnerAlreadyExistsException {
 
         OwnerEntity ownerEntity = ownerMapper.toModel(ownerDto);
@@ -49,7 +50,7 @@ public class OwnerServiceImplementation implements OwnerService {
             throw new OwnerAlreadyExistsException("El dueño con email: " + ownerEntity.getEmail() + " ya se encuentra registrado");
         }
 
-        if(!isOfLegalAge(ownerEntity.getDateOfBirth())){
+        if(!DateUtils.isOfLegalAge(ownerEntity.getDateOfBirth())){
             throw new UnderageException("Para registrar un club debes ser mayor de edad");
         }
 
@@ -61,24 +62,30 @@ public class OwnerServiceImplementation implements OwnerService {
         return ownerMapper.toResponse(ownerEntity);
     }
 
+    @Override
+    @Transactional
     public void deleteById(long id){
-        OwnerEntity ownerEntity = ownerRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("El usuario no fue encontrado"));
-
+        OwnerEntity ownerEntity = getById(id);
         ownerRepository.delete(ownerEntity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public OwnerEntity getById(long id){
         return ownerRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("El usuario no fue encontrado"));
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public OwnerResponseDto getByIdResponse(long id){
         OwnerEntity ownerEntity = getById(id);
 
         return ownerMapper.toResponse(ownerEntity);
     }
 
+    @Override
+    @Transactional
     public void update(long id, OwnerRequestDto ownerDto){
 
         OwnerEntity ownerEntity = ownerRepository.findById(id)
@@ -93,6 +100,8 @@ public class OwnerServiceImplementation implements OwnerService {
         ownerRepository.save(ownerEntity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<OwnerResponseDto> getAll(){
 
         return ownerRepository.findAll().
@@ -101,6 +110,8 @@ public class OwnerServiceImplementation implements OwnerService {
                 collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public List<ClubResponseDto> getAllClubsByOwner(long idOwner){
         OwnerEntity ownerEntity = getById(idOwner);
 
@@ -114,7 +125,4 @@ public class OwnerServiceImplementation implements OwnerService {
                 .collect(Collectors.toList());
     }
 
-    private boolean isOfLegalAge(LocalDate dateOfBirth){
-        return Period.between(dateOfBirth, LocalDate.now()).getYears() >= 18;
-    }
 }

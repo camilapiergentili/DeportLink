@@ -1,18 +1,16 @@
 package com.deportlink.deportlink.service.implementation;
 
-import com.deportlink.deportlink.dto.request.AddressRequestDto;
 import com.deportlink.deportlink.dto.request.PlayerRequestDto;
 import com.deportlink.deportlink.dto.response.PlayerResponseDto;
-import com.deportlink.deportlink.exception.AddressNotFoundException;
 import com.deportlink.deportlink.exception.PlayerAlreadyExistsException;
 import com.deportlink.deportlink.exception.UserNotFoundException;
-import com.deportlink.deportlink.mapper.AddressMapper;
 import com.deportlink.deportlink.mapper.PlayerMapper;
 import com.deportlink.deportlink.model.Rol;
-import com.deportlink.deportlink.model.entity.AddressEntity;
+import com.deportlink.deportlink.model.StatusReservation;
 import com.deportlink.deportlink.model.entity.PlayerEntity;
 import com.deportlink.deportlink.persistence.repository.PlayerRepository;
 import com.deportlink.deportlink.service.PlayerService;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,10 +21,11 @@ import org.springframework.stereotype.Service;
 public class PlayerServiceImplementation implements PlayerService {
 
     private final PlayerMapper playerMapper;
-    private final AddressMapper addressMapper;
     private final PasswordEncoder passwordEncoder;
     private final PlayerRepository playerRepository;
 
+    @Override
+    @Transactional
     public PlayerResponseDto register(PlayerRequestDto playerDto){
 
         PlayerEntity playerEntity = playerMapper.toModel(playerDto);
@@ -40,106 +39,71 @@ public class PlayerServiceImplementation implements PlayerService {
 
         playerEntity.getAddresses().forEach(address -> address.setDefault(true));
 
-        playerRepository.save(playerEntity);
+        save(playerEntity);
 
         return playerMapper.toResponse(playerEntity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public PlayerEntity getById(long idPlayer){
         return playerRepository.findById(idPlayer)
                 .orElseThrow(() -> new UserNotFoundException("El jugador no se encontro"));
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public PlayerResponseDto getByIdResponse(long idPlayer){
         PlayerEntity playerEntity = getById(idPlayer);
         return playerMapper.toResponse(playerEntity);
     }
 
+    @Override
+    @Transactional
     public PlayerResponseDto update(long idPlayer, PlayerRequestDto playerDto){
         PlayerEntity playerEntity = getById(idPlayer);
+
+        emailAlreadyExists(playerDto.getEmail(), playerEntity.getId());
 
         playerEntity.setFirstName(playerDto.getFirstName());
         playerEntity.setLastName(playerDto.getLastName());
         playerEntity.setEmail(playerDto.getEmail());
         playerEntity.setPhone(playerDto.getPhone());
 
-        playerRepository.save(playerEntity);
+        save(playerEntity);
 
         return playerMapper.toResponse(playerEntity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
     public void delete(long idPlayer){
-
         PlayerEntity playerEntity = getById(idPlayer);
+
+        // Cancelar reservas activas antes de eliminar
+        playerEntity.getReservations()
+                .stream()
+                .filter(r -> r.getStatus().equals(StatusReservation.RESERVADO) ||
+                        r.getStatus().equals(StatusReservation.REPROGRAMADO))
+                .forEach(r -> r.setStatus(StatusReservation.CANCELADO));
+
+        save(playerEntity); // guarda las reservas canceladas
         playerRepository.delete(playerEntity);
     }
 
-    public void addAddress(long idPlayer, AddressRequestDto addressDto){
-        PlayerEntity player = getById(idPlayer);
-        AddressEntity address = addressMapper.toModel(addressDto);
 
-        // si es la primera dirección, setearla como default automáticamente
-        if(player.getAddresses().isEmpty()){
-            address.setDefault(true);
-        }
-
-        player.getAddresses().add(address);
-        playerRepository.save(player);
+    private void save(PlayerEntity playerEntity){
+        playerRepository.save(playerEntity);
     }
 
-    public void setDefaultAddress(long idPlayer, long idAddress){
-        PlayerEntity player = getById(idPlayer);
-
-        // desmarcar la anterior
-        player.getAddresses()
-                .forEach(a -> a.setDefault(false));
-
-        // marcar la nueva
-        player.getAddresses()
-                .stream()
-                .filter(a -> a.getId() == idAddress)
-                .findFirst()
-                .orElseThrow(() -> new AddressNotFoundException("La dirección no pertenece al jugador"))
-                .setDefault(true);
-
-        playerRepository.save(player);
+    private void emailAlreadyExists(String email, long idPlayer){
+        playerRepository.findByEmail(email)
+                .ifPresent(existing -> {
+                    if(existing.getId() != idPlayer){
+                        throw new PlayerAlreadyExistsException("El email ya está en uso");
+                    }
+                });
     }
 
-    public void deleteAddress(long idPlayer, long idAddress){
-        PlayerEntity player = getById(idPlayer);
-
-        AddressEntity address = player.getAddresses()
-                .stream()
-                .filter(a -> a.getId() == idAddress)
-                .findFirst()
-                .orElseThrow(() -> new AddressNotFoundException("La dirección no pertenece al jugador"));
-
-        if(address.isDefault() && player.getAddresses().size() > 1){
-            throw new IllegalStateException("No puedes eliminar la dirección default, primero seleccioná otra como default");
-        }
-
-        player.getAddresses().remove(address);
-        playerRepository.save(player);
-    }
-
-    public void updateAddress(long idPlayer, long idAddress, AddressRequestDto addressDto){
-        PlayerEntity player = getById(idPlayer);
-
-        AddressEntity address = player.getAddresses()
-                .stream()
-                .filter(a -> a.getId() == idAddress)
-                .findFirst()
-                .orElseThrow(() -> new AddressNotFoundException("La dirección no pertenece al jugador"));
-
-        address.setStreetName(addressDto.getStreetName());
-        address.setNumber(addressDto.getNumber());
-        address.setCity(addressDto.getCity());
-        address.setProvince(addressDto.getProvince());
-        address.setPostalCode(addressDto.getPostalCode());
-        address.setLatitude(addressDto.getLatitude());
-        address.setLongitude(addressDto.getLongitude());
-
-        playerRepository.save(player);
-    }
 
 }

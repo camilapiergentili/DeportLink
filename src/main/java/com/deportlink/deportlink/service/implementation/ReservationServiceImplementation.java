@@ -2,7 +2,9 @@ package com.deportlink.deportlink.service.implementation;
 
 import com.deportlink.deportlink.dto.request.ReservationRequestDto;
 import com.deportlink.deportlink.dto.response.ReservationResponseDto;
+import com.deportlink.deportlink.dto.response.TicketResponseDto;
 import com.deportlink.deportlink.exception.*;
+import com.deportlink.deportlink.factory.ReservationFactory;
 import com.deportlink.deportlink.mapper.ReservationMapper;
 import com.deportlink.deportlink.model.StatusReservation;
 import com.deportlink.deportlink.model.entity.CourtEntity;
@@ -11,10 +13,11 @@ import com.deportlink.deportlink.model.entity.ReservationEntity;
 import com.deportlink.deportlink.model.entity.ScheduleEntity;
 import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import com.deportlink.deportlink.service.ReservationService;
-import com.deportlink.deportlink.service.implementation.court.CourtServiceImplementation;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -22,7 +25,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 
 @Service
 @AllArgsConstructor
@@ -32,48 +34,56 @@ public class ReservationServiceImplementation implements ReservationService {
     private final ReservationRepository reservationRepository;
     private final CourtServiceImplementation courtService;
     private final PlayerServiceImplementation playerService;
-    private final ScheduleServiceImplementacion scheduleService;
+    private final TicketServiceImplementation ticketService;
+    private final PricingServiceImplementation pricingService;
+    private final ReservationFactory reservationFactory;
 
-    public ReservationResponseDto bookReservation(ReservationRequestDto reservationDto){
+    @Override
+    @Transactional
+    public ReservationResponseDto bookReservation(ReservationRequestDto dto) {
 
-        CourtEntity courtEntity = courtService.getById(reservationDto.getIdCourt());
-        PlayerEntity playerEntity = playerService.getById(reservationDto.getIdPlayer());
-        ReservationEntity reservationEntity = reservationMapper.toModel(reservationDto);
+        // 1. Obtener entidades base
+        CourtEntity court = courtService.getById(dto.getIdCourt());
+        PlayerEntity player = playerService.getById(dto.getIdPlayer());
 
-        validateFutureDate(reservationEntity.getDay());
-        validateAvailability(courtEntity.getId(), reservationEntity.getDay(), reservationEntity.getStartTime());
+        // 2. Crear la reserva (factory)
+        ReservationEntity reservation = reservationFactory.create(dto, court, player, StatusReservation.RESERVADO);
 
-        ScheduleEntity schedule = getAndValidateSchedule(
-                courtEntity.getId(),
-                reservationEntity.getDay(),
-                reservationEntity.getStartTime());
+        // 3. Validar reglas de negocio
+        validateReservation(reservation, court);
 
-        reservationEntity.setPlayer(playerEntity);
-        reservationEntity.setCourt(courtEntity);
-        reservationEntity.setStatus(StatusReservation.RESERVADO);
-        reservationEntity.setDuration(schedule.getSlotDuration());
+        // 4. Guardar en DB
+        reservationRepository.save(reservation);
 
-        reservationRepository.save(reservationEntity);
+        // 5. Calcular precio
+        Double total = pricingService.calculate(reservation);
 
-        return reservationMapper.toResponse(reservationEntity);
+        // 6. Generar ticket
+        TicketResponseDto ticket = ticketService.generateTicket(reservation, total);
+
+        // 7. Armar respuesta
+        return buildResponse(reservation, ticket);
     }
 
-    public void cancel(long idReservation, long idPlayer){
+
+    @Override
+    @Transactional
+    public void cancel(long idReservation, long idPlayer) {
         ReservationEntity reservationEntity = getById(idReservation);
         playerService.getById(idPlayer);
 
-        if(reservationEntity.getPlayer().getId() != idPlayer){
+        if (reservationEntity.getPlayer().getId() != idPlayer) {
             throw new ReservationNotFoundException("La reservación no pertenece al jugador seleccionado");
         }
 
-        if(reservationEntity.getStatus().equals(StatusReservation.CANCELADO) ||
-                reservationEntity.getStatus().equals(StatusReservation.FINALIZADO)){
+        if (reservationEntity.getStatus().equals(StatusReservation.CANCELADO) ||
+                reservationEntity.getStatus().equals(StatusReservation.FINALIZADO)) {
             throw new IllegalStateException("La reserva no puede cancelarse");
         }
 
         boolean isCancel = isBefore12hours(reservationEntity.getDay(), reservationEntity.getStartTime());
 
-        if(isCancel){
+        if (isCancel) {
             throw new CancellationTimeExceededException("El turno no puede ser cancelado 12h antes de la reservacion");
         }
 
@@ -81,52 +91,77 @@ public class ReservationServiceImplementation implements ReservationService {
         reservationRepository.save(reservationEntity);
     }
 
-    public ReservationResponseDto change(long idReservation, long idPlayer, LocalDate day, LocalTime time){
+    @Override
+    @Transactional
+    public ReservationResponseDto update(long idReservation, long idPlayer, LocalDate day, LocalTime time) {
         playerService.getById(idPlayer);
         ReservationEntity reservationEntity = getById(idReservation);
 
-        if(reservationEntity.getPlayer().getId() != idPlayer){
+        if (reservationEntity.getPlayer().getId() != idPlayer) {
             throw new ReservationNotFoundException("La reservación no pertenece al jugador seleccionado");
         }
 
-        if(reservationEntity.getStatus().equals(StatusReservation.FINALIZADO)){
+        if (reservationEntity.getStatus().equals(StatusReservation.FINALIZADO)) {
             throw new IllegalStateException("La reserva no puede modificarse");
+        }
+
+        if (reservationEntity.getStatus().equals(StatusReservation.CANCELADO)) {
+            throw new IllegalStateException("No se puede modificar una reserva cancelada");
+        }
+
+        if (reservationEntity.getDay().equals(day) && reservationEntity.getStartTime().equals(time)) {
+            throw new IllegalStateException("El nuevo horario es igual al actual");
         }
 
         validateFutureDate(day);
         validateAvailability(reservationEntity.getCourt().getId(), day, time);
 
-        ScheduleEntity scheduleEntity = getAndValidateSchedule(
-                reservationEntity.getCourt().getId(),
+        reservationFactory.applyScheduleAndStatus(
+                reservationEntity,
+                reservationEntity.getCourt(),
+                reservationEntity.getPlayer(),
                 day,
-                time);
-
-
-        reservationEntity.setDay(day);
-        reservationEntity.setStartTime(time);
-        reservationEntity.setDuration(scheduleEntity.getSlotDuration());
-        reservationEntity.setStatus(StatusReservation.REPROGRAMADO);
+                time,
+                StatusReservation.REPROGRAMADO
+        );
 
         reservationRepository.save(reservationEntity);
 
         return reservationMapper.toResponse(reservationEntity);
     }
 
-    public List<ReservationEntity> getAllForCount(long idCourt){
-        List<ReservationEntity> listReservation = reservationRepository.findReservationForCountAndDay(idCourt);
-        if(listReservation.isEmpty()){
-            throw new ReservationEmptyException("No existen reservaciones activas");
-        }
-
-        return listReservation;
+    //Obtengo todas las reservas de una cancha en particular.
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReservationEntity> getAllForCount(long idCourt) {
+        return reservationRepository.findReservationForCountAndDay(idCourt);
     }
 
-    public List<LocalTime> getForDay(long idCourt, LocalDate day){
+    //Obtengo todas las reservas de un jugador
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReservationResponseDto> getByPlayer(long idPlayer) {
+        PlayerEntity player = playerService.getById(idPlayer);
+        List<ReservationEntity> reservations = new ArrayList<>(player.getReservations());
+
+        if (reservations.isEmpty()) {
+            throw new ReservationNotFoundException(player.getLastName() + " no tiene reservaciones");
+        }
+
+        return reservations.stream()
+                .map(reservationMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    //Obtengo las reservas de una cancha un dia particular
+    @Override
+    @Transactional(readOnly = true)
+    public List<LocalTime> getByCourtAndDay(long idCourt, LocalDate day) {
         courtService.getById(idCourt);
 
-        List<ReservationEntity> listReservation = reservationRepository.findByCourtAndDay(idCourt,day);
+        List<ReservationEntity> listReservation = reservationRepository.findByCourtAndDay(idCourt, day);
 
-        if(listReservation.isEmpty()){
+        if (listReservation.isEmpty()) {
             return List.of();
         }
 
@@ -134,33 +169,43 @@ public class ReservationServiceImplementation implements ReservationService {
                 .collect(Collectors.toList());
     }
 
-    public ReservationEntity getById(long id){
+    //Buscar reservacion por id
+    @Override
+    @Transactional(readOnly = true)
+    public ReservationEntity getById(long id) {
         return reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException("No existe reservación con el id recibido"));
     }
 
-    public ReservationResponseDto getByIdResponse(long id){
+    @Override
+    @Transactional(readOnly = true)
+    public ReservationResponseDto getByIdResponse(long id) {
         return reservationMapper.toResponse(getById(id));
     }
 
 
-    private void slotValido(ScheduleEntity schedule, LocalTime time){
-        List<LocalTime>  slotsValid = new ArrayList<>();
-        LocalTime current = schedule.getOpeningTime();
-        long duration = schedule.getSlotDuration().toMinutes();
+    private ReservationResponseDto buildResponse(
+            ReservationEntity reservation,
+            TicketResponseDto ticket
+    ) {
+        ReservationResponseDto response = reservationMapper.toResponse(reservation);
+        response.setTicket(ticket);
+        return response;
+    }
 
-        while(!current.plusMinutes(duration).isAfter(schedule.getClosingTime())){
-            slotsValid.add(current);
-            current = current.plusMinutes(duration);
-        }
+    private void validateReservation(ReservationEntity reservation, CourtEntity court) {
 
-        if(!slotsValid.contains(time)){
-            throw new SlotNotAvailableException("El horario no corresponde a un turno válido");
-        }
+        validateFutureDate(reservation.getDay());
+
+        validateAvailability(
+                court.getId(),
+                reservation.getDay(),
+                reservation.getStartTime()
+        );
     }
 
     private void validateAvailability(long idCourt, LocalDate day, LocalTime time){
-        List<LocalTime> appointmentsForDay = getForDay(idCourt, day);
+        List<LocalTime> appointmentsForDay = getByCourtAndDay(idCourt, day);
         if(appointmentsForDay.contains(time)){
             throw new SlotNotAvailableException("El horario ya esta reservado");
         }
@@ -170,12 +215,6 @@ public class ReservationServiceImplementation implements ReservationService {
         if(day.isBefore(LocalDate.now())){
             throw new InvalidTimeRangeException("La fecha seleccionada ya pasó");
         }
-    }
-
-    private ScheduleEntity getAndValidateSchedule(long idCourt, LocalDate day, LocalTime time){
-        ScheduleEntity schedule = scheduleService.getEntityByDay(idCourt, day.getDayOfWeek());
-        slotValido(schedule, time);
-        return schedule;
     }
 
     private boolean isBefore12hours(LocalDate reservationDay, LocalTime reservationTime){

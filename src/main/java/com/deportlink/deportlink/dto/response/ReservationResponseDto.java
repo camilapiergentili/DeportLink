@@ -11,10 +11,6 @@ public class ReservationResponseDto {
     private String day;
     private String startTime;
     private Long duration;
-    private String nameCourt;
-    private String sport;
-    private String namePlayer;
-    private double totalPrice;
-    private String address;
+    private TicketResponseDto ticket;
 
 }
