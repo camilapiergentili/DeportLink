@@ -10,5 +10,4 @@ public interface PlayerService {
     PlayerResponseDto getByIdResponse(long idPlayer);
     PlayerResponseDto update(long idPlayer, PlayerRequestDto playerDto);
     void delete(long idPlayer);
-    void save(PlayerEntity playerEntity);
 }

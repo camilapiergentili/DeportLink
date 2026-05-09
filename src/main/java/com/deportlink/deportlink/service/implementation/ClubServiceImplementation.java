@@ -152,12 +152,7 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
         OwnerResponseDto ownerResponse = ownerService.register(ownerDto);
         OwnerEntity ownerEntity = ownerService.getById(ownerResponse.getId());
 
-        Set<OwnerEntity> clubEntityOwners = clubEntity.getOwners();
-
-        boolean exists = clubEntityOwners.stream().
-                anyMatch(o -> o.getCuil().equals(ownerEntity.getCuil()));
-
-        if(exists){
+        if(existsOwner(clubEntity, ownerEntity.getCuil())){
             throw new OwnerAlreadyExistsException("El dueño ya esta como propietario del club");
         }
 
@@ -173,11 +168,7 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
         ClubEntity clubEntity = getById(idClub);
         OwnerEntity ownerEntity = ownerService.getById(idOwner);
 
-        boolean existsOwner = clubEntity.getOwners()
-                .stream()
-                .anyMatch(o -> o.getCuil().equals(ownerEntity.getCuil()));
-
-        if(!existsOwner){
+        if(!existsOwner(clubEntity, ownerEntity.getCuil())){
             throw new OwnerNotInClubException("La persona que quieres eliminar, no pertenece al club");
         }
 
@@ -197,12 +188,6 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
     @Transactional
     public void activate(long idOwner, long idClub){
         activateAndDesactivateClub(idOwner, idClub, ActiveStatus.ACTIVE);
-    }
-
-    @Override
-    @Transactional
-    public void save(ClubEntity club){
-        clubRepository.save(club);
     }
 
     @Override
@@ -234,6 +219,12 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
         save(clubEntity);
     }
 
+    private Boolean existsOwner(ClubEntity clubEntity, String cuil){
+        return clubEntity.getOwners()
+                .stream()
+                .anyMatch(o -> o.getCuil().equals(cuil));
+    }
+
     private void activateAndDesactivateClub(long idOwner, long idClub, ActiveStatus status){
         OwnerEntity owner = ownerService.getById(idOwner);
         List<ClubEntity> clubsByOwner = owner.getClubs();
@@ -254,6 +245,10 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
 
         club.setActiveStatus(status);
         save(club);
+    }
+
+    private void save(ClubEntity club){
+        clubRepository.save(club);
     }
 
 }

@@ -56,7 +56,6 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
         return courtMapper.toResponse(courtEntity);
     }
 
-    @Override
     @Transactional(readOnly = true)
     public CourtEntity getById(long idCourt){
         return courtRepository.findById(idCourt)
@@ -166,13 +165,6 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public CourtEntity getCourtByIdWithSchedule(long idCourt) {
-        return courtRepository.findByCourtWithSchedule(idCourt)
-                .orElseThrow(() -> new CourtNotFoundException("La cancha que esta buscando no se encuentra registrada"));
-    }
-
-    @Override
     @Transactional
     public void delete(long idCourt){
         CourtEntity courtToDelete = getById(idCourt);
@@ -227,6 +219,12 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
     public void desactivedCourt(long idBranch, long idCourt){
         ActiveStatus status = ActiveStatus.DESACTIVE;
         activateAndDesactivateCourtByBranch(idCourt, idBranch, status);
+    }
+
+    @Transactional(readOnly = true)
+    public CourtEntity getCourtByIdWithSchedule(long idCourt) {
+        return courtRepository.findByCourtWithSchedule(idCourt)
+                .orElseThrow(() -> new CourtNotFoundException("La cancha que esta buscando no se encuentra registrada"));
     }
 
     private void activateAndDesactivateCourtByBranch(long idCourt, long idBranch, ActiveStatus status){

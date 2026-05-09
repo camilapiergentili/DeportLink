@@ -8,10 +8,6 @@ import java.util.List;
 
 public interface BranchService {
 
-    BranchEntity getById(long id);
     List<BranchResponseDto> getAllActiveAndApproved(long idClub);
-    List<BranchResponseDto> getAll(long idClub);
-    BranchResponseDto getByIdResponse(long id);
     BranchResponseDto getByIdApproved(long id);
-
 }

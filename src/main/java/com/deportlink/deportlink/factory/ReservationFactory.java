@@ -66,4 +66,7 @@ public class ReservationFactory {
         reservation.setStatus(status);
         reservation.setDuration(schedule.getSlotDuration());
     }
+
+
+
 }

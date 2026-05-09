@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.dto.request.AppointmentRequestDto;
-import com.deportlink.deportlink.service.implementation.AppointmentServiceImplementation;
+import com.deportlink.deportlink.service.AppointmentService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AppointmentController {
 
-    final private AppointmentServiceImplementation appointmentService;
+    final private AppointmentService appointmentService;
 
     @GetMapping
     public ResponseEntity<List<LocalTime>> getAvailable(@RequestBody @Valid AppointmentRequestDto appointmentDto){

@@ -57,13 +57,11 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
         save(branchEntity);
     }
 
-    @Override
     @Transactional
     public void save(BranchEntity branchEntity){
         branchRepository.save(branchEntity);
     }
 
-    @Override
     @Transactional(readOnly = true)
     public BranchEntity getById(long id){
         return branchRepository.findById(id)
@@ -125,6 +123,8 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
 
         return branchMapper.toResponse(branchEntity);
     }
+
+
 
     @Override
     @Transactional

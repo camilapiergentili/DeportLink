@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -34,6 +35,12 @@ public class OwnerController {
                 .body(response);
     }
 
+    @GetMapping
+    public ResponseEntity<List<OwnerResponseDto>> getAll() {
+        List<OwnerResponseDto> response = ownerService.getAll();
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<OwnerResponseDto> getById(@PathVariable long id){
         OwnerResponseDto ownerResponse = ownerService.getByIdResponse(id);
@@ -52,6 +59,7 @@ public class OwnerController {
         ownerService.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Owner eliminado con exito"));
     }
+
 
 
 

@@ -4,4 +4,5 @@ public interface ClubAdminService {
 
     void approve(long idClub);
     void reject(long idClub);
+
 }

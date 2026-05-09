@@ -91,12 +91,10 @@ public class PlayerServiceImplementation implements PlayerService {
         playerRepository.delete(playerEntity);
     }
 
-    @Override
-    @Transactional
-    public void save(PlayerEntity playerEntity){
+
+    private void save(PlayerEntity playerEntity){
         playerRepository.save(playerEntity);
     }
-
 
     private void emailAlreadyExists(String email, long idPlayer){
         playerRepository.findByEmail(email)

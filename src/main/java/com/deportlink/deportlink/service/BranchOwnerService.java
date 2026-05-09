@@ -9,5 +9,4 @@ public interface BranchOwnerService {
     void update(long id, BranchRequestDto branchDto);
     void desactive(long idBranch, long idClub);
     void active(long idBranch, long idClub);
-    void save(BranchEntity branchEntity);
 }
