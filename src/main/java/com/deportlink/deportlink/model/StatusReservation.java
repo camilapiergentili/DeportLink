@@ -2,13 +2,18 @@ package com.deportlink.deportlink.model;
 
 public enum StatusReservation {
 
-    RESERVADO,
-    SEÑADO,
-    CANCELADO,
-    FINALIZADO,
-    NO_ASISTIO,
-    BLOQUEADO,
-    PENDIENTE_PAGO,
-    REPROGRAMADO,
-    EN_CURSO
+    RESERVADO(true),
+    FINALIZADO(false),
+    CANCELADO(false),
+    REPROGRAMADO(false);
+
+    private final boolean occupiesSlot;
+
+    StatusReservation(boolean occupiesSlot) {
+        this.occupiesSlot = occupiesSlot;
+    }
+
+    public boolean occupiesSlot() {
+        return occupiesSlot;
+    }
 }

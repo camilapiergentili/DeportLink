@@ -5,6 +5,7 @@ import com.deportlink.deportlink.dto.response.ScheduleResponseDto;
 import com.deportlink.deportlink.exception.*;
 import com.deportlink.deportlink.mapper.ScheduleMapper;
 import com.deportlink.deportlink.model.ActiveStatus;
+import com.deportlink.deportlink.model.StatusReservation;
 import com.deportlink.deportlink.model.VerificationStatus;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.model.entity.ReservationEntity;
@@ -20,6 +21,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -96,7 +98,11 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
         isValidTimeRange(openingTime, closingTime);
 
-        List<ReservationEntity> reservationEntities = reservationRepository.findReservationForCountAndDay(idCourt);
+        List<StatusReservation> activeStatuses = Arrays.stream(StatusReservation.values())
+                .filter(StatusReservation::occupiesSlot)
+                .toList();
+
+        List<ReservationEntity> reservationEntities = reservationRepository.findActiveByCourt(idCourt, activeStatuses);
         List<ReservationEntity> reservationForDay = filterReservationPerDay(reservationEntities, scheduleEntity);
 
         reservationTimeValid(reservationForDay, openingTime, closingTime);

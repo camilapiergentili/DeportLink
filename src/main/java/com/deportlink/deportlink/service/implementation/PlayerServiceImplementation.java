@@ -92,7 +92,7 @@ public class PlayerServiceImplementation implements PlayerService {
     }
 
 
-    private void save(PlayerEntity playerEntity){
+    public void save(PlayerEntity playerEntity){
         playerRepository.save(playerEntity);
     }
 

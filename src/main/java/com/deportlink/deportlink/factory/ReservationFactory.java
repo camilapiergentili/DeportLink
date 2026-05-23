@@ -26,19 +26,20 @@ public class ReservationFactory {
 
 
     public ReservationEntity create(
-            ReservationRequestDto dto,
             CourtEntity court,
             PlayerEntity player,
+            LocalDate day,
+            LocalTime time,
             StatusReservation status
     ) {
-        ReservationEntity reservation = reservationMapper.toModel(dto);
+        ReservationEntity reservation = new ReservationEntity();
 
         applyScheduleAndStatus(
                 reservation,
                 court,
                 player,
-                reservation.getDay(),
-                reservation.getStartTime(),
+                day,
+                time,
                 status
         );
 

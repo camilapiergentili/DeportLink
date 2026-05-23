@@ -1,5 +1,6 @@
 package com.deportlink.deportlink.model.entity;
 
+import com.deportlink.deportlink.exception.ReservationNotUpdateException;
 import com.deportlink.deportlink.model.StatusReservation;
 import com.deportlink.deportlink.persistence.converter.DurationConverter;
 import jakarta.persistence.*;
@@ -13,11 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "reservation",
-        uniqueConstraints = @UniqueConstraint(
-                columnNames = {"court_id", "day", "start_time"}
-        )
-)
+@Table(name = "reservation")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -47,5 +44,18 @@ public class ReservationEntity {
 
     @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL)
     private TicketEntity ticket;
+
+    public void cancel() {
+
+        if(this.status == StatusReservation.CANCELADO ||
+                this.status == StatusReservation.FINALIZADO){
+
+            throw new ReservationNotUpdateException(
+                    "La reserva no puede cancelarse"
+            );
+        }
+
+        this.status = StatusReservation.CANCELADO;
+    }
 
 }
