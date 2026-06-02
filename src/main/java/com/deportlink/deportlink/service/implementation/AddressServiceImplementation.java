@@ -23,7 +23,7 @@ public class AddressServiceImplementation implements AddressService {
         PlayerEntity player = playerService.getById(idPlayer);
         AddressEntity address = addressMapper.toModel(addressDto);
 
-        // si es la primera dirección, setearla como default automáticamente
+        //sí es la primera dirección, setearla como default automáticamente
         if (player.getAddresses().isEmpty()) {
             address.setDefault(true);
         }

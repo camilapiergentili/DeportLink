@@ -68,6 +68,4 @@ public class ReservationFactory {
         reservation.setDuration(schedule.getSlotDuration());
     }
 
-
-
 }

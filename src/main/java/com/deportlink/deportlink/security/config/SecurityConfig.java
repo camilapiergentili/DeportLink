@@ -1,4 +1,4 @@
-package com.deportlink.deportlink.config.security;
+package com.deportlink.deportlink.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
