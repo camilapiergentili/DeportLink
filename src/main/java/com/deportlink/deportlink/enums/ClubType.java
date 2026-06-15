@@ -1,4 +1,4 @@
-package com.deportlink.deportlink.model;
+package com.deportlink.deportlink.enums;
 
 public enum ClubType {
     SA,         // Sociedad Anónima

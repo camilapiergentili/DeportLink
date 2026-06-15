@@ -1,6 +1,6 @@
 package com.deportlink.deportlink.persistence.repository;
 
-import com.deportlink.deportlink.model.StatusReservation;
+import com.deportlink.deportlink.enums.StatusReservation;
 import com.deportlink.deportlink.model.entity.ReservationEntity;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 @Repository

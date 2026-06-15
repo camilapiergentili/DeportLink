@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 @Entity
 @Table(name= "users")
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -14,7 +15,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserEntity {
+public class UserEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
