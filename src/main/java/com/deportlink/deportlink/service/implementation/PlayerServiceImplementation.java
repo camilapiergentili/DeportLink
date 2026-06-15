@@ -6,7 +6,7 @@ import com.deportlink.deportlink.exception.PlayerAlreadyExistsException;
 import com.deportlink.deportlink.exception.UserNotFoundException;
 import com.deportlink.deportlink.mapper.PlayerMapper;
 import com.deportlink.deportlink.model.Rol;
-import com.deportlink.deportlink.model.StatusReservation;
+import com.deportlink.deportlink.enums.StatusReservation;
 import com.deportlink.deportlink.model.entity.PlayerEntity;
 import com.deportlink.deportlink.persistence.repository.PlayerRepository;
 import com.deportlink.deportlink.service.PlayerService;
@@ -76,7 +76,7 @@ public class PlayerServiceImplementation implements PlayerService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void delete(long idPlayer){
         PlayerEntity playerEntity = getById(idPlayer);
 

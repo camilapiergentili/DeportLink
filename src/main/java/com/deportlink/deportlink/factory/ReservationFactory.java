@@ -1,8 +1,7 @@
 package com.deportlink.deportlink.factory;
 
-import com.deportlink.deportlink.dto.request.ReservationRequestDto;
 import com.deportlink.deportlink.mapper.ReservationMapper;
-import com.deportlink.deportlink.model.StatusReservation;
+import com.deportlink.deportlink.enums.StatusReservation;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.model.entity.PlayerEntity;
 import com.deportlink.deportlink.model.entity.ReservationEntity;

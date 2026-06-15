@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.model.entity;
 
-import com.deportlink.deportlink.model.ActiveStatus;
-import com.deportlink.deportlink.model.VerificationStatus;
+import com.deportlink.deportlink.enums.ActiveStatus;
+import com.deportlink.deportlink.enums.VerificationStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

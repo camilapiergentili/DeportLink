@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.persistence.repository;
 
-import com.deportlink.deportlink.model.ActiveStatus;
-import com.deportlink.deportlink.model.VerificationStatus;
+import com.deportlink.deportlink.enums.ActiveStatus;
+import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.model.entity;
 
 import com.deportlink.deportlink.exception.ReservationNotUpdateException;
-import com.deportlink.deportlink.model.StatusReservation;
+import com.deportlink.deportlink.enums.StatusReservation;
 import com.deportlink.deportlink.persistence.converter.DurationConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

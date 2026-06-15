@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.dto.response;
 
-import com.deportlink.deportlink.model.ActiveStatus;
-import com.deportlink.deportlink.model.VerificationStatus;
+import com.deportlink.deportlink.enums.ActiveStatus;
+import com.deportlink.deportlink.enums.VerificationStatus;
 import lombok.Getter;
 import lombok.Setter;
 
