@@ -1,6 +1,6 @@
 package com.deportlink.deportlink.dto.request;
 
-import com.deportlink.deportlink.model.ClubType;
+import com.deportlink.deportlink.enums.ClubType;
 import lombok.Getter;
 import lombok.Setter;
 

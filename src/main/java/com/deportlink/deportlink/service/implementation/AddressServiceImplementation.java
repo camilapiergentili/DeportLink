@@ -7,10 +7,12 @@ import com.deportlink.deportlink.model.entity.AddressEntity;
 import com.deportlink.deportlink.model.entity.PlayerEntity;
 import com.deportlink.deportlink.persistence.repository.AddressRepository;
 import com.deportlink.deportlink.service.AddressService;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@AllArgsConstructor
 public class AddressServiceImplementation implements AddressService {
 
     private PlayerServiceImplementation playerService;
