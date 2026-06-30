@@ -13,6 +13,7 @@ import com.deportlink.deportlink.model.entity.ReservationEntity;
 import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import com.deportlink.deportlink.service.ReservationService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class ReservationServiceImplementation implements ReservationService {
@@ -41,49 +43,69 @@ public class ReservationServiceImplementation implements ReservationService {
     @Override
     @Transactional
     public ReservationResponseDto book(ReservationRequestDto dto) {
+        log.info("Booking reservation: courtId={}, playerId={}, day={}, startTime={}", 
+                dto.getIdCourt(), dto.getIdPlayer(), dto.getDay(), dto.getStartTime());
 
-        // 1. Obtener entidades base
-        CourtEntity court = courtService.getById(dto.getIdCourt());
-        PlayerEntity player = playerService.getById(dto.getIdPlayer());
+        try {
+            // 1. Obtener entidades base
+            CourtEntity court = courtService.getById(dto.getIdCourt());
+            PlayerEntity player = playerService.getById(dto.getIdPlayer());
 
-        // 2. Crear la reserva (factory)
-        ReservationEntity reservation = reservationFactory.create(court, player, dto.getDay(), dto.getStartTime(), StatusReservation.RESERVADO);
+            // 2. Crear la reserva (factory)
+            ReservationEntity reservation = reservationFactory.create(court, player, dto.getDay(), dto.getStartTime(), StatusReservation.RESERVADO);
 
-        // 3. Validar reglas de negocio
-        validateReservation(reservation, court);
+            // 3. Validar reglas de negocio
+            validateReservation(reservation, court);
 
-        // 4. Armar respuesta
-        return processAndRespond(reservation);
+            // 4. Armar respuesta
+            ReservationResponseDto response = processAndRespond(reservation);
+            log.info("Reservation booked successfully: reservationId={}", response.getId());
+            return response;
+        } catch (Exception e) {
+            log.error("Failed to book reservation: courtId={}, playerId={}: {}", 
+                    dto.getIdCourt(), dto.getIdPlayer(), e.getMessage(), e);
+            throw e;
+        }
     }
 
 
     @Override
     @Transactional
     public void cancel(long idReservation, long idPlayer) {
+        log.info("Cancelling reservation: reservationId={}, playerId={}", idReservation, idPlayer);
 
-        // Busco la reserva por id, y la guardo en la variable reservationEntity
-        ReservationEntity reservationEntity = getById(idReservation);
+        try {
+            // Busco la reserva por id, y la guardo en la variable reservationEntity
+            ReservationEntity reservationEntity = getById(idReservation);
 
-        // Valido que el jugador exista
-        playerService.getById(idPlayer);
+            // Valido que el jugador exista
+            playerService.getById(idPlayer);
 
-        if (!Objects.equals(reservationEntity.getPlayer().getId(), idPlayer)) {
-            throw new ReservationNotFoundException("La reservación no pertenece al jugador seleccionado");
+            if (!Objects.equals(reservationEntity.getPlayer().getId(), idPlayer)) {
+                log.warn("Reservation {} does not belong to player {}", idReservation, idPlayer);
+                throw new ReservationNotFoundException("La reservación no pertenece al jugador seleccionado");
+            }
+
+            if (reservationEntity.getStatus().equals(StatusReservation.CANCELADO) ||
+                    reservationEntity.getStatus().equals(StatusReservation.FINALIZADO)) {
+                log.warn("Cannot cancel reservation {} - status is {}", idReservation, reservationEntity.getStatus());
+                throw new IllegalStateException("La reserva no puede cancelarse");
+            }
+
+            boolean isCancel = isBefore12hours(reservationEntity.getDay(), reservationEntity.getStartTime());
+
+            if (isCancel) {
+                log.warn("Cancellation denied - less than 12 hours before reservation");
+                throw new CancellationTimeExceededException("El turno no puede ser cancelado 12h antes de la reservacion");
+            }
+
+            reservationEntity.cancel();
+            reservationRepository.save(reservationEntity);
+            log.info("Reservation {} cancelled successfully by player {}", idReservation, idPlayer);
+        } catch (Exception e) {
+            log.error("Failed to cancel reservation {}: {}", idReservation, e.getMessage(), e);
+            throw e;
         }
-
-        if (reservationEntity.getStatus().equals(StatusReservation.CANCELADO) ||
-                reservationEntity.getStatus().equals(StatusReservation.FINALIZADO)) {
-            throw new IllegalStateException("La reserva no puede cancelarse");
-        }
-
-        boolean isCancel = isBefore12hours(reservationEntity.getDay(), reservationEntity.getStartTime());
-
-        if (isCancel) {
-            throw new CancellationTimeExceededException("El turno no puede ser cancelado 12h antes de la reservacion");
-        }
-
-        reservationEntity.cancel();
-        reservationRepository.save(reservationEntity);
     }
 
     @Override

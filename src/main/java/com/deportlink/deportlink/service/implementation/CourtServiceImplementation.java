@@ -17,12 +17,16 @@ import com.deportlink.deportlink.service.CourtAdminService;
 import com.deportlink.deportlink.service.CourtOwnerService;
 import com.deportlink.deportlink.service.CourtService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class CourtServiceImplementation implements CourtService, CourtOwnerService, CourtAdminService {
@@ -35,25 +39,32 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
     @Override
     @Transactional
     public CourtResponseDto create(CourtRequestDto courtDto) {
+        log.info("Creating court: name={}, branchId={}, sportId={}", courtDto.getName(), courtDto.getIdBranch(), courtDto.getIdSport());
 
-        BranchEntity branchEntity = branchService.getById(courtDto.getIdBranch());
-        SportEntity sportEntity = sportService.getById(courtDto.getIdSport());
+        try {
+            BranchEntity branchEntity = branchService.getById(courtDto.getIdBranch());
+            SportEntity sportEntity = sportService.getById(courtDto.getIdSport());
 
-        if(!branchEntity.getVerificationStatus().equals(VerificationStatus.APPROVED)
-                || !branchEntity.getActiveStatus().equals(ActiveStatus.ACTIVE)){
-            throw new BranchNotApprovedException("La sucursal no puede agregar canchas");
+            if(!branchEntity.getVerificationStatus().equals(VerificationStatus.APPROVED)
+                    || !branchEntity.getActiveStatus().equals(ActiveStatus.ACTIVE)){
+                throw new BranchNotApprovedException("La sucursal no puede agregar canchas");
+            }
+
+            validateUniqueCourt(courtDto.getName(), branchEntity.getId(), sportEntity.getId());
+
+            CourtEntity courtEntity = courtMapper.toModel(courtDto);
+            courtEntity.setSport(sportEntity);
+            courtEntity.setBranch(branchEntity);
+            courtEntity.setActiveStatus(ActiveStatus.ACTIVE);
+
+            courtRepository.save(courtEntity);
+            log.info("Court created successfully: courtId={}", courtEntity.getId());
+
+            return courtMapper.toResponse(courtEntity);
+        } catch (Exception e) {
+            log.error("Failed to create court: {}", e.getMessage(), e);
+            throw e;
         }
-
-        validateUniqueCourt(courtDto.getName(), branchEntity.getId(), sportEntity.getId());
-
-        CourtEntity courtEntity = courtMapper.toModel(courtDto);
-        courtEntity.setSport(sportEntity);
-        courtEntity.setBranch(branchEntity);
-        courtEntity.setActiveStatus(ActiveStatus.ACTIVE);
-
-        courtRepository.save(courtEntity);
-
-        return courtMapper.toResponse(courtEntity);
     }
 
     @Transactional(readOnly = true)
@@ -86,12 +97,11 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
     @Override
     @Transactional(readOnly = true)
     public List<CourtResponseDto> getAllBranch(long idBranch){
-        BranchEntity branchEntity = branchService.getById(idBranch);
-
-        return branchEntity.getCourts().stream()
+        log.debug("Fetching courts for branch: branchId={}", idBranch);
+        return courtRepository.findByBranchIdWithEagerLoading(idBranch)
+                .stream()
                 .map(courtMapper::toResponse)
                 .collect(Collectors.toList());
-
     }
 
     @Override
@@ -122,6 +132,22 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
 
     @Override
     @Transactional(readOnly = true)
+    public Page<CourtResponseDto> getAllActiveAndApprovedPaginated(Pageable pageable){
+        log.info("Fetching active and approved courts with pagination: page={}, size={}", pageable.getPageNumber(), pageable.getPageSize());
+
+        Page<CourtEntity> courtEntities = courtRepository
+                .findByBranch_VerificationStatusAndBranch_ActiveStatus(
+                        VerificationStatus.APPROVED,
+                        ActiveStatus.ACTIVE,
+                        pageable
+                );
+
+        log.info("Found {} courts for pagination", courtEntities.getTotalElements());
+        return courtEntities.map(courtMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<CourtResponseDto> getAllByBranchActiveAndApproved(long idBranch){
         BranchEntity branchEntity = branchService.getById(idBranch);
 
@@ -140,6 +166,41 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
         return courts.stream()
                 .map(courtMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CourtResponseDto> getAllByBranchActiveAndApprovedPaginated(long idBranch, Pageable pageable){
+        log.info("Fetching active and approved courts for branch with pagination: branchId={}, page={}, size={}", idBranch, pageable.getPageNumber(), pageable.getPageSize());
+        
+        BranchEntity branchEntity = branchService.getById(idBranch);
+
+        boolean isVisible = verifyBranchIsVisibleForPlayer(branchEntity.getVerificationStatus(), branchEntity.getActiveStatus());
+
+        if(!isVisible){
+            throw new BranchNotApprovedException("La cancha no está disponible para jugadores");
+        }
+
+        List<CourtEntity> courts = branchEntity.getCourts();
+
+        if(courts.isEmpty()){
+            throw new CourtNotFoundException("No se encontraron canchas asociadas a la sucursal");
+        }
+
+        log.info("Found {} courts for branch with pagination", courts.size());
+        
+        // Manual pagination of in-memory list
+        int pageNumber = pageable.getPageNumber();
+        int pageSize = pageable.getPageSize();
+        int start = pageNumber * pageSize;
+        int end = Math.min(start + pageSize, courts.size());
+        
+        List<CourtResponseDto> pageContent = courts.subList(start, Math.max(start, end))
+                .stream()
+                .map(courtMapper::toResponse)
+                .collect(Collectors.toList());
+        
+        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, courts.size());
     }
 
     @Override
@@ -167,58 +228,98 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
     @Override
     @Transactional
     public void delete(long idCourt){
-        CourtEntity courtToDelete = getById(idCourt);
-        courtRepository.delete(courtToDelete);
+        log.info("Deleting court: courtId={}", idCourt);
+
+        try {
+            CourtEntity courtToDelete = getById(idCourt);
+            courtRepository.delete(courtToDelete);
+            log.info("Court deleted successfully: courtId={}", idCourt);
+        } catch (Exception e) {
+            log.error("Failed to delete court {}: {}", idCourt, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override
     @Transactional
     public CourtResponseDto update(long idCourt, CourtRequestDto courtDto) {
-        CourtEntity courtEntity = getById(idCourt);
-        BranchEntity branchEntity = branchService.getById(courtDto.getIdBranch());
-        SportEntity sportEntity = sportService.getById(courtDto.getIdSport());
+        log.info("Updating court: courtId={}, name={}, branchId={}", idCourt, courtDto.getName(), courtDto.getIdBranch());
 
-        boolean sameSport = courtEntity.getSport().getId() == sportEntity.getId();
-        boolean sameName = courtEntity.getName().equalsIgnoreCase(courtDto.getName());
+        try {
+            CourtEntity courtEntity = getById(idCourt);
+            BranchEntity branchEntity = branchService.getById(courtDto.getIdBranch());
+            SportEntity sportEntity = sportService.getById(courtDto.getIdSport());
 
-        if(!sameSport || !sameName){
-           validateUniqueCourt(courtDto.getName(), branchEntity.getId(), sportEntity.getId());
+            boolean sameSport = courtEntity.getSport().getId() == sportEntity.getId();
+            boolean sameName = courtEntity.getName().equalsIgnoreCase(courtDto.getName());
+
+            if(!sameSport || !sameName){
+               validateUniqueCourt(courtDto.getName(), branchEntity.getId(), sportEntity.getId());
+            }
+
+            courtEntity.setName(courtDto.getName());
+            courtEntity.setSport(sportEntity);
+            courtEntity.setBranch(branchEntity);
+
+            courtRepository.save(courtEntity);
+            log.info("Court updated successfully: courtId={}", courtEntity.getId());
+
+            return courtMapper.toResponse(courtEntity);
+        } catch (Exception e) {
+            log.error("Failed to update court {}: {}", idCourt, e.getMessage(), e);
+            throw e;
         }
-
-        courtEntity.setName(courtDto.getName());
-        courtEntity.setSport(sportEntity);
-        courtEntity.setBranch(branchEntity);
-
-        courtRepository.save(courtEntity);
-
-        return courtMapper.toResponse(courtEntity);
     }
 
     @Override
     @Transactional
     public void updatePrice(long idCourt, double newPrice){
-        CourtEntity courtEntity = getById(idCourt);
+        log.info("Updating price for court: courtId={}, newPrice={}", idCourt, newPrice);
 
-        if(newPrice <= 0){
-            throw new NegativePriceExcepcion("El precio no pueder ser negativo o cero");
+        try {
+            CourtEntity courtEntity = getById(idCourt);
+
+            if(newPrice <= 0){
+                throw new NegativePriceExcepcion("El precio no pueder ser negativo o cero");
+            }
+
+            courtEntity.setPricePerHour(newPrice);
+            courtRepository.save(courtEntity);
+            log.info("Court price updated successfully: courtId={}", idCourt);
+        } catch (Exception e) {
+            log.error("Failed to update price for court {}: {}", idCourt, e.getMessage(), e);
+            throw e;
         }
-
-        courtEntity.setPricePerHour(newPrice);
-        courtRepository.save(courtEntity);
     }
 
     @Override
     @Transactional
     public void activateCourt(long idBranch, long idCourt){
-        ActiveStatus status = ActiveStatus.ACTIVE;
-        activateAndDesactivateCourtByBranch(idCourt, idBranch, status);
+        log.info("Activating court: courtId={}, branchId={}", idCourt, idBranch);
+
+        try {
+            ActiveStatus status = ActiveStatus.ACTIVE;
+            activateAndDesactivateCourtByBranch(idCourt, idBranch, status);
+            log.info("Court activated successfully: courtId={}", idCourt);
+        } catch (Exception e) {
+            log.error("Failed to activate court {}: {}", idCourt, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override
     @Transactional
     public void desactivedCourt(long idBranch, long idCourt){
-        ActiveStatus status = ActiveStatus.DESACTIVE;
-        activateAndDesactivateCourtByBranch(idCourt, idBranch, status);
+        log.info("Deactivating court: courtId={}, branchId={}", idCourt, idBranch);
+
+        try {
+            ActiveStatus status = ActiveStatus.DESACTIVE;
+            activateAndDesactivateCourtByBranch(idCourt, idBranch, status);
+            log.info("Court deactivated successfully: courtId={}", idCourt);
+        } catch (Exception e) {
+            log.error("Failed to deactivate court {}: {}", idCourt, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Transactional(readOnly = true)

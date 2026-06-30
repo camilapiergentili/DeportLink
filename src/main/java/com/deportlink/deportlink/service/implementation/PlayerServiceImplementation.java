@@ -12,10 +12,12 @@ import com.deportlink.deportlink.persistence.repository.PlayerRepository;
 import com.deportlink.deportlink.service.PlayerService;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class PlayerServiceImplementation implements PlayerService {
@@ -27,21 +29,28 @@ public class PlayerServiceImplementation implements PlayerService {
     @Override
     @Transactional
     public PlayerResponseDto register(PlayerRequestDto playerDto){
+        log.info("Registering player: email={}", playerDto.getEmail());
 
-        PlayerEntity playerEntity = playerMapper.toModel(playerDto);
+        try {
+            PlayerEntity playerEntity = playerMapper.toModel(playerDto);
 
-        if(playerRepository.findByEmail(playerEntity.getEmail()).isPresent()){
-            throw new PlayerAlreadyExistsException("El email " + playerEntity.getEmail() + " ya se encuentra registrado");
+            if(playerRepository.findByEmail(playerEntity.getEmail()).isPresent()){
+                throw new PlayerAlreadyExistsException("El email " + playerEntity.getEmail() + " ya se encuentra registrado");
+            }
+
+            playerEntity.setPassword(passwordEncoder.encode(playerDto.getPassword()));
+            playerEntity.setRole(Rol.PLAYER);
+
+            playerEntity.getAddresses().forEach(address -> address.setDefault(true));
+
+            save(playerEntity);
+            log.info("Player registered successfully: playerId={}", playerEntity.getId());
+
+            return playerMapper.toResponse(playerEntity);
+        } catch (Exception e) {
+            log.error("Failed to register player: {}", e.getMessage(), e);
+            throw e;
         }
-
-        playerEntity.setPassword(passwordEncoder.encode(playerDto.getPassword()));
-        playerEntity.setRole(Rol.PLAYER);
-
-        playerEntity.getAddresses().forEach(address -> address.setDefault(true));
-
-        save(playerEntity);
-
-        return playerMapper.toResponse(playerEntity);
     }
 
     @Override
@@ -61,34 +70,50 @@ public class PlayerServiceImplementation implements PlayerService {
     @Override
     @Transactional
     public PlayerResponseDto update(long idPlayer, PlayerRequestDto playerDto){
-        PlayerEntity playerEntity = getById(idPlayer);
+        log.info("Updating player: playerId={}, email={}", idPlayer, playerDto.getEmail());
 
-        emailAlreadyExists(playerDto.getEmail(), playerEntity.getId());
+        try {
+            PlayerEntity playerEntity = getById(idPlayer);
 
-        playerEntity.setFirstName(playerDto.getFirstName());
-        playerEntity.setLastName(playerDto.getLastName());
-        playerEntity.setEmail(playerDto.getEmail());
-        playerEntity.setPhone(playerDto.getPhone());
+            emailAlreadyExists(playerDto.getEmail(), playerEntity.getId());
 
-        save(playerEntity);
+            playerEntity.setFirstName(playerDto.getFirstName());
+            playerEntity.setLastName(playerDto.getLastName());
+            playerEntity.setEmail(playerDto.getEmail());
+            playerEntity.setPhone(playerDto.getPhone());
 
-        return playerMapper.toResponse(playerEntity);
+            save(playerEntity);
+            log.info("Player updated successfully: playerId={}", playerEntity.getId());
+
+            return playerMapper.toResponse(playerEntity);
+        } catch (Exception e) {
+            log.error("Failed to update player {}: {}", idPlayer, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override
     @Transactional
     public void delete(long idPlayer){
-        PlayerEntity playerEntity = getById(idPlayer);
+        log.info("Deleting player: playerId={}", idPlayer);
 
-        // Cancelar reservas activas antes de eliminar
-        playerEntity.getReservations()
-                .stream()
-                .filter(r -> r.getStatus().equals(StatusReservation.RESERVADO) ||
-                        r.getStatus().equals(StatusReservation.REPROGRAMADO))
-                .forEach(r -> r.setStatus(StatusReservation.CANCELADO));
+        try {
+            PlayerEntity playerEntity = getById(idPlayer);
 
-        save(playerEntity); // guarda las reservas canceladas
-        playerRepository.delete(playerEntity);
+            // Cancelar reservas activas antes de eliminar
+            playerEntity.getReservations()
+                    .stream()
+                    .filter(r -> r.getStatus().equals(StatusReservation.RESERVADO) ||
+                            r.getStatus().equals(StatusReservation.REPROGRAMADO))
+                    .forEach(r -> r.setStatus(StatusReservation.CANCELADO));
+
+            save(playerEntity); // guarda las reservas canceladas
+            playerRepository.delete(playerEntity);
+            log.info("Player deleted successfully: playerId={}", idPlayer);
+        } catch (Exception e) {
+            log.error("Failed to delete player {}: {}", idPlayer, e.getMessage(), e);
+            throw e;
+        }
     }
 
 

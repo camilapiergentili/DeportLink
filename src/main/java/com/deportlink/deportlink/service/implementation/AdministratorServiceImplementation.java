@@ -14,12 +14,14 @@ import com.deportlink.deportlink.model.entity.ClubEntity;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.service.AdministratorService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class AdministratorServiceImplementation implements AdministratorService {
@@ -40,11 +42,27 @@ public class AdministratorServiceImplementation implements AdministratorService 
     }
 
     public void approveClub(long idClub){
-        clubService.approve(idClub);
+        log.info("Approving club: clubId={}", idClub);
+
+        try {
+            clubService.approve(idClub);
+            log.info("Club approved successfully: clubId={}", idClub);
+        } catch (Exception e) {
+            log.error("Failed to approve club {}: {}", idClub, e.getMessage(), e);
+            throw e;
+        }
     }
 
     public void rejectClub(long idClub){
-        clubService.reject(idClub);
+        log.info("Rejecting club: clubId={}", idClub);
+
+        try {
+            clubService.reject(idClub);
+            log.info("Club rejected successfully: clubId={}", idClub);
+        } catch (Exception e) {
+            log.error("Failed to reject club {}: {}", idClub, e.getMessage(), e);
+            throw e;
+        }
     }
 
 
@@ -65,11 +83,27 @@ public class AdministratorServiceImplementation implements AdministratorService 
     }
 
     public void approveBranch(long idBranch){
-        modifyStatusBranch(idBranch, ActiveStatus.ACTIVE, VerificationStatus.APPROVED);
+        log.info("Approving branch: branchId={}", idBranch);
+
+        try {
+            modifyStatusBranch(idBranch, ActiveStatus.ACTIVE, VerificationStatus.APPROVED);
+            log.info("Branch approved successfully: branchId={}", idBranch);
+        } catch (Exception e) {
+            log.error("Failed to approve branch {}: {}", idBranch, e.getMessage(), e);
+            throw e;
+        }
     }
 
     public void rejectBranch(long idBranch){
-        modifyStatusBranch(idBranch, ActiveStatus.DESACTIVE, VerificationStatus.REJECTED);
+        log.info("Rejecting branch: branchId={}", idBranch);
+
+        try {
+            modifyStatusBranch(idBranch, ActiveStatus.DESACTIVE, VerificationStatus.REJECTED);
+            log.info("Branch rejected successfully: branchId={}", idBranch);
+        } catch (Exception e) {
+            log.error("Failed to reject branch {}: {}", idBranch, e.getMessage(), e);
+            throw e;
+        }
     }
 
     private void modifyStatusBranch(long idBranch, ActiveStatus activeStatus, VerificationStatus verificationStatus){

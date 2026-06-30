@@ -37,15 +37,15 @@ public class BranchOwnerController {
     }
 
     @PatchMapping("/{idBranch}/activate")
-    public ResponseEntity<Object> activate(@RequestParam long idBranch,
-                                           @PathVariable long idClub){
+    public ResponseEntity<Object> activate(@PathVariable long idBranch,
+                                           @RequestParam long idClub){
         branchOwnerService.active(idBranch, idClub);
         return ResponseEntity.ok(Map.of("message", "El club fue activado con exito"));
     }
 
     @PatchMapping("/{idBranch}/desactivate")
-    public ResponseEntity<Object> desactivate(@RequestParam long idBranch,
-                                              @PathVariable long idClub){
+    public ResponseEntity<Object> desactivate(@PathVariable long idBranch,
+                                              @RequestParam long idClub){
         branchOwnerService.desactive(idBranch, idClub);
         return ResponseEntity.ok(Map.of("message", "El club fue activado con exito"));
     }

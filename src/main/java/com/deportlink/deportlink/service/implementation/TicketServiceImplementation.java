@@ -5,10 +5,12 @@ import com.deportlink.deportlink.mapper.TicketMapper;
 import com.deportlink.deportlink.model.entity.*;
 import com.deportlink.deportlink.persistence.repository.TicketRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class TicketServiceImplementation {
@@ -17,9 +19,17 @@ public class TicketServiceImplementation {
     private final TicketRepository ticketRepository;
 
     public TicketResponseDto generateTicket(ReservationEntity reservation, Double totalPrice) {
-        TicketEntity ticket = buildTicket(reservation, totalPrice);
-        ticketRepository.save(ticket);
-        return ticketMapper.toResponse(ticket);
+        log.info("Generating ticket for reservation: reservationId={}, totalPrice={}", reservation.getId(), totalPrice);
+
+        try {
+            TicketEntity ticket = buildTicket(reservation, totalPrice);
+            ticketRepository.save(ticket);
+            log.info("Ticket generated successfully: ticketId={}", ticket.getId());
+            return ticketMapper.toResponse(ticket);
+        } catch (Exception e) {
+            log.error("Failed to generate ticket for reservation {}: {}", reservation.getId(), e.getMessage(), e);
+            throw e;
+        }
     }
 
     private TicketEntity buildTicket(ReservationEntity reservation, Double totalPrice) {

@@ -15,11 +15,13 @@ import com.deportlink.deportlink.service.BranchAdminService;
 import com.deportlink.deportlink.service.BranchOwnerService;
 import com.deportlink.deportlink.service.BranchService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class BranchServiceImplementation implements BranchService, BranchOwnerService, BranchAdminService {
@@ -32,29 +34,36 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
     @Override
     @Transactional
     public void create(BranchRequestDto branchDto){
+        log.info("Creating branch: name={}, clubId={}", branchDto.getName(), branchDto.getIdClub());
 
-        ClubEntity clubEntity = clubService.getById(branchDto.getIdClub());
+        try {
+            ClubEntity clubEntity = clubService.getById(branchDto.getIdClub());
 
-        if(clubEntity.getVerificationStatus() != VerificationStatus.APPROVED){
-            throw new ClubNotApprovedException("El club " + clubEntity.getLegalName() + " aun no esta autorizado para agregar sucursales");
+            if(clubEntity.getVerificationStatus() != VerificationStatus.APPROVED){
+                throw new ClubNotApprovedException("El club " + clubEntity.getLegalName() + " aun no esta autorizado para agregar sucursales");
+            }
+
+            BranchEntity branchEntity = branchMapper.toModel(branchDto);
+
+            if(branchRepository.existsByAddressAndClub(branchEntity.getAddress(), clubEntity)){
+                throw new BranchAlreadyExistsException("Ya existe una sucursal en esta dirección");
+            }
+
+            if(branchRepository.existsByNameIgnoreCaseAndClub(branchDto.getName(), clubEntity)){
+                throw new BranchAlreadyExistsException("Ya existe una sucursal con el nombre " + branchDto.getName());
+            }
+
+            branchEntity.setClub(clubEntity);
+            branchEntity.setVerificationStatus(VerificationStatus.PENDING);
+            branchEntity.setActiveStatus(ActiveStatus.DESACTIVE);
+            clubEntity.getBranches().add(branchEntity);
+
+            save(branchEntity);
+            log.info("Branch created successfully: branchId={}", branchEntity.getId());
+        } catch (Exception e) {
+            log.error("Failed to create branch: {}", e.getMessage(), e);
+            throw e;
         }
-
-        BranchEntity branchEntity = branchMapper.toModel(branchDto);
-
-        if(branchRepository.existsByAddressAndClub(branchEntity.getAddress(), clubEntity)){
-            throw new BranchAlreadyExistsException("Ya existe una sucursal en esta dirección");
-        }
-
-        if(branchRepository.existsByNameIgnoreCaseAndClub(branchDto.getName(), clubEntity)){
-            throw new BranchAlreadyExistsException("Ya existe una sucursal con el nombre " + branchDto.getName());
-        }
-
-        branchEntity.setClub(clubEntity);
-        branchEntity.setVerificationStatus(VerificationStatus.PENDING);
-        branchEntity.setActiveStatus(ActiveStatus.DESACTIVE);
-        clubEntity.getBranches().add(branchEntity);
-
-        save(branchEntity);
     }
 
     @Transactional
@@ -129,52 +138,99 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
     @Override
     @Transactional
     public void delete(long id){
-        BranchEntity branchEntity = getById(id);
+        log.info("Deleting branch: branchId={}", id);
 
-        branchRepository.delete(branchEntity);
+        try {
+            BranchEntity branchEntity = getById(id);
+            branchRepository.delete(branchEntity);
+            log.info("Branch deleted successfully: branchId={}", id);
+        } catch (Exception e) {
+            log.error("Failed to delete branch {}: {}", id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override
     @Transactional
     public void update(long id, BranchRequestDto branchDto){
-        BranchEntity branchEntity = getById(id);
-        AddressEntity newAddress = addressMapper.toModel(branchDto.getAddressRequestDto());
+        log.info("Updating branch: branchId={}, name={}", id, branchDto.getName());
 
-        boolean requiresReview = !branchEntity.getAddress().equals(newAddress);
+        try {
+            BranchEntity branchEntity = getById(id);
+            AddressEntity newAddress = addressMapper.toModel(branchDto.getAddressRequestDto());
 
-        branchEntity.setName(branchDto.getName());
-        branchEntity.setAddress(newAddress);
+            boolean requiresReview = !branchEntity.getAddress().equals(newAddress);
 
-        if(requiresReview){
-            branchEntity.setVerificationStatus(VerificationStatus.PENDING);
-            branchEntity.setActiveStatus(ActiveStatus.DESACTIVE);
+            branchEntity.setName(branchDto.getName());
+            branchEntity.setAddress(newAddress);
+
+            if(requiresReview){
+                branchEntity.setVerificationStatus(VerificationStatus.PENDING);
+                branchEntity.setActiveStatus(ActiveStatus.DESACTIVE);
+            }
+
+            save(branchEntity);
+            log.info("Branch updated successfully: branchId={}", branchEntity.getId());
+        } catch (Exception e) {
+            log.error("Failed to update branch {}: {}", id, e.getMessage(), e);
+            throw e;
         }
-
-        save(branchEntity);
     }
 
     @Override
     @Transactional
     public void desactive(long idBranch, long idClub){
-        activateAndDesactivateBranchByClub(idBranch, idClub, ActiveStatus.DESACTIVE);
+        log.info("Deactivating branch: branchId={}, clubId={}", idBranch, idClub);
+
+        try {
+            activateAndDesactivateBranchByClub(idBranch, idClub, ActiveStatus.DESACTIVE);
+            log.info("Branch deactivated successfully: branchId={}", idBranch);
+        } catch (Exception e) {
+            log.error("Failed to deactivate branch {}: {}", idBranch, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override
     @Transactional
     public void active(long idBranch, long idClub){
-        activateAndDesactivateBranchByClub(idBranch, idClub, ActiveStatus.ACTIVE);
+        log.info("Activating branch: branchId={}, clubId={}", idBranch, idClub);
+
+        try {
+            activateAndDesactivateBranchByClub(idBranch, idClub, ActiveStatus.ACTIVE);
+            log.info("Branch activated successfully: branchId={}", idBranch);
+        } catch (Exception e) {
+            log.error("Failed to activate branch {}: {}", idBranch, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override
     @Transactional
     public void approve(long idBranch){
-        modifyStatus(idBranch, ActiveStatus.ACTIVE, VerificationStatus.APPROVED);
+        log.info("Approving branch: branchId={}", idBranch);
+
+        try {
+            modifyStatus(idBranch, ActiveStatus.ACTIVE, VerificationStatus.APPROVED);
+            log.info("Branch approved successfully: branchId={}", idBranch);
+        } catch (Exception e) {
+            log.error("Failed to approve branch {}: {}", idBranch, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override
     @Transactional
     public void reject(long idBranch){
-        modifyStatus(idBranch, ActiveStatus.DESACTIVE, VerificationStatus.REJECTED);
+        log.info("Rejecting branch: branchId={}", idBranch);
+
+        try {
+            modifyStatus(idBranch, ActiveStatus.DESACTIVE, VerificationStatus.REJECTED);
+            log.info("Branch rejected successfully: branchId={}", idBranch);
+        } catch (Exception e) {
+            log.error("Failed to reject branch {}: {}", idBranch, e.getMessage(), e);
+            throw e;
+        }
     }
 
     private void modifyStatus(long idBranch, ActiveStatus activeStatus, VerificationStatus verificationStatus){

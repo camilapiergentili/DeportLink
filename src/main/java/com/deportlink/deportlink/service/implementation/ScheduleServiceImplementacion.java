@@ -14,6 +14,7 @@ import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import com.deportlink.deportlink.persistence.repository.ScheduleRepository;
 import com.deportlink.deportlink.service.ScheduleService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class ScheduleServiceImplementacion implements ScheduleService {
@@ -37,81 +39,101 @@ public class ScheduleServiceImplementacion implements ScheduleService {
     @Override
     @Transactional
     public void addSchedule(long idCourt, List<ScheduleRequestDto> schedulesDto) {
+        log.info("Adding schedules for court: courtId={}, scheduleCount={}", idCourt, schedulesDto.size());
 
-        //Busco en la base de datos que la cancha exista
-        CourtEntity courtEntity = courtService.getById(idCourt);
+        try {
+            //Busco en la base de datos que la cancha exista
+            CourtEntity courtEntity = courtService.getById(idCourt);
 
-        if (!courtEntity.getActiveStatus().equals(ActiveStatus.ACTIVE)) {
-            throw new ClubNotActivedException("No puede agregar agenda, porque la cancha no se encuentra activa");
+            if (!courtEntity.getActiveStatus().equals(ActiveStatus.ACTIVE)) {
+                throw new ClubNotActivedException("No puede agregar agenda, porque la cancha no se encuentra activa");
+            }
+
+            if (!courtEntity.getBranch().getVerificationStatus().equals(VerificationStatus.APPROVED)) {
+                throw new ClubNotApprovedException("No puede agregar agenda, porque la cancha no se encuentra aprobada");
+            }
+
+            // Mappeo la lista que el usuario envio como DTO a ENTITY
+            List<ScheduleEntity> scheduleEntityList = scheduleMapper.toModelList(schedulesDto);
+
+            //Valido que el horario de apertura no sea posterior al horario de cierra
+            rangeTimeValid(scheduleEntityList);
+
+            //Valido que los horarios que me envia el usuario no coincidan con horarios anteriores de esa cancha.
+            List<ScheduleEntity> uniqueSchedule = validateAndFilterSchedules(scheduleEntityList, courtEntity);
+
+            // Obtengo la agenda de cada cancha
+            Set<ScheduleEntity> scheduleSet = courtEntity.getSchedules();
+
+            // a la lista de agenda de cada cancha, le setteamos la nueva agenda
+            scheduleSet.addAll(uniqueSchedule);
+
+            //Por cada agenda se le settea la cancha
+            for (ScheduleEntity s : scheduleSet) {
+                s.setCourt(courtEntity);
+            }
+
+            scheduleRepository.saveAll(scheduleSet);
+            log.info("Schedules added successfully for court: courtId={}", idCourt);
+        } catch (Exception e) {
+            log.error("Failed to add schedules for court {}: {}", idCourt, e.getMessage(), e);
+            throw e;
         }
-
-        if (!courtEntity.getBranch().getVerificationStatus().equals(VerificationStatus.APPROVED)) {
-            throw new ClubNotApprovedException("No puede agregar agenda, porque la cancha no se encuentra aprobada");
-        }
-
-        // Mappeo la lista que el usuario envio como DTO a ENTITY
-        List<ScheduleEntity> scheduleEntityList = scheduleMapper.toModelList(schedulesDto);
-
-        //Valido que el horario de apertura no sea posterior al horario de cierra
-        rangeTimeValid(scheduleEntityList);
-
-        //Valido que los horarios que me envia el usuario no coincidan con horarios anteriores de esa cancha.
-        List<ScheduleEntity> uniqueSchedule = validateAndFilterSchedules(scheduleEntityList, courtEntity);
-
-        // Obtengo la agenda de cada cancha
-        Set<ScheduleEntity> scheduleSet = courtEntity.getSchedules();
-
-        // a la lista de agenda de cada cancha, le setteamos la nueva agenda
-        scheduleSet.addAll(uniqueSchedule);
-
-        //Por cada agenda se le settea la cancha
-        for (ScheduleEntity s : scheduleSet) {
-            s.setCourt(courtEntity);
-        }
-
-        scheduleRepository.saveAll(scheduleSet);
     }
 
     @Override
     @Transactional
     public void deleteSchedule(long idSchedule, long idCourt) {
+        log.info("Deleting schedule: scheduleId={}, courtId={}", idSchedule, idCourt);
 
-        ScheduleEntity scheduleEntity = getScheduleForCourt(idCourt, idSchedule);
+        try {
+            ScheduleEntity scheduleEntity = getScheduleForCourt(idCourt, idSchedule);
 
-        int dayMySql = mapJavaDayToMySQL(scheduleEntity.getDay());
+            int dayMySql = mapJavaDayToMySQL(scheduleEntity.getDay());
 
-        if (scheduleRepository.existsReservationForDay(idCourt, dayMySql)) {
-            throw new IllegalArgumentException("No se puede eliminar, ya que existen reservas para ese dia");
+            if (scheduleRepository.existsReservationForDay(idCourt, dayMySql)) {
+                throw new IllegalArgumentException("No se puede eliminar, ya que existen reservas para ese dia");
+            }
+
+            scheduleRepository.delete(scheduleEntity);
+            log.info("Schedule deleted successfully: scheduleId={}", idSchedule);
+        } catch (Exception e) {
+            log.error("Failed to delete schedule {}: {}", idSchedule, e.getMessage(), e);
+            throw e;
         }
-
-        scheduleRepository.delete(scheduleEntity);
     }
 
     @Override
     @Transactional
     public void updateSchedule(long idSchedule, long idCourt, String openingNew, String closingNew) {
+        log.info("Updating schedule: scheduleId={}, courtId={}, opening={}, closing={}", idSchedule, idCourt, openingNew, closingNew);
 
-        ScheduleEntity scheduleEntity = getScheduleForCourt(idCourt, idSchedule);
+        try {
+            ScheduleEntity scheduleEntity = getScheduleForCourt(idCourt, idSchedule);
 
-        LocalTime openingTime = LocalTime.parse(openingNew);
-        LocalTime closingTime = LocalTime.parse(closingNew);
+            LocalTime openingTime = LocalTime.parse(openingNew);
+            LocalTime closingTime = LocalTime.parse(closingNew);
 
-        isValidTimeRange(openingTime, closingTime);
+            isValidTimeRange(openingTime, closingTime);
 
-        List<StatusReservation> activeStatuses = Arrays.stream(StatusReservation.values())
-                .filter(StatusReservation::occupiesSlot)
-                .toList();
+            List<StatusReservation> activeStatuses = Arrays.stream(StatusReservation.values())
+                    .filter(StatusReservation::occupiesSlot)
+                    .toList();
 
-        List<ReservationEntity> reservationEntities = reservationRepository.findActiveByCourt(idCourt, activeStatuses);
-        List<ReservationEntity> reservationForDay = filterReservationPerDay(reservationEntities, scheduleEntity);
+            List<ReservationEntity> reservationEntities = reservationRepository.findActiveByCourt(idCourt, activeStatuses);
+            List<ReservationEntity> reservationForDay = filterReservationPerDay(reservationEntities, scheduleEntity);
 
-        reservationTimeValid(reservationForDay, openingTime, closingTime);
+            reservationTimeValid(reservationForDay, openingTime, closingTime);
 
-        scheduleEntity.setOpeningTime(openingTime);
-        scheduleEntity.setClosingTime(closingTime);
+            scheduleEntity.setOpeningTime(openingTime);
+            scheduleEntity.setClosingTime(closingTime);
 
-        scheduleRepository.save(scheduleEntity);
-
+            scheduleRepository.save(scheduleEntity);
+            log.info("Schedule updated successfully: scheduleId={}", idSchedule);
+        } catch (Exception e) {
+            log.error("Failed to update schedule {}: {}", idSchedule, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override

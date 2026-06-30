@@ -3,11 +3,18 @@ package com.deportlink.deportlink.security.advice;
 import com.deportlink.deportlink.security.config.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.util.List;
 
+//Esta clase se ejecuta antes de que cada peticion llegue al controller,
+// Obtiene el token de las rutas que requieren autorizacion,
+//Extrae antes de cada peticion el rol y el id para verificar permisos
+// y no pedir el usurio y contraseña cada vez que quiera entrar a una ruta protegida
 @ControllerAdvice
 @AllArgsConstructor
 public class GlobalControllerAdvice {
@@ -18,43 +25,27 @@ public class GlobalControllerAdvice {
     public Long extractUserIdFromToken(HttpServletRequest request) {
 
         String tokenLimpio = extraerToken(request);
-        return jwtUtil.extractUserId(tokenLimpio);
+        return (tokenLimpio != null) ? jwtUtil.extractUserId(tokenLimpio) : null;
     }
 
     @ModelAttribute("role")
     public String extractRoleFromToken(HttpServletRequest request) {
-
-        String tokenLimpio = extraerToken(request);
-        return jwtUtil.extractRole(tokenLimpio);
+        String token = extraerToken(request);
+        return (token != null) ? jwtUtil.extractRole(token) : null;
     }
 
     private String extraerToken(HttpServletRequest request){
-        if (isPublicRoute(request)) {
-            return null;
+        // 1. Le preguntamos a Spring Security: ¿Ya autenticaste a alguien en esta petición?
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        // 2. Si no hay nadie autenticado, o es un usuario "Anónimo", significa que es una RUTA PÚBLICA.
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return null; // No buscamos token
         }
 
+        // 3. Si no era pública, entonces sí sacamos y limpiamos el token de la cabecera
         String authHeader = request.getHeader("Authorization");
-
         return jwtUtil.resolveToken(authHeader);
     }
 
-    // El método inteligente que analiza la ruta y el método HTTP (POST, GET, etc.)
-    private boolean isPublicRoute(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        String method = request.getMethod();
-
-        // 1. Todo lo que sea Login / Autenticación es público
-        if (path.startsWith("/api/auth")) return true;
-
-        // 2. SI ES UN POST A PLAYERS (REGISTRO), ¡ES PÚBLICO!
-        if (path.startsWith("/api/players") && method.equals("POST")) return true;
-
-        // 3. SI ES UN POST A OWNERS (REGISTRO), ¡ES PÚBLICO!
-        if (path.startsWith("/api/owners") && method.equals("POST")) return true;
-
-        // 4. Documentación de Swagger
-        if (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) return true;
-
-        return false;
-    }
 }

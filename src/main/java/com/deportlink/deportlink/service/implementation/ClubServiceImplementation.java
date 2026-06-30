@@ -18,12 +18,16 @@ import com.deportlink.deportlink.service.OwnerService;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class ClubServiceImplementation implements ClubService, ClubOwnerService, ClubAdminService {
@@ -35,8 +39,10 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
     @Override
     @Transactional
     public ClubResponseDto create(ClubRequestDto clubDto){
+        log.info("Creating new club: name={}, cuit={}", clubDto.getName(), clubDto.getCuit());
 
         if (CollectionUtils.isEmpty(clubDto.getOwnerIds())) {
+            log.warn("Club creation failed: no owners provided");
             throw new IllegalArgumentException("El club debe estar asociado a al menos un dueño");
         }
 
@@ -48,10 +54,12 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
         ClubEntity clubEntity = clubMapper.toModel(clubDto);
 
         if(clubRepository.findByCuit(clubEntity.getCuit()).isPresent()){
+            log.warn("Club creation failed: CUIT {} already exists", clubEntity.getCuit());
             throw new ClubAlreadyExistsException("El club con el número de CUIT " + clubEntity.getCuit() + " ya se encuentra registrado");
         }
 
         if(clubRepository.findByLegalName(clubEntity.getLegalName()).isPresent()){
+            log.warn("Club creation failed: legal name {} already exists", clubEntity.getLegalName());
             throw new ClubAlreadyExistsException("El club con el nombre " + clubEntity.getLegalName() + " ya se encuentra registrado");
         }
 
@@ -61,6 +69,7 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
         owners.forEach(owner -> owner.getClubs().add(clubEntity));
 
         save(clubEntity);
+        log.info("Club created successfully: clubId={}", clubEntity.getId());
 
         return clubMapper.toResponse(clubEntity);
     }
@@ -93,8 +102,9 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
     @Override
     @Transactional(readOnly = true)
     public List<ClubResponseDto> getByActiveAndApproved(){
+        log.debug("Fetching approved and active clubs");
         return clubRepository
-                .findByVerificationStatusAndActiveStatus(VerificationStatus.APPROVED, ActiveStatus.ACTIVE)
+                .findApprovedWithEagerLoading(VerificationStatus.APPROVED, ActiveStatus.ACTIVE)
                 .stream()
                 .map(clubMapper::toResponse)
                 .collect(Collectors.toList());
@@ -109,6 +119,25 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
                 .stream()
                 .map(clubMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ClubResponseDto> getByActiveAndApprovedPaginated(Pageable pageable) {
+        log.debug("Fetching approved and active clubs with pagination: page={}, size={}", 
+                pageable.getPageNumber(), pageable.getPageSize());
+        return clubRepository
+                .findApprovedPaginated(VerificationStatus.APPROVED, ActiveStatus.ACTIVE, pageable)
+                .map(clubMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ClubResponseDto> getAllPaginated(Pageable pageable) {
+        log.debug("Fetching all clubs with pagination: page={}, size={}", 
+                pageable.getPageNumber(), pageable.getPageSize());
+        return clubRepository.findAll(pageable)
+                .map(clubMapper::toResponse);
     }
 
     @Override
@@ -193,13 +222,17 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
     @Override
     @Transactional
     public void approve(long idClub){
+        log.info("Approving club: clubId={}", idClub);
         modifyStatusClub(idClub, ActiveStatus.ACTIVE, VerificationStatus.APPROVED);
+        log.info("Club approved successfully: clubId={}", idClub);
     }
 
     @Override
     @Transactional
     public void reject(long idClub){
+        log.info("Rejecting club: clubId={}", idClub);
         modifyStatusClub(idClub, ActiveStatus.DESACTIVE, VerificationStatus.REJECTED);
+        log.info("Club rejected successfully: clubId={}", idClub);
     }
 
     private void modifyStatusClub(long idClub, ActiveStatus activeStatus, VerificationStatus verificationStatus){

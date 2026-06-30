@@ -5,6 +5,7 @@ import com.deportlink.deportlink.dto.response.ScheduleResponseDto;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.service.AppointmentService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +13,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class AppointmentServiceImplementation implements AppointmentService {
@@ -23,12 +25,20 @@ public class AppointmentServiceImplementation implements AppointmentService {
     @Override
     @Transactional
     public List<LocalTime> available(AppointmentRequestDto appointmentDto){
-        List<LocalTime> allTimes = generate(appointmentDto);
-        List<LocalTime> busyTimes = reservationService.getByCourtAndDay(appointmentDto.getIdCourt(), appointmentDto.getDay());
+        log.info("Fetching available appointments: courtId={}, day={}", appointmentDto.getIdCourt(), appointmentDto.getDay());
 
-        allTimes.removeIf(busyTimes::contains);
+        try {
+            List<LocalTime> allTimes = generate(appointmentDto);
+            List<LocalTime> busyTimes = reservationService.getByCourtAndDay(appointmentDto.getIdCourt(), appointmentDto.getDay());
 
-        return allTimes;
+            allTimes.removeIf(busyTimes::contains);
+            log.info("Available appointments retrieved: courtId={}, availableSlots={}", appointmentDto.getIdCourt(), allTimes.size());
+
+            return allTimes;
+        } catch (Exception e) {
+            log.error("Failed to fetch available appointments for court {}: {}", appointmentDto.getIdCourt(), e.getMessage(), e);
+            throw e;
+        }
     }
 
     private List<LocalTime> generate(AppointmentRequestDto appointmentDto){

@@ -9,12 +9,14 @@ import com.deportlink.deportlink.model.entity.SportEntity;
 import com.deportlink.deportlink.persistence.repository.SportRepository;
 import com.deportlink.deportlink.service.SportService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class SportServiceImplementation implements SportService {
@@ -25,18 +27,25 @@ public class SportServiceImplementation implements SportService {
     @Override
     @Transactional
     public SportResponseDto create(SportRequestDto sportDto){
+        log.info("Creating sport: name={}", sportDto.getNameSport());
 
-        SportEntity sportEntity = sportMapper.toModel(sportDto);
+        try {
+            SportEntity sportEntity = sportMapper.toModel(sportDto);
 
-        boolean exists = sportRepository.findByNameSport(sportEntity.getNameSport().toUpperCase()).isPresent();
+            boolean exists = sportRepository.findByNameSport(sportEntity.getNameSport().toUpperCase()).isPresent();
 
-        if(exists){
-            throw new SportAlreadyExistsException("El deporte " + sportEntity.getNameSport() + " ya se encuentra registrado");
+            if(exists){
+                throw new SportAlreadyExistsException("El deporte " + sportEntity.getNameSport() + " ya se encuentra registrado");
+            }
+
+            sportRepository.save(sportEntity);
+            log.info("Sport created successfully: sportId={}", sportEntity.getId());
+
+            return sportMapper.toResponse(sportEntity);
+        } catch (Exception e) {
+            log.error("Failed to create sport: {}", e.getMessage(), e);
+            throw e;
         }
-
-        sportRepository.save(sportEntity);
-
-        return sportMapper.toResponse(sportEntity);
     }
 
     @Transactional(readOnly = true)
@@ -55,9 +64,16 @@ public class SportServiceImplementation implements SportService {
     @Override
     @Transactional
     public void delete(long id){
-        SportEntity sportEntity = getById(id);
+        log.info("Deleting sport: sportId={}", id);
 
-        sportRepository.delete(sportEntity);
+        try {
+            SportEntity sportEntity = getById(id);
+            sportRepository.delete(sportEntity);
+            log.info("Sport deleted successfully: sportId={}", id);
+        } catch (Exception e) {
+            log.error("Failed to delete sport {}: {}", id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override

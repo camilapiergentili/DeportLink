@@ -16,6 +16,7 @@ import com.deportlink.deportlink.persistence.repository.OwnerRepository;
 import com.deportlink.deportlink.service.OwnerService;
 import com.deportlink.deportlink.utils.DateUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OwnerServiceImplementation implements OwnerService {
@@ -35,38 +37,53 @@ public class OwnerServiceImplementation implements OwnerService {
     @Override
     @Transactional
     public OwnerResponseDto register(OwnerRequestDto ownerDto) throws OwnerAlreadyExistsException {
+        log.info("Registering owner: email={}, dni={}", ownerDto.getEmail(), ownerDto.getDni());
 
-        OwnerEntity ownerEntity = ownerMapper.toModel(ownerDto);
+        try {
+            OwnerEntity ownerEntity = ownerMapper.toModel(ownerDto);
 
-        if(ownerRepository.findByDni(ownerEntity.getDni()).isPresent()){
-            throw new OwnerAlreadyExistsException("El dueño con dni " + ownerEntity.getDni() + " ya se encuentra registrado");
+            if(ownerRepository.findByDni(ownerEntity.getDni()).isPresent()){
+                throw new OwnerAlreadyExistsException("El dueño con dni " + ownerEntity.getDni() + " ya se encuentra registrado");
+            }
+
+            if(ownerRepository.findByCuil(ownerEntity.getCuil()).isPresent()){
+                throw new OwnerAlreadyExistsException("El dueño con número de cuil: " + ownerEntity.getCuil() + " ya se encuentra registrado");
+            }
+
+            if(ownerRepository.findByEmail(ownerEntity.getEmail()).isPresent()){
+                throw new OwnerAlreadyExistsException("El dueño con email: " + ownerEntity.getEmail() + " ya se encuentra registrado");
+            }
+
+            if(!DateUtils.isOfLegalAge(ownerEntity.getDateOfBirth())){
+                throw new UnderageException("Para registrar un club debes ser mayor de edad");
+            }
+
+            ownerEntity.setRole(Rol.OWNER);
+            ownerEntity.setPassword(passwordEncoder.encode(ownerDto.getPassword()));
+
+            ownerRepository.save(ownerEntity);
+            log.info("Owner registered successfully: ownerId={}", ownerEntity.getId());
+
+            return ownerMapper.toResponse(ownerEntity);
+        } catch (Exception e) {
+            log.error("Failed to register owner: {}", e.getMessage(), e);
+            throw e;
         }
-
-        if(ownerRepository.findByCuil(ownerEntity.getCuil()).isPresent()){
-            throw new OwnerAlreadyExistsException("El dueño con número de cuil: " + ownerEntity.getCuil() + " ya se encuentra registrado");
-        }
-
-        if(ownerRepository.findByEmail(ownerEntity.getEmail()).isPresent()){
-            throw new OwnerAlreadyExistsException("El dueño con email: " + ownerEntity.getEmail() + " ya se encuentra registrado");
-        }
-
-        if(!DateUtils.isOfLegalAge(ownerEntity.getDateOfBirth())){
-            throw new UnderageException("Para registrar un club debes ser mayor de edad");
-        }
-
-        ownerEntity.setRole(Rol.OWNER);
-        ownerEntity.setPassword(passwordEncoder.encode(ownerDto.getPassword()));
-
-        ownerRepository.save(ownerEntity);
-
-        return ownerMapper.toResponse(ownerEntity);
     }
 
     @Override
     @Transactional
     public void deleteById(long id){
-        OwnerEntity ownerEntity = getById(id);
-        ownerRepository.delete(ownerEntity);
+        log.info("Deleting owner: ownerId={}", id);
+
+        try {
+            OwnerEntity ownerEntity = getById(id);
+            ownerRepository.delete(ownerEntity);
+            log.info("Owner deleted successfully: ownerId={}", id);
+        } catch (Exception e) {
+            log.error("Failed to delete owner {}: {}", id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override
@@ -87,17 +104,24 @@ public class OwnerServiceImplementation implements OwnerService {
     @Override
     @Transactional
     public void update(long id, OwnerRequestDto ownerDto){
+        log.info("Updating owner: ownerId={}, email={}, dni={}", id, ownerDto.getEmail(), ownerDto.getDni());
 
-        OwnerEntity ownerEntity = ownerRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("El usuario no fue encontrado"));
+        try {
+            OwnerEntity ownerEntity = ownerRepository.findById(id)
+                    .orElseThrow(() -> new UserNotFoundException("El usuario no fue encontrado"));
 
-        ownerEntity.setFirstName(ownerDto.getFirstName());
-        ownerEntity.setLastName(ownerDto.getLastName());
-        ownerEntity.setPhone(ownerDto.getPhone());
-        ownerEntity.setDni(ownerDto.getDni());
-        ownerEntity.setCuil(ownerDto.getCuil());
+            ownerEntity.setFirstName(ownerDto.getFirstName());
+            ownerEntity.setLastName(ownerDto.getLastName());
+            ownerEntity.setPhone(ownerDto.getPhone());
+            ownerEntity.setDni(ownerDto.getDni());
+            ownerEntity.setCuil(ownerDto.getCuil());
 
-        ownerRepository.save(ownerEntity);
+            ownerRepository.save(ownerEntity);
+            log.info("Owner updated successfully: ownerId={}", id);
+        } catch (Exception e) {
+            log.error("Failed to update owner {}: {}", id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override
