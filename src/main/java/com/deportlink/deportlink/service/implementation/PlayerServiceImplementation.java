@@ -3,7 +3,7 @@ package com.deportlink.deportlink.service.implementation;
 import com.deportlink.deportlink.dto.request.PlayerRequestDto;
 import com.deportlink.deportlink.dto.response.PlayerResponseDto;
 import com.deportlink.deportlink.exception.PlayerAlreadyExistsException;
-import com.deportlink.deportlink.exception.UserNotFoundException;
+import com.deportlink.deportlink.exception.PlayerNotFoundException;
 import com.deportlink.deportlink.mapper.PlayerMapper;
 import com.deportlink.deportlink.model.Rol;
 import com.deportlink.deportlink.enums.StatusReservation;
@@ -57,7 +57,7 @@ public class PlayerServiceImplementation implements PlayerService {
     @Transactional(readOnly = true)
     public PlayerEntity getById(long idPlayer){
         return playerRepository.findById(idPlayer)
-                .orElseThrow(() -> new UserNotFoundException("El jugador no se encontro"));
+                .orElseThrow(() -> new PlayerNotFoundException("El jugador no se encontro"));
     }
 
     @Override

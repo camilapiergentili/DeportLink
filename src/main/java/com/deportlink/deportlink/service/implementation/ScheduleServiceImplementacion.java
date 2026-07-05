@@ -213,7 +213,8 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
     }
 
-    private int mapJavaDayToMySQL(DayOfWeek dayOfWeek) {
+    private int mapJavaDayToMySQL(String dayString) {
+        DayOfWeek dayOfWeek = DayOfWeek.valueOf(dayString.toUpperCase());
         return (dayOfWeek.getValue() % 7) + 1;
     }
 

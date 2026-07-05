@@ -23,8 +23,8 @@ public class ScheduleEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Enumerated(EnumType.STRING)
-    private DayOfWeek day;
+    @Column(name = "day_of_week", columnDefinition = "VARCHAR(20)")
+    private String day;
 
     private LocalTime openingTime;
     private LocalTime closingTime;

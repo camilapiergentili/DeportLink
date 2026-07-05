@@ -24,6 +24,7 @@ public class ReservationEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+    @Column(name = "reservation_day")
     private LocalDate day;
     private LocalTime startTime;
 
