@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 
 @Slf4j
 @Service
@@ -31,26 +33,20 @@ public class PlayerServiceImplementation implements PlayerService {
     public PlayerResponseDto register(PlayerRequestDto playerDto){
         log.info("Registering player: email={}", playerDto.getEmail());
 
-        try {
-            PlayerEntity playerEntity = playerMapper.toModel(playerDto);
+        PlayerEntity playerEntity = playerMapper.toModel(playerDto);
 
-            if(playerRepository.findByEmail(playerEntity.getEmail()).isPresent()){
-                throw new PlayerAlreadyExistsException("El email " + playerEntity.getEmail() + " ya se encuentra registrado");
-            }
-
-            playerEntity.setPassword(passwordEncoder.encode(playerDto.getPassword()));
-            playerEntity.setRole(Rol.PLAYER);
-
-            playerEntity.getAddresses().forEach(address -> address.setDefault(true));
-
-            save(playerEntity);
-            log.info("Player registered successfully: playerId={}", playerEntity.getId());
-
-            return playerMapper.toResponse(playerEntity);
-        } catch (Exception e) {
-            log.error("Failed to register player: {}", e.getMessage(), e);
-            throw e;
+        if(playerRepository.findByEmail(playerEntity.getEmail()).isPresent()){
+            throw new PlayerAlreadyExistsException("El email " + playerEntity.getEmail() + " ya se encuentra registrado");
         }
+
+        playerEntity.setPassword(passwordEncoder.encode(playerDto.getPassword()));
+        playerEntity.setRole(Rol.PLAYER);
+        playerEntity.getAddresses().forEach(address -> address.setDefault(true));
+
+        save(playerEntity);
+        log.info("Player registered successfully: playerId={}", playerEntity.getId());
+
+        return playerMapper.toResponse(playerEntity);
     }
 
     @Override
@@ -63,8 +59,7 @@ public class PlayerServiceImplementation implements PlayerService {
     @Override
     @Transactional(readOnly = true)
     public PlayerResponseDto getByIdResponse(long idPlayer){
-        PlayerEntity playerEntity = getById(idPlayer);
-        return playerMapper.toResponse(playerEntity);
+        return playerMapper.toResponse(getById(idPlayer));
     }
 
     @Override
@@ -72,24 +67,19 @@ public class PlayerServiceImplementation implements PlayerService {
     public PlayerResponseDto update(long idPlayer, PlayerRequestDto playerDto){
         log.info("Updating player: playerId={}, email={}", idPlayer, playerDto.getEmail());
 
-        try {
-            PlayerEntity playerEntity = getById(idPlayer);
+        PlayerEntity playerEntity = getById(idPlayer);
 
-            emailAlreadyExists(playerDto.getEmail(), playerEntity.getId());
+        emailAlreadyExists(playerDto.getEmail(), playerEntity.getId());
 
-            playerEntity.setFirstName(playerDto.getFirstName());
-            playerEntity.setLastName(playerDto.getLastName());
-            playerEntity.setEmail(playerDto.getEmail());
-            playerEntity.setPhone(playerDto.getPhone());
+        playerEntity.setFirstName(playerDto.getFirstName());
+        playerEntity.setLastName(playerDto.getLastName());
+        playerEntity.setEmail(playerDto.getEmail());
+        playerEntity.setPhone(playerDto.getPhone());
 
-            save(playerEntity);
-            log.info("Player updated successfully: playerId={}", playerEntity.getId());
+        save(playerEntity);
+        log.info("Player updated successfully: playerId={}", playerEntity.getId());
 
-            return playerMapper.toResponse(playerEntity);
-        } catch (Exception e) {
-            log.error("Failed to update player {}: {}", idPlayer, e.getMessage(), e);
-            throw e;
-        }
+        return playerMapper.toResponse(playerEntity);
     }
 
     @Override
@@ -97,25 +87,17 @@ public class PlayerServiceImplementation implements PlayerService {
     public void delete(long idPlayer){
         log.info("Deleting player: playerId={}", idPlayer);
 
-        try {
-            PlayerEntity playerEntity = getById(idPlayer);
+        PlayerEntity playerEntity = getById(idPlayer);
 
-            // Cancelar reservas activas antes de eliminar
-            playerEntity.getReservations()
-                    .stream()
-                    .filter(r -> r.getStatus().equals(StatusReservation.RESERVADO) ||
-                            r.getStatus().equals(StatusReservation.REPROGRAMADO))
-                    .forEach(r -> r.setStatus(StatusReservation.CANCELADO));
+        playerEntity.getReservations()
+                .stream()
+                .filter(r -> r.getStatus().occupiesSlot())
+                .forEach(r -> r.setStatus(StatusReservation.CANCELADO));
 
-            save(playerEntity); // guarda las reservas canceladas
-            playerRepository.delete(playerEntity);
-            log.info("Player deleted successfully: playerId={}", idPlayer);
-        } catch (Exception e) {
-            log.error("Failed to delete player {}: {}", idPlayer, e.getMessage(), e);
-            throw e;
-        }
+        save(playerEntity);
+        playerRepository.delete(playerEntity);
+        log.info("Player deleted successfully: playerId={}", idPlayer);
     }
-
 
     public void save(PlayerEntity playerEntity){
         playerRepository.save(playerEntity);
@@ -124,11 +106,9 @@ public class PlayerServiceImplementation implements PlayerService {
     private void emailAlreadyExists(String email, long idPlayer){
         playerRepository.findByEmail(email)
                 .ifPresent(existing -> {
-                    if(existing.getId() != idPlayer){
+                    if(!Objects.equals(existing.getId(), idPlayer)){
                         throw new PlayerAlreadyExistsException("El email ya está en uso");
                     }
                 });
     }
-
-
 }

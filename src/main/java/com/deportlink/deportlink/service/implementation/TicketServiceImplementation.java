@@ -21,15 +21,12 @@ public class TicketServiceImplementation {
     public TicketResponseDto generateTicket(ReservationEntity reservation, Double totalPrice) {
         log.info("Generating ticket for reservation: reservationId={}, totalPrice={}", reservation.getId(), totalPrice);
 
-        try {
-            TicketEntity ticket = buildTicket(reservation, totalPrice);
-            ticketRepository.save(ticket);
-            log.info("Ticket generated successfully: ticketId={}", ticket.getId());
-            return ticketMapper.toResponse(ticket);
-        } catch (Exception e) {
-            log.error("Failed to generate ticket for reservation {}: {}", reservation.getId(), e.getMessage(), e);
-            throw e;
-        }
+        TicketEntity ticket = buildTicket(reservation, totalPrice);
+        ticketRepository.save(ticket);
+
+        log.info("Ticket generated successfully: ticketId={}", ticket.getId());
+
+        return ticketMapper.toResponse(ticket);
     }
 
     private TicketEntity buildTicket(ReservationEntity reservation, Double totalPrice) {

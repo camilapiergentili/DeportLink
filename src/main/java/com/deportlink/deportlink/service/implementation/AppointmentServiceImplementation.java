@@ -27,18 +27,13 @@ public class AppointmentServiceImplementation implements AppointmentService {
     public List<LocalTime> available(AppointmentRequestDto appointmentDto){
         log.info("Fetching available appointments: courtId={}, day={}", appointmentDto.getIdCourt(), appointmentDto.getDay());
 
-        try {
-            List<LocalTime> allTimes = generate(appointmentDto);
-            List<LocalTime> busyTimes = reservationService.getByCourtAndDay(appointmentDto.getIdCourt(), appointmentDto.getDay());
+        List<LocalTime> allTimes = generate(appointmentDto);
+        List<LocalTime> busyTimes = reservationService.getByCourtAndDay(appointmentDto.getIdCourt(), appointmentDto.getDay());
 
-            allTimes.removeIf(busyTimes::contains);
-            log.info("Available appointments retrieved: courtId={}, availableSlots={}", appointmentDto.getIdCourt(), allTimes.size());
+        allTimes.removeIf(busyTimes::contains);
+        log.info("Available appointments retrieved: courtId={}, availableSlots={}", appointmentDto.getIdCourt(), allTimes.size());
 
-            return allTimes;
-        } catch (Exception e) {
-            log.error("Failed to fetch available appointments for court {}: {}", appointmentDto.getIdCourt(), e.getMessage(), e);
-            throw e;
-        }
+        return allTimes;
     }
 
     private List<LocalTime> generate(AppointmentRequestDto appointmentDto){

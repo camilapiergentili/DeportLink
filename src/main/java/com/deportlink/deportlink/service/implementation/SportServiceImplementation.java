@@ -29,23 +29,17 @@ public class SportServiceImplementation implements SportService {
     public SportResponseDto create(SportRequestDto sportDto){
         log.info("Creating sport: name={}", sportDto.getNameSport());
 
-        try {
-            SportEntity sportEntity = sportMapper.toModel(sportDto);
+        SportEntity sportEntity = sportMapper.toModel(sportDto);
+        boolean exists = sportRepository.findByNameSport(sportEntity.getNameSport().toUpperCase()).isPresent();
 
-            boolean exists = sportRepository.findByNameSport(sportEntity.getNameSport().toUpperCase()).isPresent();
-
-            if(exists){
-                throw new SportAlreadyExistsException("El deporte " + sportEntity.getNameSport() + " ya se encuentra registrado");
-            }
-
-            sportRepository.save(sportEntity);
-            log.info("Sport created successfully: sportId={}", sportEntity.getId());
-
-            return sportMapper.toResponse(sportEntity);
-        } catch (Exception e) {
-            log.error("Failed to create sport: {}", e.getMessage(), e);
-            throw e;
+        if(exists){
+            throw new SportAlreadyExistsException("El deporte " + sportEntity.getNameSport() + " ya se encuentra registrado");
         }
+        sportRepository.save(sportEntity);
+
+        log.info("Sport created successfully: sportId={}", sportEntity.getId());
+
+        return sportMapper.toResponse(sportEntity);
     }
 
     @Transactional(readOnly = true)
@@ -66,14 +60,9 @@ public class SportServiceImplementation implements SportService {
     public void delete(long id){
         log.info("Deleting sport: sportId={}", id);
 
-        try {
-            SportEntity sportEntity = getById(id);
-            sportRepository.delete(sportEntity);
-            log.info("Sport deleted successfully: sportId={}", id);
-        } catch (Exception e) {
-            log.error("Failed to delete sport {}: {}", id, e.getMessage(), e);
-            throw e;
-        }
+        SportEntity sportEntity = getById(id);
+        sportRepository.delete(sportEntity);
+        log.info("Sport deleted successfully: sportId={}", id);
     }
 
     @Override
