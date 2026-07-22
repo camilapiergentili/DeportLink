@@ -4,7 +4,7 @@ import com.deportlink.deportlink.dto.response.BranchResponseDto;
 import com.deportlink.deportlink.dto.response.ClubResponseDto;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
 import com.deportlink.deportlink.exception.CourtNotFoundException;
-import com.deportlink.deportlink.exception.StatusAlreadyExistsException;
+import com.deportlink.deportlink.exception.StatusAlreadyAppliedException;
 import com.deportlink.deportlink.mapper.BranchMapper;
 import com.deportlink.deportlink.mapper.CourtMapper;
 import com.deportlink.deportlink.enums.ActiveStatus;
@@ -94,7 +94,7 @@ public class AdministratorServiceImplementation implements AdministratorService 
 
         if(branchEntity.getActiveStatus().equals(activeStatus) &&
                 branchEntity.getVerificationStatus().equals(verificationStatus)){
-            throw new StatusAlreadyExistsException("La sucursal ya se encuentra " + activeStatus + " y " + verificationStatus);
+            throw new StatusAlreadyAppliedException("La sucursal ya se encuentra " + activeStatus + " y " + verificationStatus);
         }
 
         branchEntity.setActiveStatus(activeStatus);

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Getter
@@ -19,5 +20,6 @@ public class ErrorResponse {
     private String message;
     private String path;
     private String method;
+    private Map<String, String> validationErrors;
 
 }

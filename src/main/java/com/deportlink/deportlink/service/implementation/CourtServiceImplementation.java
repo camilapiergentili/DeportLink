@@ -5,7 +5,7 @@ import com.deportlink.deportlink.dto.response.CourtResponseDto;
 import com.deportlink.deportlink.exception.BranchNotApprovedException;
 import com.deportlink.deportlink.exception.CourtAlreadyExistsException;
 import com.deportlink.deportlink.exception.CourtNotFoundException;
-import com.deportlink.deportlink.exception.NegativePriceExcepcion;
+import com.deportlink.deportlink.exception.NegativePriceException;
 import com.deportlink.deportlink.mapper.CourtMapper;
 import com.deportlink.deportlink.enums.ActiveStatus;
 import com.deportlink.deportlink.enums.VerificationStatus;
@@ -258,13 +258,13 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
 
     @Override
     @Transactional
-    public void updatePrice(long idCourt, double newPrice){
+    public void updatePrice(long idCourt, double newPrice) {
         log.info("Updating price for court: courtId={}, newPrice={}", idCourt, newPrice);
 
         CourtEntity courtEntity = getById(idCourt);
 
         if(newPrice <= 0){
-            throw new NegativePriceExcepcion("El precio no pueder ser negativo o cero");
+            throw new NegativePriceException("El precio no pueder ser negativo o cero");
         }
 
         courtEntity.setPricePerHour(newPrice);

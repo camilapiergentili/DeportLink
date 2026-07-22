@@ -116,7 +116,7 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
         }
 
         if(branchEntity.getActiveStatus().equals(ActiveStatus.DESACTIVE)){
-            throw new BranchNotActivedExcepcion("La sucursal se encuentra inactiva");
+            throw new BranchNotActiveException("La sucursal se encuentra inactiva");
         }
 
         return branchMapper.toResponse(branchEntity);
@@ -197,7 +197,7 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
 
         if(branchEntity.getActiveStatus().equals(activeStatus) &&
                 branchEntity.getVerificationStatus().equals(verificationStatus)){
-            throw new StatusAlreadyExistsException("El club ya se encuentra " + activeStatus + " y " + verificationStatus);
+            throw new StatusAlreadyAppliedException("El club ya se encuentra " + activeStatus + " y " + verificationStatus);
         }
 
         branchEntity.setActiveStatus(activeStatus);

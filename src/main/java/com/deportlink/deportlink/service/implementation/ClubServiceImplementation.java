@@ -198,7 +198,7 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
         OwnerEntity ownerEntity = ownerService.getById(idOwner);
 
         if(!existsOwner(clubEntity, ownerEntity.getCuil())){
-            throw new OwnerNotInClubException("La persona que quieres eliminar, no pertenece al club");
+            throw new OwnerNotBelongsToClubException("La persona que quieres eliminar, no pertenece al club");
         }
 
         clubEntity.getOwners().remove(ownerEntity);
@@ -244,7 +244,7 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
 
         if(clubEntity.getActiveStatus().equals(activeStatus) &&
                 clubEntity.getVerificationStatus().equals(verificationStatus)){
-            throw new StatusAlreadyExistsException("El club ya se encuentra " + activeStatus + " y " + verificationStatus);
+            throw new StatusAlreadyAppliedException("El club ya se encuentra " + activeStatus + " y " + verificationStatus);
         }
 
         clubEntity.setActiveStatus(activeStatus);

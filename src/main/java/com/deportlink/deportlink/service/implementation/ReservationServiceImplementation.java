@@ -83,7 +83,7 @@ public class ReservationServiceImplementation implements ReservationService {
         if (reservationEntity.getStatus().equals(StatusReservation.CANCELADO) ||
                 reservationEntity.getStatus().equals(StatusReservation.FINALIZADO)) {
             log.warn("Cannot cancel reservation {} - status is {}", idReservation, reservationEntity.getStatus());
-            throw new IllegalStateException("La reserva no puede cancelarse");
+            throw new InvalidStatusTransitionException("La reserva no puede cancelarse");
         }
 
         boolean isCancel = isBefore12hours(reservationEntity.getDay(), reservationEntity.getStartTime());
