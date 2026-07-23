@@ -1,6 +1,7 @@
 package com.deportlink.deportlink.security.service;
 
 import com.deportlink.deportlink.model.entity.UserEntity;
+import com.deportlink.deportlink.model.entity.UserMain;
 import com.deportlink.deportlink.persistence.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.User;
@@ -17,15 +18,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-
         UserEntity user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
-
-
-        return User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .roles(user.getRole().name())
-                .build();
+        return new UserMain(user);
     }
+
 }

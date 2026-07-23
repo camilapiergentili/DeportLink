@@ -28,33 +28,34 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        // De la request obtengo el Header del token
         String header = request.getHeader("Authorization");
-
-        // Limpio el Bearer y me quedo solo con el token
         String token = jwtUtil.resolveToken(header);
 
-        //Si no es nullo o ya expero, extraemos el mail del token y nos fijamos que exista en la base de datos
-        if (token != null && !jwtUtil.isTokenExpired(token)
-                && SecurityContextHolder.getContext().getAuthentication() == null){
+        try {
+            if (token != null && !jwtUtil.isTokenExpired(token)
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            String email = jwtUtil.extractUsername(token);
+                String email = jwtUtil.extractUsername(token);
+                UserDetails user = userDetailsService.loadUserByUsername(email);
 
-            UserDetails user = userDetailsService.loadUserByUsername(email);
+                UsernamePasswordAuthenticationToken auth =
+                        new UsernamePasswordAuthenticationToken(
+                                user,
+                                null,
+                                user.getAuthorities()
+                        );
 
-            UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(
-                            user,                    // quién es
-                            null,                    // credenciales (no necesarias acá)
-                            user.getAuthorities()    // sus permisos (ROLE_PLAYER)
-                    );
-
-            // Guardamos los detalles web (como la IP) en la credencial
-            auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(auth);
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            }
+        } catch (Exception e) {
+            // El token es inválido — respondemos 401 directamente
+            response.setContentType("application/json");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{\"error\": \"Token inválido o expirado\"}");
+            return; // Cortamos acá, no seguimos con el filter
         }
 
         filterChain.doFilter(request, response);
-
     }
 }

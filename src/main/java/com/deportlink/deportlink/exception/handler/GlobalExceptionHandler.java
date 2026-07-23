@@ -26,7 +26,8 @@ public class GlobalExceptionHandler {
             ScheduleNotFoundException.class,
             ReservationNotFoundException.class,
             SportNotFoundException.class,
-            OwnerNotFoundException.class
+            OwnerNotFoundException.class,
+            UserNotFoundException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFoundException(RuntimeException ex, HttpServletRequest request) {
         log.error("Resource not found: {}", ex.getMessage());
