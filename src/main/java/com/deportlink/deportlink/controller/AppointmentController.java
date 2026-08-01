@@ -5,7 +5,7 @@ import com.deportlink.deportlink.service.AppointmentService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +20,7 @@ public class AppointmentController {
 
     final private AppointmentService appointmentService;
 
-    @GetMapping
+    @PostMapping("/available")
     public ResponseEntity<List<LocalTime>> getAvailable(@RequestBody @Valid AppointmentRequestDto appointmentDto){
         List<LocalTime> available = appointmentService.available(appointmentDto);
         return ResponseEntity.ok(available);

@@ -7,57 +7,111 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
 
 @RestController
 @RequestMapping("/api/courts/owners")
 @AllArgsConstructor
 public class CourtOwnerController {
 
-    private CourtOwnerService courtService;
+    private final CourtOwnerService courtService;
 
     @PostMapping
-    public ResponseEntity<CourtResponseDto> create(@Valid @RequestBody CourtRequestDto courtDto){
-        CourtResponseDto courtResponse = courtService.create(courtDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(courtResponse);
+    @PreAuthorize("""
+        hasRole('ADMIN')
+        or (hasRole('OWNER')
+            and @courtAuthorization.isOwnerOfBranch(
+                #courtDto.idBranch, authentication))
+    """)
+    public ResponseEntity<CourtResponseDto> create(
+            @Valid @RequestBody CourtRequestDto courtDto) {
+
+        CourtResponseDto court = courtService.create(courtDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(court);
     }
 
     @DeleteMapping("/{idCourt}")
-    public ResponseEntity<Object> detele(@PathVariable long idCourt){
+    @PreAuthorize("""
+        hasRole('ADMIN')
+        or (hasRole('OWNER')
+            and @courtAuthorization.isOwnerOfCourt(
+                #idCourt, authentication))
+    """)
+    public ResponseEntity<Object> delete(@PathVariable long idCourt) {
         courtService.delete(idCourt);
-        return ResponseEntity.ok(Map.of("message", "Cancha eliminada con exito"));
+        return ResponseEntity.ok(
+                Map.of("message", "Cancha eliminada con éxito")
+        );
     }
 
     @PutMapping("/{idCourt}")
-    public ResponseEntity<CourtResponseDto> update(@PathVariable long idCourt,
-                                                   @Valid @RequestBody CourtRequestDto courtDto){
-        CourtResponseDto courtResponse = courtService.update(idCourt, courtDto);
-        return ResponseEntity.ok(courtResponse);
+    @PreAuthorize("""
+        hasRole('ADMIN')
+        or (hasRole('OWNER')
+            and @courtAuthorization.isOwnerOfCourt(
+                #idCourt, authentication)
+            and @courtAuthorization.isOwnerOfBranch(
+                #courtDto.idBranch, authentication))
+    """)
+    public ResponseEntity<CourtResponseDto> update(
+            @PathVariable long idCourt,
+            @Valid @RequestBody CourtRequestDto courtDto) {
+
+        return ResponseEntity.ok(courtService.update(idCourt, courtDto));
     }
 
     @PatchMapping("/{idCourt}/price")
-    public ResponseEntity<Object> updatePrice(@PathVariable long idCourt,
-                                              @RequestParam double newPrice){
+    @PreAuthorize("""
+        hasRole('ADMIN')
+        or (hasRole('OWNER')
+            and @courtAuthorization.isOwnerOfCourt(
+                #idCourt, authentication))
+    """)
+    public ResponseEntity<Object> updatePrice(
+            @PathVariable long idCourt,
+            @RequestParam double newPrice) {
+
         courtService.updatePrice(idCourt, newPrice);
-        return ResponseEntity.ok(Map.of("message", "El precio ha sido actualizado con exito"));
+        return ResponseEntity.ok(
+                Map.of("message", "El precio fue actualizado con éxito")
+        );
     }
 
     @PatchMapping("/{idCourt}/activate")
-    public ResponseEntity<Object> activate(@RequestParam long idBranch,
-                                           @PathVariable long idCourt){
+    @PreAuthorize("""
+        hasRole('ADMIN')
+        or (hasRole('OWNER')
+            and @courtAuthorization.isOwnerOfCourt(
+                #idCourt, authentication))
+    """)
+    public ResponseEntity<Object> activate(
+            @RequestParam long idBranch,
+            @PathVariable long idCourt) {
+
         courtService.activateCourt(idBranch, idCourt);
-        return ResponseEntity.ok(Map.of("message", "La cancha fue activado con exito"));
+        return ResponseEntity.ok(
+                Map.of("message", "La cancha fue activada con éxito")
+        );
     }
 
-    @PatchMapping("/{idCourt}/desactivate")
-    public ResponseEntity<Object> desactivate(@RequestParam long idBranch,
-                                              @PathVariable long idCourt){
-        courtService.desactivedCourt(idBranch, idCourt);
-        return ResponseEntity.ok(Map.of("message", "La cancha fue activado con exito"));
-    }
+    @PatchMapping("/{idCourt}/deactivate")
+    @PreAuthorize("""
+        hasRole('ADMIN')
+        or (hasRole('OWNER')
+            and @courtAuthorization.isOwnerOfCourt(
+                #idCourt, authentication))
+    """)
+    public ResponseEntity<Object> deactivate(
+            @RequestParam long idBranch,
+            @PathVariable long idCourt) {
 
+        courtService.deactivateCourt(idBranch, idCourt);
+        return ResponseEntity.ok(
+                Map.of("message", "La cancha fue desactivada con éxito")
+        );
+    }
 }

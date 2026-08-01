@@ -10,5 +10,5 @@ public interface CourtOwnerService {
     void updatePrice(long idCourt, double newPrice) throws NegativePriceException;
     void delete(long idCourt);
     void activateCourt(long idBranch, long idCourt);
-    void desactivedCourt(long idBranch, long idCourt);
+    void deactivateCourt(long idBranch, long idCourt);
 }

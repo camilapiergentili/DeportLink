@@ -9,6 +9,8 @@ import java.util.List;
 
 
 public interface CourtService {
+    CourtEntity getById(long idCourt);
+    CourtEntity getByIdForUpdate(long idCourt);
     CourtResponseDto getByIdResponse(long idCourt);
     CourtResponseDto getByIdApprovedAndActive(long idCourt);
     List<CourtResponseDto> getAllActiveAndApproved();

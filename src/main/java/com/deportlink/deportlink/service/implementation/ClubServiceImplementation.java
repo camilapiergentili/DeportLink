@@ -15,7 +15,6 @@ import com.deportlink.deportlink.service.ClubAdminService;
 import com.deportlink.deportlink.service.ClubOwnerService;
 import com.deportlink.deportlink.service.ClubService;
 import com.deportlink.deportlink.service.OwnerService;
-import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +40,7 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
     public ClubResponseDto create(ClubRequestDto clubDto){
         log.info("Creating new club: name={}, cuit={}", clubDto.getName(), clubDto.getCuit());
 
-        if (CollectionUtils.isEmpty(clubDto.getOwnerIds())) {
+        if (clubDto.getOwnerIds() == null || clubDto.getOwnerIds().isEmpty()) {
             log.warn("Club creation failed: no owners provided");
             throw new IllegalArgumentException("El club debe estar asociado a al menos un dueño");
         }
@@ -53,19 +52,12 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
 
         ClubEntity clubEntity = clubMapper.toModel(clubDto);
 
-        if(clubRepository.findByCuit(clubEntity.getCuit()).isPresent()){
-            log.warn("Club creation failed: CUIT {} already exists", clubEntity.getCuit());
-            throw new ClubAlreadyExistsException("El club con el número de CUIT " + clubEntity.getCuit() + " ya se encuentra registrado");
-        }
-
-        if(clubRepository.findByLegalName(clubEntity.getLegalName()).isPresent()){
-            log.warn("Club creation failed: legal name {} already exists", clubEntity.getLegalName());
-            throw new ClubAlreadyExistsException("El club con el nombre " + clubEntity.getLegalName() + " ya se encuentra registrado");
-        }
+        validateUniqueness(clubEntity.getCuit(), clubEntity.getLegalName(), null);
 
         clubEntity.setVerificationStatus(VerificationStatus.PENDING);
-        clubEntity.setActiveStatus(ActiveStatus.DESACTIVE);
+        clubEntity.setActiveStatus(ActiveStatus.INACTIVE);
         clubEntity.setOwners(owners);
+
         owners.forEach(owner -> owner.getClubs().add(clubEntity));
 
         save(clubEntity);
@@ -92,7 +84,7 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
             default -> {}
         }
 
-        if(clubEntity.getActiveStatus().equals(ActiveStatus.DESACTIVE)){
+        if(clubEntity.getActiveStatus().equals(ActiveStatus.INACTIVE)){
             throw new ClubNotActivedException("El club no se encuentra activo");
         }
 
@@ -101,30 +93,8 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
 
     @Override
     @Transactional(readOnly = true)
-    public List<ClubResponseDto> getByActiveAndApproved(){
-        log.debug("Fetching approved and active clubs");
-        return clubRepository
-                .findApprovedWithEagerLoading(VerificationStatus.APPROVED, ActiveStatus.ACTIVE)
-                .stream()
-                .map(clubMapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ClubResponseDto> getAll(){
-        List<ClubEntity> clubEntities = clubRepository.findAll();
-
-        return clubEntities
-                .stream()
-                .map(clubMapper::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Page<ClubResponseDto> getByActiveAndApprovedPaginated(Pageable pageable) {
-        log.debug("Fetching approved and active clubs with pagination: page={}, size={}", 
+        log.debug("Fetching approved and active clubs with pagination: page={}, size={}",
                 pageable.getPageNumber(), pageable.getPageSize());
         return clubRepository
                 .findApprovedPaginated(VerificationStatus.APPROVED, ActiveStatus.ACTIVE, pageable)
@@ -134,10 +104,18 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
     @Override
     @Transactional(readOnly = true)
     public Page<ClubResponseDto> getAllPaginated(Pageable pageable) {
-        log.debug("Fetching all clubs with pagination: page={}, size={}", 
+        log.debug("Fetching all clubs with pagination: page={}, size={}",
                 pageable.getPageNumber(), pageable.getPageSize());
         return clubRepository.findAll(pageable)
                 .map(clubMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClubResponseDto> getAll() {
+        return clubRepository.findAll()
+                .stream()
+                .map(clubMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -161,6 +139,10 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
                 !clubEntity.getCuit().equals(clubDto.getCuit()) ||
                 !clubEntity.getClubType().equals(clubDto.getClubType());
 
+        if (requiresReview) {
+            validateUniqueness(clubDto.getCuit(), clubDto.getLegalName(), id);
+        }
+
         clubEntity.setName(clubDto.getName());
         clubEntity.setLegalName(clubDto.getLegalName());
         clubEntity.setClubType(clubDto.getClubType());
@@ -168,7 +150,7 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
 
         if(requiresReview) {
             clubEntity.setVerificationStatus(VerificationStatus.PENDING);
-            clubEntity.setActiveStatus(ActiveStatus.DESACTIVE);
+            clubEntity.setActiveStatus(ActiveStatus.INACTIVE);
         }
 
         save(clubEntity);
@@ -209,14 +191,14 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
 
     @Override
     @Transactional
-    public void deactivate(long idOwner, long idClub){
-        activateAndDesactivateClub(idOwner, idClub, ActiveStatus.DESACTIVE);
+    public void deactivate(long idClub){
+        setClubActiveStatus(idClub, ActiveStatus.INACTIVE);
     }
 
     @Override
     @Transactional
-    public void activate(long idOwner, long idClub){
-        activateAndDesactivateClub(idOwner, idClub, ActiveStatus.ACTIVE);
+    public void activate(long idClub){
+        setClubActiveStatus(idClub, ActiveStatus.ACTIVE);
     }
 
     @Override
@@ -231,8 +213,24 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
     @Transactional
     public void reject(long idClub){
         log.info("Rejecting club: clubId={}", idClub);
-        modifyStatusClub(idClub, ActiveStatus.DESACTIVE, VerificationStatus.REJECTED);
+        modifyStatusClub(idClub, ActiveStatus.INACTIVE, VerificationStatus.REJECTED);
         log.info("Club rejected successfully: clubId={}", idClub);
+    }
+
+    private void validateUniqueness(String cuit, String legalName, Long excludeId) {
+        clubRepository.findByCuit(cuit)
+                .filter(c -> !c.getId().equals(excludeId))
+                .ifPresent(c -> {
+                    throw new ClubAlreadyExistsException(
+                            "El club con el número de CUIT " + cuit + " ya se encuentra registrado");
+                });
+
+        clubRepository.findByLegalName(legalName)
+                .filter(c -> !c.getId().equals(excludeId))
+                .ifPresent(c -> {
+                    throw new ClubAlreadyExistsException(
+                            "El club con el nombre " + legalName + " ya se encuentra registrado");
+                });
     }
 
     private void modifyStatusClub(long idClub, ActiveStatus activeStatus, VerificationStatus verificationStatus){
@@ -258,24 +256,14 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
                 .anyMatch(o -> o.getCuil().equals(cuil));
     }
 
-    private void activateAndDesactivateClub(long idOwner, long idClub, ActiveStatus status){
-        OwnerEntity owner = ownerService.getById(idOwner);
-        List<ClubEntity> clubsByOwner = owner.getClubs();
-
-        ClubEntity club = clubsByOwner.stream()
-                .filter(o -> o.getId() == idClub)
-                .findFirst()
-                .orElseThrow(() -> new ClubNotFoundException("La persona no tiene el club asociado"));
-
-        if(!club.getVerificationStatus().equals(VerificationStatus.APPROVED)){
-            throw new ClubNotApprovedException(
-                    "El club no se encuentra aprobado para poder usar la función de activar y desactivar club");
+    private void setClubActiveStatus(long idClub, ActiveStatus status) {
+        ClubEntity club = getById(idClub);
+        if (!club.getVerificationStatus().equals(VerificationStatus.APPROVED)) {
+            throw new ClubNotApprovedException("El club no se encuentra aprobado");
         }
-
-        if(club.getActiveStatus().equals(status)){
+        if (club.getActiveStatus().equals(status)) {
             throw new IllegalStateException("El club ya está en el estado solicitado");
         }
-
         club.setActiveStatus(status);
         save(club);
     }

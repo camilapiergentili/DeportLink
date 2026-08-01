@@ -47,4 +47,6 @@ public interface ClubRepository extends JpaRepository<ClubEntity, Long> {
             ActiveStatus activeStatus,
             Pageable pageable
     );
+
+    boolean existsByIdAndOwners_Id(long idClub, long idOwner);
 }

@@ -16,12 +16,13 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface ScheduleMapper {
 
+    @Mapping(source = "day", target = "day", qualifiedByName = "stringToDayOfWeek")
     @Mapping(source = "openingTime", target = "openingTime", qualifiedByName = "stringToLocalTime")
     @Mapping(source = "closingTime", target = "closingTime", qualifiedByName = "stringToLocalTime")
     @Mapping(source = "slotDuration", target = "slotDuration", qualifiedByName = "minutesToDuration")
     ScheduleEntity toModel(ScheduleRequestDto dto);
 
-
+    @Mapping(source = "day", target = "day", qualifiedByName = "dayOfWeekToString")
     @Mapping(source = "openingTime", target = "openingTime", qualifiedByName = "localTimeToString")
     @Mapping(source = "closingTime", target = "closingTime", qualifiedByName = "localTimeToString")
     @Mapping(source = "slotDuration", target = "slotDuration", qualifiedByName = "durationToMinutes")

@@ -14,6 +14,7 @@ import com.deportlink.deportlink.persistence.repository.BranchRepository;
 import com.deportlink.deportlink.service.BranchAdminService;
 import com.deportlink.deportlink.service.BranchOwnerService;
 import com.deportlink.deportlink.service.BranchService;
+import com.deportlink.deportlink.service.ClubService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
     private final BranchRepository branchRepository;
     private final BranchMapper branchMapper;
     private final AddressMapper addressMapper;
-    private final ClubServiceImplementation clubService;
+    private final ClubService clubService;
 
     @Override
     @Transactional
@@ -48,7 +49,7 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
 
         branchEntity.setClub(clubEntity);
         branchEntity.setVerificationStatus(VerificationStatus.PENDING);
-        branchEntity.setActiveStatus(ActiveStatus.DESACTIVE);
+        branchEntity.setActiveStatus(ActiveStatus.INACTIVE);
         clubEntity.getBranches().add(branchEntity);
 
         save(branchEntity);
@@ -115,7 +116,7 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
             default -> {}
         }
 
-        if(branchEntity.getActiveStatus().equals(ActiveStatus.DESACTIVE)){
+        if(branchEntity.getActiveStatus().equals(ActiveStatus.INACTIVE)){
             throw new BranchNotActiveException("La sucursal se encuentra inactiva");
         }
 
@@ -148,7 +149,7 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
 
         if(requiresReview){
             branchEntity.setVerificationStatus(VerificationStatus.PENDING);
-            branchEntity.setActiveStatus(ActiveStatus.DESACTIVE);
+            branchEntity.setActiveStatus(ActiveStatus.INACTIVE);
         }
 
         save(branchEntity);
@@ -158,17 +159,17 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
 
     @Override
     @Transactional
-    public void desactive(long idBranch, long idClub){
+    public void deactivate(long idBranch, long idClub){
         log.info("Deactivating branch: branchId={}, clubId={}", idBranch, idClub);
-        activateAndDesactivateBranchByClub(idBranch, idClub, ActiveStatus.DESACTIVE);
+        setActivationStatus(idBranch, idClub, ActiveStatus.INACTIVE);
         log.info("Branch deactivated successfully: branchId={}", idBranch);
     }
 
     @Override
     @Transactional
-    public void active(long idBranch, long idClub){
+    public void activate(long idBranch, long idClub){
         log.info("Activating branch: branchId={}, clubId={}", idBranch, idClub);
-        activateAndDesactivateBranchByClub(idBranch, idClub, ActiveStatus.ACTIVE);
+        setActivationStatus(idBranch, idClub, ActiveStatus.ACTIVE);
         log.info("Branch activated successfully: branchId={}", idBranch);
     }
 
@@ -184,7 +185,7 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
     @Transactional
     public void reject(long idBranch){
         log.info("Rejecting branch: branchId={}", idBranch);
-        modifyStatus(idBranch, ActiveStatus.DESACTIVE, VerificationStatus.REJECTED);
+        modifyStatus(idBranch, ActiveStatus.INACTIVE, VerificationStatus.REJECTED);
         log.info("Branch rejected successfully: branchId={}", idBranch);
     }
 
@@ -192,7 +193,7 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
         BranchEntity branchEntity = getById(idBranch);
 
         if(!branchEntity.getVerificationStatus().equals(VerificationStatus.PENDING)){
-            throw new IllegalStateException("Solo se pueden aprobar/rechazar clubs en estado PENDING");
+            throw new IllegalStateException("Solo se pueden aprobar/rechazar sucursales en estado PENDING");
         }
 
         if(branchEntity.getActiveStatus().equals(activeStatus) &&
@@ -205,25 +206,17 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
         save(branchEntity);
     }
 
-
-    private void activateAndDesactivateBranchByClub(long idBranch, long idClub, ActiveStatus status){
-        ClubEntity clubEntity = clubService.getById(idClub);
-
-        BranchEntity branchEntity = clubEntity.getBranches()
-                .stream()
-                .filter(b -> b.getId() == idBranch)
-                .findFirst()
-                .orElseThrow(() -> new BranchNotFoundException("No existe sucursal que desea desactivar"));
-
-        if(!branchEntity.getVerificationStatus().equals(VerificationStatus.APPROVED)){
-            throw new BranchNotApprovedException(
-                    "La sucursal no se encuentra aprobada para poder usar la función de activar y desactivar sucursal");
+    private void setActivationStatus(long idBranch, long idClub, ActiveStatus status){
+        BranchEntity branchEntity = getById(idBranch);
+        if (branchEntity.getClub().getId() != idClub) {
+            throw new BranchNotFoundException("La sucursal no pertenece al club indicado");
         }
-
-        if(branchEntity.getActiveStatus().equals(status)){
+        if (!branchEntity.getVerificationStatus().equals(VerificationStatus.APPROVED)) {
+            throw new BranchNotApprovedException("La sucursal no se encuentra aprobada");
+        }
+        if (branchEntity.getActiveStatus().equals(status)) {
             throw new IllegalStateException("La sucursal ya está en el estado solicitado");
         }
-
         branchEntity.setActiveStatus(status);
         save(branchEntity);
     }

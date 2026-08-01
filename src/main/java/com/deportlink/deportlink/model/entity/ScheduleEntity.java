@@ -12,7 +12,13 @@ import java.time.Duration;
 import java.time.LocalTime;
 
 @Entity
-@Table(name= "availability")
+@Table(
+    name = "availability",
+    indexes = {
+        // Cubre findByCourtIdAndDay — llamado en cada generación de turnos disponibles
+        @Index(name = "idx_availability_court_day", columnList = "court_id, day_of_week")
+    }
+)
 @Getter
 @Setter
 @AllArgsConstructor
@@ -21,10 +27,11 @@ public class ScheduleEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
-    @Column(name = "day_of_week", columnDefinition = "VARCHAR(20)")
-    private String day;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week")
+    private DayOfWeek day;
 
     private LocalTime openingTime;
     private LocalTime closingTime;

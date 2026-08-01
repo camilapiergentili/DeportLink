@@ -4,15 +4,13 @@ import com.deportlink.deportlink.dto.response.BranchResponseDto;
 import com.deportlink.deportlink.dto.response.ClubResponseDto;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
 import com.deportlink.deportlink.exception.CourtNotFoundException;
-import com.deportlink.deportlink.exception.StatusAlreadyAppliedException;
 import com.deportlink.deportlink.mapper.BranchMapper;
 import com.deportlink.deportlink.mapper.CourtMapper;
-import com.deportlink.deportlink.enums.ActiveStatus;
-import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.model.entity.BranchEntity;
 import com.deportlink.deportlink.model.entity.ClubEntity;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.service.AdministratorService;
+import com.deportlink.deportlink.service.ClubService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,7 +24,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class AdministratorServiceImplementation implements AdministratorService {
 
-    private final ClubServiceImplementation clubService;
+    private final ClubService clubService;
     private final CourtServiceImplementation courtService;
     private final BranchServiceImplementation branchService;
     private final CourtMapper courtMapper;
@@ -49,7 +47,6 @@ public class AdministratorServiceImplementation implements AdministratorService 
 
     public void rejectClub(long idClub){
         log.info("Rejecting club: clubId={}", idClub);
-
         clubService.reject(idClub);
         log.info("Club rejected successfully: clubId={}", idClub);
     }
@@ -73,33 +70,14 @@ public class AdministratorServiceImplementation implements AdministratorService 
 
     public void approveBranch(long idBranch){
         log.info("Approving branch: branchId={}", idBranch);
-
-        modifyStatusBranch(idBranch, ActiveStatus.ACTIVE, VerificationStatus.APPROVED);
+        branchService.approve(idBranch);
         log.info("Branch approved successfully: branchId={}", idBranch);
     }
 
     public void rejectBranch(long idBranch){
         log.info("Rejecting branch: branchId={}", idBranch);
-
-        modifyStatusBranch(idBranch, ActiveStatus.DESACTIVE, VerificationStatus.REJECTED);
+        branchService.reject(idBranch);
         log.info("Branch rejected successfully: branchId={}", idBranch);
-    }
-
-    private void modifyStatusBranch(long idBranch, ActiveStatus activeStatus, VerificationStatus verificationStatus){
-        BranchEntity branchEntity = branchService.getById(idBranch);
-
-        if(!branchEntity.getVerificationStatus().equals(VerificationStatus.PENDING)){
-            throw new IllegalStateException("Solo se pueden aprobar/rechazar sucursales en estado PENDING");
-        }
-
-        if(branchEntity.getActiveStatus().equals(activeStatus) &&
-                branchEntity.getVerificationStatus().equals(verificationStatus)){
-            throw new StatusAlreadyAppliedException("La sucursal ya se encuentra " + activeStatus + " y " + verificationStatus);
-        }
-
-        branchEntity.setActiveStatus(activeStatus);
-        branchEntity.setVerificationStatus(verificationStatus);
-        branchService.save(branchEntity);
     }
 
     //COURT

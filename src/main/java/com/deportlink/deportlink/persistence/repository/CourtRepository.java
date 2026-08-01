@@ -5,7 +5,9 @@ import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -51,6 +53,12 @@ public interface CourtRepository extends JpaRepository<CourtEntity, Long> {
             @Param("activeStatus") ActiveStatus activeStatus,
             Pageable pageable);
 
+    Page<CourtEntity> findByBranch_IdAndActiveStatus(
+            long idBranch,
+            ActiveStatus activeStatus,
+            Pageable pageable
+    );
+
     @Query("""
         SELECT DISTINCT c FROM CourtEntity c
         LEFT JOIN FETCH c.sport
@@ -60,4 +68,22 @@ public interface CourtRepository extends JpaRepository<CourtEntity, Long> {
     Page<CourtEntity> findByBranch_Id(
             @Param("branchId") long branchId,
             Pageable pageable);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT c FROM CourtEntity c WHERE c.id = :id")
+    Optional<CourtEntity> findByIdForUpdate(@Param("id") long id);
+
+    @Query("""
+    SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END
+    FROM CourtEntity c
+    JOIN c.branch b
+    JOIN b.club club
+    JOIN club.owners owner
+    WHERE c.id = :idCourt
+      AND owner.id = :idOwner
+""")
+    boolean existsByCourtAndOwner(
+            @Param("idCourt") long idCourt,
+            @Param("idOwner") long idOwner
+    );
 }

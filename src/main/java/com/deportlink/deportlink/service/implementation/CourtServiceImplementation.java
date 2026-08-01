@@ -62,9 +62,17 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
         return courtMapper.toResponse(courtEntity);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public CourtEntity getById(long idCourt){
         return courtRepository.findById(idCourt)
+                .orElseThrow(() -> new CourtNotFoundException("No se encontro la cancha"));
+    }
+
+    @Override
+    @Transactional
+    public CourtEntity getByIdForUpdate(long idCourt) {
+        return courtRepository.findByIdForUpdate(idCourt)
                 .orElseThrow(() -> new CourtNotFoundException("No se encontro la cancha"));
     }
 
@@ -165,37 +173,30 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
 
     @Override
     @Transactional(readOnly = true)
-    public Page<CourtResponseDto> getAllByBranchActiveAndApprovedPaginated(long idBranch, Pageable pageable){
-        log.info("Fetching active and approved courts for branch with pagination: branchId={}, page={}, size={}", idBranch, pageable.getPageNumber(), pageable.getPageSize());
-        
-        BranchEntity branchEntity = branchService.getById(idBranch);
+    public Page<CourtResponseDto> getAllByBranchActiveAndApprovedPaginated(
+            long idBranch,
+            Pageable pageable) {
 
-        boolean isVisible = verifyBranchIsVisibleForPlayer(branchEntity.getVerificationStatus(), branchEntity.getActiveStatus());
+        BranchEntity branch = branchService.getById(idBranch);
 
-        if(!isVisible){
-            throw new BranchNotApprovedException("La cancha no está disponible para jugadores");
+        boolean visible = verifyBranchIsVisibleForPlayer(
+                branch.getVerificationStatus(),
+                branch.getActiveStatus()
+        );
+
+        if (!visible) {
+            throw new BranchNotApprovedException(
+                    "La sucursal no está disponible para jugadores"
+            );
         }
 
-        List<CourtEntity> courts = branchEntity.getCourts();
-
-        if(courts.isEmpty()){
-            throw new CourtNotFoundException("No se encontraron canchas asociadas a la sucursal");
-        }
-
-        log.info("Found {} courts for branch with pagination", courts.size());
-        
-        // Manual pagination of in-memory list
-        int pageNumber = pageable.getPageNumber();
-        int pageSize = pageable.getPageSize();
-        int start = pageNumber * pageSize;
-        int end = Math.min(start + pageSize, courts.size());
-        
-        List<CourtResponseDto> pageContent = courts.subList(start, Math.max(start, end))
-                .stream()
-                .map(courtMapper::toResponse)
-                .collect(Collectors.toList());
-        
-        return new org.springframework.data.domain.PageImpl<>(pageContent, pageable, courts.size());
+        return courtRepository
+                .findByBranch_IdAndActiveStatus(
+                        idBranch,
+                        ActiveStatus.ACTIVE,
+                        pageable
+                )
+                .map(courtMapper::toResponse);
     }
 
     @Override
@@ -277,17 +278,17 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
     public void activateCourt(long idBranch, long idCourt){
         log.info("Activating court: courtId={}, branchId={}", idCourt, idBranch);
         ActiveStatus status = ActiveStatus.ACTIVE;
-        activateAndDesactivateCourtByBranch(idCourt, idBranch, status);
+        setCourtActiveStatus(idCourt, idBranch, status);
         log.info("Court activated successfully: courtId={}", idCourt);
     }
 
     @Override
     @Transactional
-    public void desactivedCourt(long idBranch, long idCourt){
+    public void deactivateCourt(long idBranch, long idCourt){
         log.info("Deactivating court: courtId={}, branchId={}", idCourt, idBranch);
 
-        ActiveStatus status = ActiveStatus.DESACTIVE;
-        activateAndDesactivateCourtByBranch(idCourt, idBranch, status);
+        ActiveStatus status = ActiveStatus.INACTIVE;
+        setCourtActiveStatus(idCourt, idBranch, status);
 
         log.info("Court deactivated successfully: courtId={}", idCourt);
     }
@@ -298,7 +299,7 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
                 .orElseThrow(() -> new CourtNotFoundException("La cancha que esta buscando no se encuentra registrada"));
     }
 
-    private void activateAndDesactivateCourtByBranch(long idCourt, long idBranch, ActiveStatus status){
+    private void setCourtActiveStatus(long idCourt, long idBranch, ActiveStatus status){
         CourtEntity courtEntity = courtRepository.findByIdAndBranch_Id(idCourt, idBranch)
                 .orElseThrow(() -> new CourtNotFoundException("No se encontre cancha vinculada a la sucursal"));
 
@@ -307,7 +308,7 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
                     "La sucursal no se encuentra APROBADA para poder usar la función de activar y desactivar cancha");
         }
 
-        if(courtEntity.getBranch().getActiveStatus().equals(ActiveStatus.DESACTIVE)){
+        if(courtEntity.getBranch().getActiveStatus().equals(ActiveStatus.INACTIVE)){
             throw new BranchNotApprovedException(
                     "La sucursal no se encuentra ACTIVA para poder usar la función de activar y desactivar cancha");
         }

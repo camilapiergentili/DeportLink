@@ -17,6 +17,7 @@ import java.util.List;
 public class BranchAdminController {
 
     private BranchAdminService branchAdminService;
+
     @GetMapping("/{id}")
     public ResponseEntity<BranchResponseDto> getById(@PathVariable long id){
         BranchResponseDto branchResponse = branchAdminService.getByIdResponse(id);

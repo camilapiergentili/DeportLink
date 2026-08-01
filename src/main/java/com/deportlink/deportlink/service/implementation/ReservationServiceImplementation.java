@@ -11,6 +11,9 @@ import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.model.entity.PlayerEntity;
 import com.deportlink.deportlink.model.entity.ReservationEntity;
 import com.deportlink.deportlink.persistence.repository.ReservationRepository;
+import com.deportlink.deportlink.service.CourtService;
+import com.deportlink.deportlink.service.PlayerService;
+import com.deportlink.deportlink.service.PricingService;
 import com.deportlink.deportlink.service.ReservationService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,19 +38,22 @@ public class ReservationServiceImplementation implements ReservationService {
 
     private final ReservationMapper reservationMapper;
     private final ReservationRepository reservationRepository;
-    private final CourtServiceImplementation courtService;
-    private final PlayerServiceImplementation playerService;
+    private final CourtService courtService;
+    private final PlayerService playerService;
     private final TicketServiceImplementation ticketService;
-    private final PricingServiceImplementation pricingService;
+    private final PricingService pricingService;
     private final ReservationFactory reservationFactory;
 
     @Override
     @Transactional
     public ReservationResponseDto book(ReservationRequestDto dto) {
-        log.info("Booking reservation: courtId={}, playerId={}, day={}, startTime={}", 
+        log.info("Booking reservation: courtId={}, playerId={}, day={}, startTime={}",
                 dto.getIdCourt(), dto.getIdPlayer(), dto.getDay(), dto.getStartTime());
-        // 1. Obtener entidades base
-        CourtEntity court = courtService.getById(dto.getIdCourt());
+        // 1. Lockear la cancha antes de cualquier lectura de disponibilidad.
+        //    PESSIMISTIC_WRITE garantiza exclusión mutua: si dos requests intentan
+        //    reservar la misma cancha simultáneamente, el segundo espera hasta que
+        //    el primero haga commit, eliminando el phantom read en slots vacíos.
+        CourtEntity court = courtService.getByIdForUpdate(dto.getIdCourt());
         PlayerEntity player = playerService.getById(dto.getIdPlayer());
 
         // 2. Crear la reserva (factory)
@@ -102,13 +109,14 @@ public class ReservationServiceImplementation implements ReservationService {
     @Transactional
     public ReservationResponseDto update(long idReservation, long idPlayer, LocalDate day, LocalTime time) {
 
-        //Verifico que el Jugador este registrado
         playerService.getById(idPlayer);
 
-        //Verifico que la reserva exista y la obtengo
         ReservationEntity oldReservation = getById(idReservation);
 
-        // Valido que el jugador pueda modificar la reserva y que el nuevo horario esté disponible
+        // Lockear la cancha antes de validar el nuevo horario, por la misma razón que en book():
+        // el slot nuevo podría estar vacío y el lock de reservas no alcanza para protegerlo.
+        courtService.getByIdForUpdate(oldReservation.getCourt().getId());
+
         validateUpdatePermissions(oldReservation, idPlayer, day, time);
 
         //Guardo para el historial la reserva reprogramada
@@ -140,22 +148,17 @@ public class ReservationServiceImplementation implements ReservationService {
                 .collect(Collectors.toList());
     }
 
-    //Obtengo las reservas de una cancha un dia particular
     @Override
     @Transactional(readOnly = true)
-    public List<LocalTime> getByCourtAndDay(long idCourt, LocalDate day) {
+    public Set<LocalTime> getByCourtAndDay(long idCourt, LocalDate day) {
         courtService.getById(idCourt);
-
-        //Busco los estados que ocupan un slot y los guardo en activeStatus
-        List<StatusReservation> activeStatus = Arrays.stream(StatusReservation.values()).filter(StatusReservation::occupiesSlot).toList();
-
-        //Busco las reservaciones que el estado coincida con la lista de activeStatus
-        List<ReservationEntity> listReservation = reservationRepository.findActiveByCourtAndDay(idCourt, day, activeStatus);
-
-        // Solo retorno una lista de horarios.
-        return listReservation.stream()
+        List<StatusReservation> activeStatus = Arrays.stream(StatusReservation.values())
+                .filter(StatusReservation::occupiesSlot)
+                .toList();
+        return reservationRepository.findActiveByCourtAndDay(idCourt, day, activeStatus)
+                .stream()
                 .map(ReservationEntity::getStartTime)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -234,9 +237,9 @@ public class ReservationServiceImplementation implements ReservationService {
         );
     }
 
-    private void validateAvailability(long idCourt, LocalDate day, LocalTime time){
-        List<LocalTime> appointmentsForDay = getByCourtAndDay(idCourt, day);
-        if(appointmentsForDay.contains(time)){
+    private void validateAvailability(long idCourt, LocalDate day, LocalTime time) {
+        Set<LocalTime> bookedSlots = getByCourtAndDay(idCourt, day);
+        if (bookedSlots.contains(time)) {
             throw new SlotNotAvailableException("El horario ya esta reservado");
         }
     }

@@ -29,7 +29,7 @@ import java.util.Set;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class ScheduleServiceImplementacion implements ScheduleService {
+public class ScheduleServiceImplementation implements ScheduleService {
 
     private final CourtServiceImplementation courtService;
     private final ReservationRepository reservationRepository;
@@ -107,8 +107,9 @@ public class ScheduleServiceImplementacion implements ScheduleService {
                 .filter(StatusReservation::occupiesSlot)
                 .toList();
 
+        DayOfWeek dayOfWeek = scheduleEntity.getDay();
         List<ReservationEntity> reservationEntities = reservationRepository.findActiveByCourt(idCourt, activeStatuses);
-        List<ReservationEntity> reservationForDay = filterReservationPerDay(reservationEntities, scheduleEntity);
+        List<ReservationEntity> reservationForDay = filterReservationPerDay(reservationEntities, dayOfWeek);
 
         reservationTimeValid(reservationForDay, openingTime, closingTime);
 
@@ -163,31 +164,34 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         return schedule;
     }
 
-    private void slotValido(ScheduleEntity schedule, LocalTime time){
-        List<LocalTime>  slotsValid = new ArrayList<>();
-        LocalTime current = schedule.getOpeningTime();
-        long duration = schedule.getSlotDuration().toMinutes();
-
-        while(!current.plusMinutes(duration).isAfter(schedule.getClosingTime())){
-            slotsValid.add(current);
-            current = current.plusMinutes(duration);
+    @Override
+    public List<LocalTime> generateSlots(LocalTime opening, LocalTime closing, long slotDurationMinutes) {
+        List<LocalTime> slots = new ArrayList<>();
+        LocalTime current = opening;
+        while (!current.plusMinutes(slotDurationMinutes).isAfter(closing)) {
+            slots.add(current);
+            current = current.plusMinutes(slotDurationMinutes);
         }
+        return slots;
+    }
 
-        if(!slotsValid.contains(time)){
+    private void slotValido(ScheduleEntity schedule, LocalTime time) {
+        List<LocalTime> validSlots = generateSlots(
+                schedule.getOpeningTime(),
+                schedule.getClosingTime(),
+                schedule.getSlotDuration().toMinutes()
+        );
+        if (!validSlots.contains(time)) {
             throw new SlotNotAvailableException("El horario no corresponde a un turno válido");
         }
     }
 
-    private boolean isOpeningTimeBeforeClosingTime(LocalTime open, LocalTime close){
+    private boolean isOpeningAfterClosing(LocalTime open, LocalTime close){
         return open.isAfter(close);
     }
 
-    private ScheduleEntity getScheduleForCourt(long idCourt, long idSchedule){
-        CourtEntity courtEntity = courtService.getCourtByIdWithSchedule(idCourt);
-
-        return courtEntity.getSchedules().stream()
-                .filter(s -> s.getId() == idSchedule)
-                .findFirst()
+    private ScheduleEntity getScheduleForCourt(long idCourt, long idSchedule) {
+        return scheduleRepository.findByIdAndCourtId(idSchedule, idCourt)
                 .orElseThrow(() -> new ScheduleNotFoundException("No se encontro la agenda"));
     }
 
@@ -196,8 +200,7 @@ public class ScheduleServiceImplementacion implements ScheduleService {
 
     }
 
-    private int mapJavaDayToMySQL(String dayString) {
-        DayOfWeek dayOfWeek = DayOfWeek.valueOf(dayString.toUpperCase());
+    private int mapJavaDayToMySQL(DayOfWeek dayOfWeek) {
         return (dayOfWeek.getValue() % 7) + 1;
     }
 
@@ -208,7 +211,7 @@ public class ScheduleServiceImplementacion implements ScheduleService {
     }
 
     private void isValidTimeRange(LocalTime opening, LocalTime close){
-        if(isOpeningTimeBeforeClosingTime(opening, close)){
+        if(isOpeningAfterClosing(opening, close)){
             throw new InvalidTimeRangeException("El horario de inicio no puede ser posterior al horario de fin");
         }
     }
@@ -229,9 +232,9 @@ public class ScheduleServiceImplementacion implements ScheduleService {
         return uniqueSchedule;
     }
 
-    private List<ReservationEntity> filterReservationPerDay(List<ReservationEntity> reservationEntities, ScheduleEntity scheduleEntity ){
+    private List<ReservationEntity> filterReservationPerDay(List<ReservationEntity> reservationEntities, DayOfWeek dayOfWeek) {
         return reservationEntities.stream()
-                .filter(r -> r.getDay().getDayOfWeek().equals(scheduleEntity.getDay()))
+                .filter(r -> r.getDay().getDayOfWeek() == dayOfWeek)
                 .toList();
     }
 

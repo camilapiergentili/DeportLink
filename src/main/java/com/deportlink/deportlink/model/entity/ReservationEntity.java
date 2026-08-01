@@ -14,7 +14,17 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "reservation")
+@Table(
+    name = "reservation",
+    indexes = {
+        // Cubre findActiveByCourtAndDay (verificación de disponibilidad + pessimistic lock)
+        @Index(name = "idx_reservation_court_day_status", columnList = "court_id, reservation_day, status"),
+        // Cubre findActiveByCourt (historial de reservas por cancha)
+        @Index(name = "idx_reservation_court_status", columnList = "court_id, status"),
+        // Cubre getByPlayer (historial del jugador)
+        @Index(name = "idx_reservation_player", columnList = "player_id")
+    }
+)
 @Getter
 @Setter
 @AllArgsConstructor
@@ -23,7 +33,8 @@ public class ReservationEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
+
     @Column(name = "reservation_day")
     private LocalDate day;
     private LocalTime startTime;

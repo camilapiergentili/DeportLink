@@ -4,6 +4,7 @@ import com.deportlink.deportlink.dto.request.ClubRequestDto;
 import com.deportlink.deportlink.dto.response.ClubResponseDto;
 import com.deportlink.deportlink.exception.ClubAlreadyExistsException;
 import com.deportlink.deportlink.exception.ClubNotFoundException;
+import com.deportlink.deportlink.service.ClubOwnerService;
 import com.deportlink.deportlink.enums.ClubType;
 import com.deportlink.deportlink.model.entity.ClubEntity;
 import com.deportlink.deportlink.model.entity.OwnerEntity;
@@ -32,6 +33,9 @@ public class ClubServiceTest {
 
     @Autowired
     private ClubService clubService;
+
+    @Autowired
+    private ClubOwnerService clubOwnerService;
 
     @Autowired
     private ClubRepository clubRepository;
@@ -68,7 +72,7 @@ public class ClubServiceTest {
         dto.setClubType(ClubType.SA);
         dto.setOwnerIds(Set.of(testOwner.getId()));
 
-        ClubResponseDto response = clubService.create(dto);
+        ClubResponseDto response = clubOwnerService.create(dto);
 
         assertNotNull(response);
         assertNotNull(response.getId());
@@ -84,7 +88,7 @@ public class ClubServiceTest {
         dto1.setCuit("30111111111");
         dto1.setClubType(ClubType.SA);
         dto1.setOwnerIds(Set.of(testOwner.getId()));
-        clubService.create(dto1);
+        clubOwnerService.create(dto1);
 
         // Try to create club with same CUIT
         ClubRequestDto dto2 = new ClubRequestDto();
@@ -94,7 +98,7 @@ public class ClubServiceTest {
         dto2.setClubType(ClubType.SA);
         dto2.setOwnerIds(Set.of(testOwner.getId()));
 
-        assertThrows(ClubAlreadyExistsException.class, () -> clubService.create(dto2));
+        assertThrows(ClubAlreadyExistsException.class, () -> clubOwnerService.create(dto2));
     }
 
     @Test
@@ -106,7 +110,7 @@ public class ClubServiceTest {
         dto1.setCuit("30111111111");
         dto1.setClubType(ClubType.SA);
         dto1.setOwnerIds(Set.of(testOwner.getId()));
-        clubService.create(dto1);
+        clubOwnerService.create(dto1);
 
         // Try to create club with same legal name
         ClubRequestDto dto2 = new ClubRequestDto();
@@ -116,7 +120,7 @@ public class ClubServiceTest {
         dto2.setClubType(ClubType.SA);
         dto2.setOwnerIds(Set.of(testOwner.getId()));
 
-        assertThrows(ClubAlreadyExistsException.class, () -> clubService.create(dto2));
+        assertThrows(ClubAlreadyExistsException.class, () -> clubOwnerService.create(dto2));
     }
 
     @Test
@@ -128,10 +132,10 @@ public class ClubServiceTest {
         createDto.setCuit("30333333333");
         createDto.setClubType(ClubType.SA);
         createDto.setOwnerIds(Set.of(testOwner.getId()));
-        ClubResponseDto created = clubService.create(createDto);
+        ClubResponseDto created = clubOwnerService.create(createDto);
 
         // Delete club
-        clubService.delete(created.getId());
+        clubOwnerService.delete(created.getId());
 
         // Verify
         assertThrows(ClubNotFoundException.class, () -> clubService.getById(created.getId()));
@@ -146,7 +150,7 @@ public class ClubServiceTest {
         dto1.setCuit("30444444444");
         dto1.setClubType(ClubType.SA);
         dto1.setOwnerIds(Set.of(testOwner.getId()));
-        clubService.create(dto1);
+        clubOwnerService.create(dto1);
 
         ClubRequestDto dto2 = new ClubRequestDto();
         dto2.setName("Club 2");
@@ -154,7 +158,7 @@ public class ClubServiceTest {
         dto2.setCuit("30555555555");
         dto2.setClubType(ClubType.SRL);
         dto2.setOwnerIds(Set.of(testOwner.getId()));
-        clubService.create(dto2);
+        clubOwnerService.create(dto2);
 
         // Get all
         List<ClubResponseDto> clubs = clubService.getAll();
@@ -163,19 +167,17 @@ public class ClubServiceTest {
     }
 
     @Test
-    public void testGetByIdResponse_Success() {
-        // Create club
+    public void testGetById_AfterCreate_Success() {
         ClubRequestDto createDto = new ClubRequestDto();
         createDto.setName("Test Club");
         createDto.setLegalName("Test Legal");
         createDto.setCuit("30666666666");
         createDto.setClubType(ClubType.SA);
         createDto.setOwnerIds(Set.of(testOwner.getId()));
-        ClubResponseDto created = clubService.create(createDto);
+        ClubResponseDto created = clubOwnerService.create(createDto);
 
-        // Get by ID
-        ClubResponseDto response = clubService.getByIdResponse(created.getId());
-        assertNotNull(response);
-        assertEquals("Test Club", response.getName());
+        ClubEntity found = clubService.getById(created.getId());
+        assertNotNull(found);
+        assertEquals("Test Club", found.getName());
     }
 }

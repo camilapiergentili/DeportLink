@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,12 +25,6 @@ import java.util.Map;
 public class ClubController {
 
     private final ClubService clubService;
-
-    @PostMapping
-    public ResponseEntity<ClubResponseDto> create(@RequestBody @Valid ClubRequestDto clubDto){
-        ClubResponseDto clubResponse = clubService.create(clubDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(clubResponse);
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ClubResponseDto> getById(@PathVariable long id){
@@ -55,16 +50,4 @@ public class ClubController {
         return ResponseEntity.ok(allClubs);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Object> delete(@PathVariable long id){
-        clubService.delete(id);
-        return ResponseEntity.ok("Club eliminado con exito");
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Object> update(@PathVariable long id,
-                                         @RequestBody @Valid ClubRequestDto clubDto){
-        clubService.update(id, clubDto);
-        return ResponseEntity.ok(Map.of("message", "El club se actualizo con exito"));
-    }
 }

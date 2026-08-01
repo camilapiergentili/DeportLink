@@ -26,4 +26,5 @@ public interface BranchRepository extends JpaRepository<BranchEntity, Long> {
 
     boolean existsByAddressAndClub(AddressEntity address, ClubEntity club);
     boolean existsByNameIgnoreCaseAndClub(String name, ClubEntity club);
+    boolean existsByIdAndClub_Owners_Id(long idBranch, long idOwner);
 }

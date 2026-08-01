@@ -17,6 +17,6 @@ public interface ScheduleService {
     ScheduleResponseDto getByDay(long idCourt, LocalDate day);
     ScheduleEntity getByDay(long idCourt, DayOfWeek dayOfWeek);
     ScheduleEntity getAndValidateSchedule(long idCourt, LocalDate day, LocalTime time);
-
+    List<LocalTime> generateSlots(LocalTime opening, LocalTime closing, long slotDurationMinutes);
 
 }

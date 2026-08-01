@@ -11,11 +11,9 @@ import java.util.List;
 public interface ClubService {
     ClubEntity getById(long id);
     ClubResponseDto getByIdResponse(long id);
-    List<ClubResponseDto> getByActiveAndApproved();
     Page<ClubResponseDto> getByActiveAndApprovedPaginated(Pageable pageable);
-    List<ClubResponseDto> getAll();
     Page<ClubResponseDto> getAllPaginated(Pageable pageable);
-    ClubResponseDto create(ClubRequestDto clubDto);
-    void delete(long id);
-    void update(long id, ClubRequestDto clubDto);
+    List<ClubResponseDto> getAll();
+    void approve(long idClub);
+    void reject(long idClub);
 }
