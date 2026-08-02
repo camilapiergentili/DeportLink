@@ -95,7 +95,7 @@ public class ReservationController {
      * Admin puede consultar cualquier jugador; el propio jugador solo las suyas.
      */
     @GetMapping("/player/{playerId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('PLAYER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('PLAYER') and #playerId == principal.id)")
     public ResponseEntity<List<ReservationResponseDto>> getByPlayer(@PathVariable Long playerId) {
         List<ReservationResponseDto> response = getPlayerReservationsUseCase.execute(playerId)
                 .stream()
