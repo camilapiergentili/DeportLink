@@ -14,6 +14,7 @@ import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -62,6 +63,17 @@ public class ReservationRepositoryAdapter implements ReservationRepositoryPort {
     public List<Reservation> findByPlayerId(Long playerId) {
         return reservationRepository.findByPlayer_Id(playerId).stream()
                 .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<ActiveSlot> findActiveByCourtAndDay(Long courtId, DayOfWeek day) {
+        List<StatusReservation> occupying = Arrays.stream(StatusReservation.values())
+                .filter(StatusReservation::occupiesSlot)
+                .toList();
+        return reservationRepository.findActiveByCourt(courtId, occupying).stream()
+                .filter(r -> r.getDay().getDayOfWeek() == day)
+                .map(r -> new ActiveSlot(r.getStartTime(), r.getDuration()))
                 .toList();
     }
 

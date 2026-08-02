@@ -1,6 +1,7 @@
 package com.deportlink.deportlink.service;
 
-import com.deportlink.deportlink.dto.response.CourtResponseDto;
+import com.deportlink.deportlink.application.usecase.court.*;
+import com.deportlink.deportlink.domain.model.Court;
 import com.deportlink.deportlink.exception.CourtNotFoundException;
 import com.deportlink.deportlink.model.entity.*;
 import com.deportlink.deportlink.persistence.repository.*;
@@ -8,11 +9,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,27 +22,19 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 public class CourtServiceTest {
 
-    @Autowired
-    private CourtService courtService;
+    @Autowired private GetCourtByIdUseCase getCourtByIdUseCase;
+    @Autowired private GetApprovedCourtsUseCase getApprovedCourtsUseCase;
 
-    @Autowired
-    private CourtRepository courtRepository;
+    @Autowired private CourtRepository courtRepository;
+    @Autowired private BranchRepository branchRepository;
+    @Autowired private ClubRepository clubRepository;
+    @Autowired private SportRepository sportRepository;
+    @Autowired private OwnerRepository ownerRepository;
 
-    @Autowired
-    private BranchRepository branchRepository;
-
-    @Autowired
-    private ClubRepository clubRepository;
-
-    @Autowired
-    private SportRepository sportRepository;
-
-    @Autowired
-    private OwnerRepository ownerRepository;
+    private CourtEntity testCourt;
 
     @BeforeEach
     public void setUp() {
-        // Create test owner
         OwnerEntity owner = new OwnerEntity();
         owner.setEmail("owner@example.com");
         owner.setPassword("password123");
@@ -53,12 +46,10 @@ public class CourtServiceTest {
         owner.setDateOfBirth(LocalDate.of(1985, 1, 1));
         owner = ownerRepository.save(owner);
 
-        // Create test sport
         SportEntity sport = new SportEntity();
         sport.setNameSport("Football");
         sport = sportRepository.save(sport);
 
-        // Create test club
         ClubEntity club = new ClubEntity();
         club.setName("Test Club");
         club.setLegalName("Test Club Legal");
@@ -66,42 +57,34 @@ public class CourtServiceTest {
         club.getOwners().add(owner);
         club = clubRepository.save(club);
 
-        // Create test branch
         BranchEntity branch = new BranchEntity();
         branch.setClub(club);
         branch.setName("Test Branch");
         branch = branchRepository.save(branch);
 
-        // Create test court
-        CourtEntity court = new CourtEntity();
-        court.setName("Test Court");
-        court.setBranch(branch);
-        court.setSport(sport);
-        court.setPricePerHour(100.0);
-        courtRepository.save(court);
+        testCourt = new CourtEntity();
+        testCourt.setName("Test Court");
+        testCourt.setBranch(branch);
+        testCourt.setSport(sport);
+        testCourt.setPricePerHour(100.0);
+        testCourt = courtRepository.save(testCourt);
     }
 
     @Test
     public void testGetByIdResponse_Success() {
-        List<CourtEntity> courts = courtRepository.findAll();
-        assertTrue(courts.size() > 0);
-        
-        CourtEntity testCourt = courts.get(0);
-        CourtResponseDto response = courtService.getByIdResponse(testCourt.getId());
-        
-        assertNotNull(response);
-        assertEquals("Test Court", response.getName());
+        Court court = getCourtByIdUseCase.execute(testCourt.getId());
+
+        assertNotNull(court);
+        assertEquals("Test Court", court.name());
     }
 
     @Test
     public void testGetByIdResponse_NotFound() {
-        assertThrows(CourtNotFoundException.class, () -> courtService.getByIdResponse(99999L));
+        assertThrows(CourtNotFoundException.class, () -> getCourtByIdUseCase.execute(99999L));
     }
 
     @Test
     public void testGetAllActiveAndApproved_Success() {
-        List<CourtResponseDto> courts = courtService.getAllActiveAndApproved();
-        assertNotNull(courts);
+        assertNotNull(getApprovedCourtsUseCase.execute(Pageable.unpaged()));
     }
 }
-

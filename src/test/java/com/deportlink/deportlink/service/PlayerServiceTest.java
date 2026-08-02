@@ -1,9 +1,9 @@
 package com.deportlink.deportlink.service;
 
+import com.deportlink.deportlink.application.usecase.player.*;
+import com.deportlink.deportlink.domain.model.Player;
 import com.deportlink.deportlink.dto.request.PlayerRequestDto;
-import com.deportlink.deportlink.dto.response.PlayerResponseDto;
 import com.deportlink.deportlink.exception.PlayerNotFoundException;
-import com.deportlink.deportlink.model.entity.PlayerEntity;
 import com.deportlink.deportlink.persistence.repository.PlayerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -20,24 +19,23 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 public class PlayerServiceTest {
 
-    @Autowired
-    private PlayerService playerService;
+    @Autowired private RegisterPlayerUseCase registerPlayerUseCase;
+    @Autowired private GetPlayerByIdUseCase getPlayerByIdUseCase;
+    @Autowired private UpdatePlayerUseCase updatePlayerUseCase;
+    @Autowired private DeletePlayerUseCase deletePlayerUseCase;
+    @Autowired private PlayerRepository playerRepository;
 
-    @Autowired
-    private PlayerRepository playerRepository;
-
-    private PlayerEntity testUser;
+    private Player testPlayer;
 
     @BeforeEach
     public void setUp() {
-        // Create test player
-        testUser = new PlayerEntity();
-        testUser.setEmail("player@example.com");
-        testUser.setPassword("password123");
-        testUser.setFirstName("Test");
-        testUser.setLastName("Player");
-        testUser.setPhone("1234567890");
-        testUser = playerRepository.save(testUser);
+        PlayerRequestDto dto = new PlayerRequestDto();
+        dto.setEmail("player@example.com");
+        dto.setPassword("password123");
+        dto.setFirstName("Test");
+        dto.setLastName("Player");
+        dto.setPhone("1234567890");
+        testPlayer = registerPlayerUseCase.execute(dto);
     }
 
     @Test
@@ -49,49 +47,43 @@ public class PlayerServiceTest {
         dto.setLastName("Player");
         dto.setPhone("9876543210");
 
-        PlayerResponseDto response = playerService.register(dto);
+        Player player = registerPlayerUseCase.execute(dto);
 
-        assertNotNull(response);
-        assertNotNull(response.getId());
+        assertNotNull(player);
+        assertNotNull(player.id());
     }
 
     @Test
     public void testGetPlayerById_Success() {
-        // Get by ID
-        PlayerEntity retrieved = playerService.getById(testUser.getId());
+        Player retrieved = getPlayerByIdUseCase.execute(testPlayer.id());
 
         assertNotNull(retrieved);
-        assertEquals(testUser.getId(), retrieved.getId());
+        assertEquals(testPlayer.id(), retrieved.id());
     }
 
     @Test
     public void testGetPlayerById_NotFound() {
-        assertThrows(PlayerNotFoundException.class, () -> playerService.getById(99999L));
+        assertThrows(PlayerNotFoundException.class, () -> getPlayerByIdUseCase.execute(99999L));
     }
 
     @Test
     public void testUpdatePlayer_Success() {
-        // Update
         PlayerRequestDto updateDto = new PlayerRequestDto();
         updateDto.setFirstName("Updated");
         updateDto.setLastName("Player");
         updateDto.setPhone("1111111111");
-        updateDto.setEmail(testUser.getEmail());
+        updateDto.setEmail(testPlayer.email());
 
-        playerService.update(testUser.getId(), updateDto);
+        updatePlayerUseCase.execute(testPlayer.id(), updateDto);
 
-        // Verify
-        PlayerEntity updated = playerRepository.findById(testUser.getId()).orElseThrow();
-        assertEquals("Updated", updated.getFirstName());
-        assertEquals("1111111111", updated.getPhone());
+        assertEquals("Updated", playerRepository.findById(testPlayer.id()).orElseThrow().getFirstName());
+        assertEquals("1111111111", playerRepository.findById(testPlayer.id()).orElseThrow().getPhone());
     }
 
     @Test
     public void testDeletePlayer_Success() {
-        // Delete
-        playerService.delete(testUser.getId());
+        deletePlayerUseCase.execute(testPlayer.id());
 
-        // Verify
-        assertTrue(playerRepository.findById(testUser.getId()).isEmpty());
+        assertTrue(playerRepository.findById(testPlayer.id()).isEmpty());
     }
 }

@@ -1,58 +1,56 @@
 package com.deportlink.deportlink.controller;
 
+import com.deportlink.deportlink.application.usecase.owner.*;
+import com.deportlink.deportlink.domain.model.Owner;
 import com.deportlink.deportlink.dto.request.OwnerRequestDto;
 import com.deportlink.deportlink.dto.response.OwnerResponseDto;
-import com.deportlink.deportlink.dto.response.PlayerResponseDto;
 import com.deportlink.deportlink.model.entity.UserMain;
-import com.deportlink.deportlink.service.OwnerService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
-
 
 import java.net.URI;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+
 @RestController
 @RequestMapping("/api/owners")
 @RequiredArgsConstructor
 public class OwnerController {
 
-    private final OwnerService ownerService;
+    private final RegisterOwnerUseCase registerOwnerUseCase;
+    private final GetOwnerByIdUseCase getOwnerByIdUseCase;
+    private final GetAllOwnersUseCase getAllOwnersUseCase;
+    private final UpdateOwnerUseCase updateOwnerUseCase;
+    private final DeleteOwnerUseCase deleteOwnerUseCase;
 
     @PostMapping
-    public ResponseEntity<OwnerResponseDto> register(
-            @RequestBody @Valid OwnerRequestDto dto) {
-
-        OwnerResponseDto owner = ownerService.register(dto);
-
-        URI location = URI.create("/api/owners/" + owner.getId());
-
-        return ResponseEntity.created(location).body(owner);
+    public ResponseEntity<OwnerResponseDto> register(@RequestBody @Valid OwnerRequestDto dto) {
+        Owner owner = registerOwnerUseCase.execute(dto);
+        URI location = URI.create("/api/owners/" + owner.id());
+        return ResponseEntity.created(location).body(toResponse(owner));
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OwnerResponseDto>> getAll() {
-        return ResponseEntity.ok(ownerService.getAll());
+        return ResponseEntity.ok(getAllOwnersUseCase.execute().stream().map(this::toResponse).toList());
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<OwnerResponseDto> getById(@PathVariable long id) {
-        return ResponseEntity.ok(ownerService.getByIdResponse(id));
+        return ResponseEntity.ok(toResponse(getOwnerByIdUseCase.execute(id)));
     }
 
     @GetMapping("/my-profile")
     @PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<OwnerResponseDto> profileOwner(
-            @AuthenticationPrincipal UserMain user) {
-
-        return ResponseEntity.ok(ownerService.getByIdResponse(user.getId()));
+    public ResponseEntity<OwnerResponseDto> profileOwner(@AuthenticationPrincipal UserMain user) {
+        return ResponseEntity.ok(toResponse(getOwnerByIdUseCase.execute(user.getId())));
     }
 
     @PutMapping("/{id}")
@@ -62,12 +60,10 @@ public class OwnerController {
     """)
     public ResponseEntity<Object> update(
             @PathVariable long id,
-            @RequestBody @Valid OwnerRequestDto ownerDto) {
+            @RequestBody @Valid OwnerRequestDto dto) {
 
-        ownerService.update(id, ownerDto);
-        return ResponseEntity.ok(
-                Map.of("message", "Dueño actualizado con éxito")
-        );
+        updateOwnerUseCase.execute(id, dto);
+        return ResponseEntity.ok(Map.of("message", "Dueño actualizado con éxito"));
     }
 
     @DeleteMapping("/{id}")
@@ -76,9 +72,23 @@ public class OwnerController {
         or (hasRole('OWNER') and #id == principal.id)
     """)
     public ResponseEntity<Object> delete(@PathVariable long id) {
-        ownerService.deleteById(id);
-        return ResponseEntity.ok(
-                Map.of("message", "Dueño eliminado con éxito")
-        );
+        deleteOwnerUseCase.execute(id);
+        return ResponseEntity.ok(Map.of("message", "Dueño eliminado con éxito"));
+    }
+
+    private OwnerResponseDto toResponse(Owner owner) {
+        OwnerResponseDto dto = new OwnerResponseDto();
+        dto.setId(owner.id());
+        dto.setFirstName(owner.firstName());
+        dto.setLastName(owner.lastName());
+        dto.setEmail(owner.email());
+        dto.setPhone(owner.phone());
+        dto.setDni(String.valueOf(owner.dni()));
+        dto.setCuil(owner.cuil());
+        if (owner.dateOfBirth() != null) {
+            dto.setDateOfBirth(owner.dateOfBirth().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        }
+        dto.setClubs(null);
+        return dto;
     }
 }

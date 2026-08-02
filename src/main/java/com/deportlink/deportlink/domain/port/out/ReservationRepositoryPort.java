@@ -2,6 +2,8 @@ package com.deportlink.deportlink.domain.port.out;
 
 import com.deportlink.deportlink.domain.model.Reservation;
 
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -28,4 +30,12 @@ public interface ReservationRepositoryPort {
     Set<LocalTime> findBookedSlots(Long courtId, LocalDate day);
 
     List<Reservation> findByPlayerId(Long playerId);
+
+    /**
+     * Returns active reservation slots for a court on a given day of week.
+     * Used by UpdateScheduleUseCase to verify existing reservations fit in the new time range.
+     */
+    List<ActiveSlot> findActiveByCourtAndDay(Long courtId, DayOfWeek day);
+
+    record ActiveSlot(LocalTime startTime, Duration duration) {}
 }

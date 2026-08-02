@@ -1,8 +1,9 @@
 package com.deportlink.deportlink.controller;
 
+import com.deportlink.deportlink.application.usecase.schedule.*;
+import com.deportlink.deportlink.domain.model.Schedule;
 import com.deportlink.deportlink.dto.request.ScheduleRequestDto;
 import com.deportlink.deportlink.dto.response.ScheduleResponseDto;
-import com.deportlink.deportlink.service.ScheduleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,12 +14,17 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+
 @RestController
 @RequestMapping("/api/schedules")
 @RequiredArgsConstructor
 public class ScheduleController {
 
-    private final ScheduleService scheduleService;
+    private final AddScheduleUseCase addScheduleUseCase;
+    private final DeleteScheduleUseCase deleteScheduleUseCase;
+    private final UpdateScheduleUseCase updateScheduleUseCase;
+    private final GetAllSchedulesByCourtUseCase getAllSchedulesByCourtUseCase;
+    private final GetScheduleByDayUseCase getScheduleByDayUseCase;
 
     @PostMapping("/court/{idCourt}")
     @PreAuthorize("""
@@ -29,9 +35,8 @@ public class ScheduleController {
             @PathVariable long idCourt,
             @Valid @RequestBody List<ScheduleRequestDto> schedules) {
 
-        scheduleService.addSchedule(idCourt, schedules);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
+        addScheduleUseCase.execute(idCourt, schedules);
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("message", "Agenda creada con éxito"));
     }
 
@@ -44,10 +49,8 @@ public class ScheduleController {
             @PathVariable long idSchedule,
             @PathVariable long idCourt) {
 
-        scheduleService.deleteSchedule(idSchedule, idCourt);
-        return ResponseEntity.ok(
-                Map.of("message", "Agenda eliminada con éxito")
-        );
+        deleteScheduleUseCase.execute(idSchedule, idCourt);
+        return ResponseEntity.ok(Map.of("message", "Agenda eliminada con éxito"));
     }
 
     @PutMapping("/{idSchedule}/court/{idCourt}")
@@ -61,18 +64,16 @@ public class ScheduleController {
             @RequestParam String openingNew,
             @RequestParam String closingNew) {
 
-        scheduleService.updateSchedule(idSchedule, idCourt, openingNew, closingNew);
-        return ResponseEntity.ok(
-                Map.of("message", "Agenda modificada con éxito")
-        );
+        updateScheduleUseCase.execute(idSchedule, idCourt, openingNew, closingNew);
+        return ResponseEntity.ok(Map.of("message", "Agenda modificada con éxito"));
     }
 
     @GetMapping("/court/{idCourt}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<ScheduleResponseDto>> getByCourt(
-            @PathVariable long idCourt) {
-
-        return ResponseEntity.ok(scheduleService.getAllByCourt(idCourt));
+    public ResponseEntity<List<ScheduleResponseDto>> getByCourt(@PathVariable long idCourt) {
+        return ResponseEntity.ok(
+                getAllSchedulesByCourtUseCase.execute(idCourt).stream().map(this::toResponse).toList()
+        );
     }
 
     @GetMapping("/court/{idCourt}/day")
@@ -81,6 +82,16 @@ public class ScheduleController {
             @PathVariable long idCourt,
             @RequestParam LocalDate day) {
 
-        return ResponseEntity.ok(scheduleService.getByDay(idCourt, day));
+        return ResponseEntity.ok(toResponse(getScheduleByDayUseCase.execute(idCourt, day)));
+    }
+
+    private ScheduleResponseDto toResponse(Schedule schedule) {
+        ScheduleResponseDto dto = new ScheduleResponseDto();
+        dto.setId(schedule.id());
+        dto.setDay(schedule.day());
+        dto.setOpeningTime(schedule.openingTime());
+        dto.setClosingTime(schedule.closingTime());
+        dto.setSlotDuration(schedule.slotDuration().toMinutes());
+        return dto;
     }
 }
