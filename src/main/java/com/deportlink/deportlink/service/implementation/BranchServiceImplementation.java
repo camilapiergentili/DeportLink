@@ -11,10 +11,10 @@ import com.deportlink.deportlink.model.entity.AddressEntity;
 import com.deportlink.deportlink.model.entity.BranchEntity;
 import com.deportlink.deportlink.model.entity.ClubEntity;
 import com.deportlink.deportlink.persistence.repository.BranchRepository;
+import com.deportlink.deportlink.persistence.repository.ClubRepository;
 import com.deportlink.deportlink.service.BranchAdminService;
 import com.deportlink.deportlink.service.BranchOwnerService;
 import com.deportlink.deportlink.service.BranchService;
-import com.deportlink.deportlink.service.ClubService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,14 +30,15 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
     private final BranchRepository branchRepository;
     private final BranchMapper branchMapper;
     private final AddressMapper addressMapper;
-    private final ClubService clubService;
+    private final ClubRepository clubRepository;
 
     @Override
     @Transactional
     public void create(BranchRequestDto branchDto){
         log.info("Creating branch: name={}, clubId={}", branchDto.getName(), branchDto.getIdClub());
 
-        ClubEntity clubEntity = clubService.getById(branchDto.getIdClub());
+        ClubEntity clubEntity = clubRepository.findById(branchDto.getIdClub())
+                .orElseThrow(() -> new ClubNotFoundException("No se encontró el club indicado"));
 
         if(clubEntity.getVerificationStatus() != VerificationStatus.APPROVED){
             throw new ClubNotApprovedException("El club " + clubEntity.getLegalName() + " aun no esta autorizado para agregar sucursales");
@@ -97,7 +98,9 @@ public class BranchServiceImplementation implements BranchService, BranchOwnerSe
     @Transactional(readOnly = true)
     public List<BranchResponseDto> getAll(long idClub){
 
-        clubService.getById(idClub);
+        if (!clubRepository.existsById(idClub)) {
+            throw new ClubNotFoundException("No se encontró el club indicado");
+        }
         List<BranchEntity> branchesEntity = branchRepository.findAllByClubId(idClub);
 
         return branchesEntity.stream()
