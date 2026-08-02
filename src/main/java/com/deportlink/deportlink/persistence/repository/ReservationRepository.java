@@ -25,6 +25,7 @@ public interface ReservationRepository extends JpaRepository<ReservationEntity, 
           AND r.day = :day
           AND r.status IN :occupyingStatuses
     """)
+
     Set<LocalTime> findStartTimesByCourtAndDay(
             @Param("courtId") Long courtId,
             @Param("day") LocalDate day,
