@@ -28,4 +28,20 @@ public interface BranchRepository extends JpaRepository<BranchEntity, Long> {
     boolean existsByNameIgnoreCaseAndClub(String name, ClubEntity club);
     boolean existsByIdAndClub_Owners_Id(long idBranch, long idOwner);
     boolean existsByClub_Id(Long clubId);
+
+    // Clean Architecture adapter queries (no entity references needed)
+    boolean existsByNameIgnoreCaseAndClub_Id(String name, Long clubId);
+
+    @Query("SELECT COUNT(b) > 0 FROM BranchEntity b WHERE b.club.id = :clubId " +
+           "AND b.address.streetName = :streetName AND b.address.number = :number " +
+           "AND b.address.city = :city AND b.address.province = :province " +
+           "AND b.address.postalCode = :postalCode")
+    boolean existsByAddressFieldsAndClubId(
+            @Param("clubId") Long clubId,
+            @Param("streetName") String streetName,
+            @Param("number") int number,
+            @Param("city") String city,
+            @Param("province") String province,
+            @Param("postalCode") int postalCode
+    );
 }
