@@ -29,6 +29,7 @@ public class OwnerController {
     private final DeleteOwnerUseCase deleteOwnerUseCase;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<OwnerResponseDto> register(@RequestBody @Valid OwnerRequestDto dto) {
         Owner owner = registerOwnerUseCase.execute(dto);
         URI location = URI.create("/api/owners/" + owner.id());
