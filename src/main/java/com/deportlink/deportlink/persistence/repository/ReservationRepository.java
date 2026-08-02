@@ -10,10 +10,28 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<ReservationEntity, Long> {
+
+    // Devuelve solo los horarios de inicio de los slots que ocupan cancha (sin cargar entidades completas).
+    // Usado por ReservationRepositoryAdapter.findBookedSlots — O(1) en la verificación gracias al Set.
+    @Query("""
+        SELECT r.startTime FROM ReservationEntity r
+        WHERE r.court.id = :courtId
+          AND r.day = :day
+          AND r.status IN :occupyingStatuses
+    """)
+    Set<LocalTime> findStartTimesByCourtAndDay(
+            @Param("courtId") Long courtId,
+            @Param("day") LocalDate day,
+            @Param("occupyingStatuses") List<StatusReservation> occupyingStatuses
+    );
+
+    List<ReservationEntity> findByPlayer_Id(Long playerId);
 
     @Query("""
     SELECT r FROM ReservationEntity r

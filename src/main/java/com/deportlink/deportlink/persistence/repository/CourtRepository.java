@@ -73,6 +73,26 @@ public interface CourtRepository extends JpaRepository<CourtEntity, Long> {
     @Query("SELECT c FROM CourtEntity c WHERE c.id = :id")
     Optional<CourtEntity> findByIdForUpdate(@Param("id") long id);
 
+    // Carga eager de relaciones para construir CourtSnapshot sin lazy-load fuera de transacción.
+    @Query("""
+        SELECT c FROM CourtEntity c
+        JOIN FETCH c.sport
+        JOIN FETCH c.branch b
+        JOIN FETCH b.address
+        WHERE c.id = :id
+    """)
+    Optional<CourtEntity> findByIdWithRelations(@Param("id") Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        SELECT c FROM CourtEntity c
+        JOIN FETCH c.sport
+        JOIN FETCH c.branch b
+        JOIN FETCH b.address
+        WHERE c.id = :id
+    """)
+    Optional<CourtEntity> findByIdForUpdateWithRelations(@Param("id") Long id);
+
     @Query("""
     SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END
     FROM CourtEntity c
