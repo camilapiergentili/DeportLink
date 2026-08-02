@@ -3,7 +3,6 @@ package com.deportlink.deportlink.controller;
 import com.deportlink.deportlink.dto.request.SportRequestDto;
 import com.deportlink.deportlink.dto.response.SportResponseDto;
 import com.deportlink.deportlink.service.SportService;
-import com.deportlink.deportlink.service.implementation.SportServiceImplementation;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;

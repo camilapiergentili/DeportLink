@@ -10,6 +10,7 @@ import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.model.entity.ReservationEntity;
 import com.deportlink.deportlink.model.entity.ScheduleEntity;
+import com.deportlink.deportlink.persistence.repository.CourtRepository;
 import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import com.deportlink.deportlink.persistence.repository.ScheduleRepository;
 import com.deportlink.deportlink.service.ScheduleService;
@@ -31,7 +32,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class ScheduleServiceImplementation implements ScheduleService {
 
-    private final CourtServiceImplementation courtService;
+    private final CourtRepository courtRepository;
     private final ReservationRepository reservationRepository;
     private final ScheduleMapper scheduleMapper;
     private final ScheduleRepository scheduleRepository;
@@ -42,7 +43,7 @@ public class ScheduleServiceImplementation implements ScheduleService {
         log.info("Adding schedules for court: courtId={}, scheduleCount={}", idCourt, schedulesDto.size());
 
         //Busco en la base de datos que la cancha exista
-        CourtEntity courtEntity = courtService.getById(idCourt);
+        CourtEntity courtEntity = courtRepository.findById(idCourt).orElseThrow(() -> new CourtNotFoundException("No se encontró la cancha"));
 
         if (!courtEntity.getActiveStatus().equals(ActiveStatus.ACTIVE)) {
             throw new ClubNotActivedException("No puede agregar agenda, porque la cancha no se encuentra activa");
@@ -123,7 +124,7 @@ public class ScheduleServiceImplementation implements ScheduleService {
     @Override
     @Transactional(readOnly = true)
     public List<ScheduleResponseDto> getAllByCourt(long idCourt) {
-        CourtEntity courtEntity = courtService.getById(idCourt);
+        CourtEntity courtEntity = courtRepository.findById(idCourt).orElseThrow(() -> new CourtNotFoundException("No se encontró la cancha"));
 
         List<ScheduleEntity> scheduleEntityList = new ArrayList<>(courtEntity.getSchedules());
 
@@ -142,7 +143,7 @@ public class ScheduleServiceImplementation implements ScheduleService {
 
         DayOfWeek dayOfWeek = day.getDayOfWeek();
 
-        CourtEntity courtEntity = courtService.getById(idCourt);
+        CourtEntity courtEntity = courtRepository.findById(idCourt).orElseThrow(() -> new CourtNotFoundException("No se encontró la cancha"));
         ScheduleEntity scheduleEntityList = scheduleRepository.findByCourtIdAndDay(courtEntity.getId(), dayOfWeek)
                 .orElseThrow(() -> new ScheduleNotFoundException(" No se encontro agenda para el dia seleccionado"));
 
