@@ -1,14 +1,12 @@
 package com.deportlink.deportlink.controller;
 
+import com.deportlink.deportlink.application.usecase.court.GetAllCourtsByBranchUseCase;
+import com.deportlink.deportlink.application.usecase.court.GetAllCourtsUseCase;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
-import com.deportlink.deportlink.service.CourtAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -18,21 +16,21 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class CourtAdminController {
 
-    private final CourtAdminService courtAdminService;
+    private final GetAllCourtsByBranchUseCase getAllCourtsByBranchUseCase;
+    private final GetAllCourtsUseCase getAllCourtsUseCase;
+    private final CourtController courtController;
 
     @GetMapping("/branch/{idBranch}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<CourtResponseDto>> getAllByBranch(
-            @PathVariable long idBranch) {
-
-        return ResponseEntity.ok(
-                courtAdminService.getAllBranch(idBranch)
-        );
+    public ResponseEntity<List<CourtResponseDto>> getAllByBranch(@PathVariable long idBranch) {
+        List<CourtResponseDto> result = getAllCourtsByBranchUseCase.execute(idBranch)
+                .stream().map(courtController::toResponse).toList();
+        return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CourtResponseDto>> getAll() {
-        return ResponseEntity.ok(courtAdminService.getAll());
+        List<CourtResponseDto> result = getAllCourtsUseCase.execute()
+                .stream().map(courtController::toResponse).toList();
+        return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 }

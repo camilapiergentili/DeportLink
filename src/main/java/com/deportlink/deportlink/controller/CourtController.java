@@ -1,9 +1,9 @@
 package com.deportlink.deportlink.controller;
 
-
+import com.deportlink.deportlink.application.usecase.court.*;
+import com.deportlink.deportlink.domain.model.Court;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
-import com.deportlink.deportlink.service.CourtService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -15,72 +15,64 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/courts")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CourtController {
 
-    private final CourtService courtService;
+    private final GetCourtByIdUseCase getCourtByIdUseCase;
+    private final GetActiveCourtUseCase getActiveCourtUseCase;
+    private final GetApprovedCourtsUseCase getApprovedCourtsUseCase;
+    private final GetApprovedCourtsByBranchUseCase getApprovedCourtsByBranchUseCase;
+    private final GetCourtsByBranchAndSportUseCase getCourtsByBranchAndSportUseCase;
 
     @GetMapping("/{idCourt}")
     @PreAuthorize("""
         hasRole('ADMIN')
-        or (hasRole('OWNER')
-            and @courtAuthorization.isOwnerOfCourt(
-                #idCourt, authentication))
+        or (hasRole('OWNER') and @courtAuthorization.isOwnerOfCourt(#idCourt, authentication))
     """)
-    public ResponseEntity<CourtResponseDto> getById(
-            @PathVariable long idCourt) {
-
-        return ResponseEntity.ok(courtService.getByIdResponse(idCourt));
+    public ResponseEntity<CourtResponseDto> getById(@PathVariable long idCourt) {
+        return ResponseEntity.ok(toResponse(getCourtByIdUseCase.execute(idCourt)));
     }
 
     @GetMapping("/{idCourt}/active")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<CourtResponseDto> getByIdApprovedAndActive(
-            @PathVariable long idCourt) {
-
-        return ResponseEntity.ok(
-                courtService.getByIdApprovedAndActive(idCourt)
-        );
+    public ResponseEntity<CourtResponseDto> getByIdApprovedAndActive(@PathVariable long idCourt) {
+        return ResponseEntity.ok(toResponse(getActiveCourtUseCase.execute(idCourt)));
     }
 
     @GetMapping("/branch/{idBranch}/active")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<CourtResponseDto>>
-    getAllByBranchActiveAndApproved(@PathVariable long idBranch) {
-
-        return ResponseEntity.ok(
-                courtService.getAllByBranchActiveAndApproved(idBranch)
-        );
+    public ResponseEntity<List<CourtResponseDto>> getAllByBranchActiveAndApproved(@PathVariable long idBranch) {
+        List<CourtResponseDto> result = getApprovedCourtsByBranchUseCase
+                .execute(idBranch, Pageable.unpaged()).getContent()
+                .stream().map(this::toResponse).toList();
+        return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
     @GetMapping("/branch/{idBranch}/active/paginated")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Page<CourtResponseDto>>
-    getAllByBranchActiveAndApprovedPaginated(
+    public ResponseEntity<Page<CourtResponseDto>> getAllByBranchActiveAndApprovedPaginated(
             @PathVariable long idBranch,
             @PageableDefault(size = 12, sort = "id") Pageable pageable) {
-
-        return ResponseEntity.ok(
-                courtService.getAllByBranchActiveAndApprovedPaginated(
-                        idBranch, pageable)
-        );
+        Page<CourtResponseDto> result = getApprovedCourtsByBranchUseCase
+                .execute(idBranch, pageable).map(this::toResponse);
+        return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
     @GetMapping("/active")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<CourtResponseDto>> getAllActiveAndApproved() {
-        return ResponseEntity.ok(courtService.getAllActiveAndApproved());
+        List<CourtResponseDto> result = getApprovedCourtsUseCase
+                .execute(Pageable.unpaged()).getContent()
+                .stream().map(this::toResponse).toList();
+        return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
     @GetMapping("/active/paginated")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Page<CourtResponseDto>>
-    getAllActiveAndApprovedPaginated(
+    public ResponseEntity<Page<CourtResponseDto>> getAllActiveAndApprovedPaginated(
             @PageableDefault(size = 12, sort = "id") Pageable pageable) {
-
-        return ResponseEntity.ok(
-                courtService.getAllActiveAndApprovedPaginated(pageable)
-        );
+        Page<CourtResponseDto> result = getApprovedCourtsUseCase.execute(pageable).map(this::toResponse);
+        return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
     @GetMapping("/branch/{idBranch}/sport/{idSport}")
@@ -88,9 +80,18 @@ public class CourtController {
     public ResponseEntity<List<CourtResponseDto>> getCourtsByBranchAndSport(
             @PathVariable long idBranch,
             @PathVariable long idSport) {
+        List<CourtResponseDto> result = getCourtsByBranchAndSportUseCase
+                .execute(idBranch, idSport).stream().map(this::toResponse).toList();
+        return ResponseEntity.ok(result);
+    }
 
-        return ResponseEntity.ok(
-                courtService.getCourtsByBranchAndSport(idBranch, idSport)
-        );
+    CourtResponseDto toResponse(Court court) {
+        CourtResponseDto dto = new CourtResponseDto();
+        dto.setId(court.id());
+        dto.setName(court.name());
+        dto.setPricePerHour(court.pricePerHour());
+        dto.setBranchId(court.branchId());
+        dto.setSport(court.sportName());
+        return dto;
     }
 }

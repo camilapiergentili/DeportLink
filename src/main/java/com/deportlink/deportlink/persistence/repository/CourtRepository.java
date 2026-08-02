@@ -106,4 +106,23 @@ public interface CourtRepository extends JpaRepository<CourtEntity, Long> {
             @Param("idCourt") long idCourt,
             @Param("idOwner") long idOwner
     );
+
+    // Clean Architecture adapter queries
+
+    @Query("SELECT c FROM CourtEntity c JOIN FETCH c.sport WHERE c.id = :id")
+    Optional<CourtEntity> findByIdWithSport(@Param("id") Long id);
+
+    boolean existsByNameAndBranch_IdAndSport_Id(String name, Long branchId, Long sportId);
+
+    @Query("SELECT c FROM CourtEntity c LEFT JOIN FETCH c.sport " +
+           "WHERE c.branch.verificationStatus = :vs AND c.branch.activeStatus = :as " +
+           "AND c.activeStatus = :cs")
+    Page<CourtEntity> findApprovedClean(
+            @Param("vs") VerificationStatus vs,
+            @Param("as") ActiveStatus as,
+            @Param("cs") ActiveStatus cs,
+            Pageable pageable
+    );
+
+    List<CourtEntity> findByBranch_IdAndActiveStatus(long branchId, ActiveStatus activeStatus);
 }
