@@ -9,9 +9,11 @@ import com.deportlink.deportlink.exception.NegativePriceException;
 import com.deportlink.deportlink.mapper.CourtMapper;
 import com.deportlink.deportlink.enums.ActiveStatus;
 import com.deportlink.deportlink.enums.VerificationStatus;
+import com.deportlink.deportlink.exception.BranchNotFoundException;
 import com.deportlink.deportlink.model.entity.BranchEntity;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.model.entity.SportEntity;
+import com.deportlink.deportlink.persistence.repository.BranchRepository;
 import com.deportlink.deportlink.persistence.repository.CourtRepository;
 import com.deportlink.deportlink.service.CourtAdminService;
 import com.deportlink.deportlink.service.CourtOwnerService;
@@ -33,7 +35,7 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
 
     private final CourtRepository courtRepository;
     private final CourtMapper courtMapper;
-    private final BranchServiceImplementation branchService;
+    private final BranchRepository branchRepository;
     private final SportServiceImplementation sportService;
 
     @Override
@@ -41,7 +43,7 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
     public CourtResponseDto create(CourtRequestDto courtDto) {
         log.info("Creating court: name={}, branchId={}, sportId={}", courtDto.getName(), courtDto.getIdBranch(), courtDto.getIdSport());
 
-        BranchEntity branchEntity = branchService.getById(courtDto.getIdBranch());
+        BranchEntity branchEntity = branchRepository.findById(courtDto.getIdBranch()).orElseThrow(() -> new BranchNotFoundException("Sucursal no encontrada"));
         SportEntity sportEntity = sportService.getById(courtDto.getIdSport());
 
         if(!branchEntity.getVerificationStatus().equals(VerificationStatus.APPROVED)
@@ -152,7 +154,7 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
     @Override
     @Transactional(readOnly = true)
     public List<CourtResponseDto> getAllByBranchActiveAndApproved(long idBranch){
-        BranchEntity branchEntity = branchService.getById(idBranch);
+        BranchEntity branchEntity = branchRepository.findById(idBranch).orElseThrow(() -> new BranchNotFoundException("Sucursal no encontrada"));
 
         boolean isVisible = verifyBranchIsVisibleForPlayer(branchEntity.getVerificationStatus(), branchEntity.getActiveStatus());
 
@@ -177,7 +179,7 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
             long idBranch,
             Pageable pageable) {
 
-        BranchEntity branch = branchService.getById(idBranch);
+        BranchEntity branch = branchRepository.findById(idBranch).orElseThrow(() -> new BranchNotFoundException("Sucursal no encontrada"));
 
         boolean visible = verifyBranchIsVisibleForPlayer(
                 branch.getVerificationStatus(),
@@ -237,7 +239,7 @@ public class CourtServiceImplementation implements CourtService, CourtOwnerServi
         log.info("Updating court: courtId={}, name={}, branchId={}", idCourt, courtDto.getName(), courtDto.getIdBranch());
 
         CourtEntity courtEntity = getById(idCourt);
-        BranchEntity branchEntity = branchService.getById(courtDto.getIdBranch());
+        BranchEntity branchEntity = branchRepository.findById(courtDto.getIdBranch()).orElseThrow(() -> new BranchNotFoundException("Sucursal no encontrada"));
         SportEntity sportEntity = sportService.getById(courtDto.getIdSport());
 
         boolean sameSport = courtEntity.getSport().getId() == sportEntity.getId();
