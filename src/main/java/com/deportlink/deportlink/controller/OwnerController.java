@@ -3,7 +3,6 @@ package com.deportlink.deportlink.controller;
 import com.deportlink.deportlink.dto.request.OwnerRequestDto;
 import com.deportlink.deportlink.dto.response.OwnerResponseDto;
 import com.deportlink.deportlink.dto.response.PlayerResponseDto;
-import com.deportlink.deportlink.exception.OwnerAlreadyExistsException;
 import com.deportlink.deportlink.model.entity.UserMain;
 import com.deportlink.deportlink.service.OwnerService;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +26,7 @@ public class OwnerController {
 
     @PostMapping
     public ResponseEntity<OwnerResponseDto> register(
-            @RequestBody @Valid OwnerRequestDto dto)
-            throws OwnerAlreadyExistsException {
+            @RequestBody @Valid OwnerRequestDto dto) {
 
         OwnerResponseDto owner = ownerService.register(dto);
 

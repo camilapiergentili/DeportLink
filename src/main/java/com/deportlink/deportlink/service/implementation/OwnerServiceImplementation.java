@@ -36,7 +36,7 @@ public class OwnerServiceImplementation implements OwnerService {
 
     @Override
     @Transactional
-    public OwnerResponseDto register(OwnerRequestDto ownerDto) throws OwnerAlreadyExistsException {
+    public OwnerResponseDto register(OwnerRequestDto ownerDto) {
         log.info("Registering owner: email={}, dni={}", ownerDto.getEmail(), ownerDto.getDni());
 
         OwnerEntity ownerEntity = ownerMapper.toModel(ownerDto);

@@ -49,4 +49,12 @@ public interface ClubRepository extends JpaRepository<ClubEntity, Long> {
     );
 
     boolean existsByIdAndOwners_Id(long idClub, long idOwner);
+
+    // Paginado limpio sin JOIN FETCH de colecciones — evita el warning HHH90003004.
+    // Los owners se cargan lazy dentro de la transacción del adapter al llamar toDomain().
+    Page<ClubEntity> findByVerificationStatusAndActiveStatus(
+            VerificationStatus verificationStatus,
+            ActiveStatus activeStatus,
+            Pageable pageable
+    );
 }

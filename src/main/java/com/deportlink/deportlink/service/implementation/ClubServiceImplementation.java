@@ -158,7 +158,7 @@ public class ClubServiceImplementation implements ClubService, ClubOwnerService,
 
     @Override
     @Transactional
-    public void addOwner(long idClub, OwnerRequestDto ownerDto) throws OwnerAlreadyExistsException {
+    public void addOwner(long idClub, OwnerRequestDto ownerDto) {
         ClubEntity clubEntity = getById(idClub);
         OwnerResponseDto ownerResponse = ownerService.register(ownerDto);
         OwnerEntity ownerEntity = ownerService.getById(ownerResponse.getId());
