@@ -18,26 +18,24 @@ public class GlobalControllerAdvice {
     @ModelAttribute("id")
     public Long extractUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth == null || !auth.isAuthenticated()
-                || auth instanceof AnonymousAuthenticationToken) {
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
             return null;
         }
-
-        UserMain userMain = (UserMain) auth.getPrincipal();
+        if (!(auth.getPrincipal() instanceof UserMain userMain)) {
+            return null;
+        }
         return userMain.getId();
     }
 
     @ModelAttribute("role")
     public String extractRole() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth == null || !auth.isAuthenticated()
-                || auth instanceof AnonymousAuthenticationToken) {
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
             return null;
         }
-
-        UserMain userMain = (UserMain) auth.getPrincipal();
+        if (!(auth.getPrincipal() instanceof UserMain userMain)) {
+            return null;
+        }
         return userMain.getAuthorities().iterator().next().getAuthority();
     }
 }
