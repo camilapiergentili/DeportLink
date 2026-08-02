@@ -23,6 +23,4 @@ public class RescheduleRequestDto {
     @JsonFormat(pattern = "HH:mm")
     private LocalTime newStartTime;
 
-    @Positive
-    private long playerId;
 }

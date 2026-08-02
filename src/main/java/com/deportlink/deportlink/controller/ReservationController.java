@@ -11,12 +11,14 @@ import com.deportlink.deportlink.dto.request.RescheduleRequestDto;
 import com.deportlink.deportlink.dto.request.ReservationRequestDto;
 import com.deportlink.deportlink.dto.response.ReservationResponseDto;
 import com.deportlink.deportlink.dto.response.TicketResponseDto;
+import com.deportlink.deportlink.model.entity.UserMain;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -34,45 +36,34 @@ public class ReservationController {
     private final GetAvailableSlotsUseCase getAvailableSlotsUseCase;
     private final GetPlayerReservationsUseCase getPlayerReservationsUseCase;
 
-    /**
-     * Reserva un turno. Solo jugadores pueden reservar canchas.
-     * El playerId en el body es el jugador que reserva — en un sistema maduro
-     * se extraería del JWT para evitar que un jugador reserve en nombre de otro.
-     */
     @PostMapping
     @PreAuthorize("hasRole('PLAYER')")
-    public ResponseEntity<ReservationResponseDto> book(@RequestBody @Valid ReservationRequestDto dto) {
+    public ResponseEntity<ReservationResponseDto> book(
+            @RequestBody @Valid ReservationRequestDto dto,
+            @AuthenticationPrincipal UserMain user) {
         Reservation reservation = bookReservationUseCase.execute(
-                dto.getIdCourt(), dto.getIdPlayer(), dto.getDay(), dto.getStartTime()
+                dto.getIdCourt(), user.getId(), dto.getDay(), dto.getStartTime()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(reservation));
     }
 
-    /**
-     * Cancela una reserva existente. El caso de uso valida ownership y ventana de 12 horas.
-     * playerId como query param: en el futuro se leerá del contexto de seguridad.
-     */
     @DeleteMapping("/{reservationId}")
     @PreAuthorize("hasRole('PLAYER')")
     public ResponseEntity<ReservationResponseDto> cancel(
             @PathVariable Long reservationId,
-            @RequestParam Long playerId) {
-        Reservation cancelled = cancelReservationUseCase.execute(reservationId, playerId);
+            @AuthenticationPrincipal UserMain user) {
+        Reservation cancelled = cancelReservationUseCase.execute(reservationId, user.getId());
         return ResponseEntity.ok(toResponse(cancelled));
     }
 
-    /**
-     * Reprograma un turno: marca el actual como REPROGRAMADO y crea uno nuevo.
-     * Operación atómica — si la creación del nuevo turno falla, el estado anterior
-     * hace rollback y el jugador conserva la reserva original.
-     */
     @PutMapping("/{reservationId}/reschedule")
     @PreAuthorize("hasRole('PLAYER')")
     public ResponseEntity<ReservationResponseDto> reschedule(
             @PathVariable Long reservationId,
-            @RequestBody @Valid RescheduleRequestDto dto) {
+            @RequestBody @Valid RescheduleRequestDto dto,
+            @AuthenticationPrincipal UserMain user) {
         Reservation rescheduled = rescheduleReservationUseCase.execute(
-                reservationId, dto.getPlayerId(), dto.getNewDay(), dto.getNewStartTime()
+                reservationId, user.getId(), dto.getNewDay(), dto.getNewStartTime()
         );
         return ResponseEntity.ok(toResponse(rescheduled));
     }
