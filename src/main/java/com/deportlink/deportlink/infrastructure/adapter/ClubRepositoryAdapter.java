@@ -72,6 +72,13 @@ public class ClubRepositoryAdapter implements ClubRepositoryPort {
         return branchRepository.existsByClub_Id(clubId);
     }
 
+    @Override
+    public Page<Club> searchApprovedByName(String name, Pageable pageable) {
+        return clubRepository.findByNameContainingIgnoreCaseAndVerificationStatusAndActiveStatus(
+                name, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, pageable
+        ).map(this::toDomain);
+    }
+
     // ─── Entity builders ────────────────────────────────────────────────────────
 
     private ClubEntity buildNewEntity(Club domain) {

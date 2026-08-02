@@ -27,4 +27,6 @@ public interface ClubRepositoryPort {
 
     /** Verdadero si el club tiene al menos una sucursal. Impide el borrado del club. */
     boolean hasBranches(Long clubId);
+
+    Page<Club> searchApprovedByName(String name, Pageable pageable);
 }

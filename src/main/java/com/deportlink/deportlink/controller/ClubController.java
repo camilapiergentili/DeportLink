@@ -3,6 +3,7 @@ package com.deportlink.deportlink.controller;
 import com.deportlink.deportlink.application.usecase.club.GetAllClubsUseCase;
 import com.deportlink.deportlink.application.usecase.club.GetApprovedClubsUseCase;
 import com.deportlink.deportlink.application.usecase.club.GetClubUseCase;
+import com.deportlink.deportlink.application.usecase.club.SearchClubsByNameUseCase;
 import com.deportlink.deportlink.domain.model.Club;
 import com.deportlink.deportlink.dto.response.ClubResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class ClubController {
     private final GetClubUseCase getClubUseCase;
     private final GetApprovedClubsUseCase getApprovedClubsUseCase;
     private final GetAllClubsUseCase getAllClubsUseCase;
+    private final SearchClubsByNameUseCase searchClubsByNameUseCase;
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
@@ -41,6 +43,15 @@ public class ClubController {
     public ResponseEntity<Page<ClubResponseDto>> getAll(
             @PageableDefault(size = 12, sort = "id") Pageable pageable) {
         Page<ClubResponseDto> result = getAllClubsUseCase.execute(pageable).map(this::toResponse);
+        return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Page<ClubResponseDto>> search(
+            @RequestParam String name,
+            @PageableDefault(size = 12, sort = "id") Pageable pageable) {
+        Page<ClubResponseDto> result = searchClubsByNameUseCase.execute(name, pageable).map(this::toResponse);
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 

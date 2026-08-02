@@ -71,6 +71,26 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
         );
     }
 
+    @Override
+    public List<Branch> searchApprovedByName(String name) {
+        return branchRepository.findByNameContainingIgnoreCaseAndVerificationStatusAndActiveStatus(
+                name, VerificationStatus.APPROVED, ActiveStatus.ACTIVE
+        ).stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public List<Branch> findApprovedBySport(Long sportId) {
+        return branchRepository.findApprovedBySport(
+                sportId, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, ActiveStatus.ACTIVE
+        ).stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public List<Branch> findNearby(double lat, double lng, double radiusKm) {
+        return branchRepository.findNearby(lat, lng, radiusKm)
+                .stream().map(this::toDomain).toList();
+    }
+
     private BranchEntity buildNewEntity(Branch branch) {
         BranchEntity entity = new BranchEntity();
         entity.setName(branch.name());

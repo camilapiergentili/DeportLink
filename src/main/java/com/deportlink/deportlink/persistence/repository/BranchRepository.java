@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BranchRepository extends JpaRepository<BranchEntity, Long> {
@@ -43,5 +44,52 @@ public interface BranchRepository extends JpaRepository<BranchEntity, Long> {
             @Param("city") String city,
             @Param("province") String province,
             @Param("postalCode") int postalCode
+    );
+
+    List<BranchEntity> findByNameContainingIgnoreCaseAndVerificationStatusAndActiveStatus(
+            String name,
+            VerificationStatus verificationStatus,
+            ActiveStatus activeStatus
+    );
+
+    @Query("""
+        SELECT DISTINCT b FROM BranchEntity b
+        JOIN b.courts c
+        WHERE c.sport.id = :sportId
+          AND b.verificationStatus = :vs
+          AND b.activeStatus = :as
+          AND c.activeStatus = :courtStatus
+    """)
+    List<BranchEntity> findApprovedBySport(
+            @Param("sportId") Long sportId,
+            @Param("vs") VerificationStatus vs,
+            @Param("as") ActiveStatus as,
+            @Param("courtStatus") ActiveStatus courtStatus
+    );
+
+    @Query(value = """
+        SELECT b.* FROM branches b
+        JOIN address a ON b.address_id = a.id
+        WHERE b.verification_status = 'APPROVED'
+          AND b.active_status = 'ACTIVE'
+          AND (6371 * acos(
+                LEAST(1.0,
+                  cos(radians(:lat)) * cos(radians(a.latitude))
+                  * cos(radians(a.longitude) - radians(:lng))
+                  + sin(radians(:lat)) * sin(radians(a.latitude))
+                )
+              )) <= :radiusKm
+        ORDER BY (6371 * acos(
+                LEAST(1.0,
+                  cos(radians(:lat)) * cos(radians(a.latitude))
+                  * cos(radians(a.longitude) - radians(:lng))
+                  + sin(radians(:lat)) * sin(radians(a.latitude))
+                )
+              )) ASC
+    """, nativeQuery = true)
+    List<BranchEntity> findNearby(
+            @Param("lat") double lat,
+            @Param("lng") double lng,
+            @Param("radiusKm") double radiusKm
     );
 }

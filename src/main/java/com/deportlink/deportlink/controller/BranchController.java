@@ -2,6 +2,9 @@ package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.branch.GetApprovedBranchesUseCase;
 import com.deportlink.deportlink.application.usecase.branch.GetBranchUseCase;
+import com.deportlink.deportlink.application.usecase.branch.GetBranchesBySportUseCase;
+import com.deportlink.deportlink.application.usecase.branch.GetNearbyBranchesUseCase;
+import com.deportlink.deportlink.application.usecase.branch.SearchBranchesByNameUseCase;
 import com.deportlink.deportlink.domain.model.Address;
 import com.deportlink.deportlink.domain.model.Branch;
 import com.deportlink.deportlink.dto.response.AddressResponseDto;
@@ -20,6 +23,9 @@ public class BranchController {
 
     private final GetBranchUseCase getBranchUseCase;
     private final GetApprovedBranchesUseCase getApprovedBranchesUseCase;
+    private final SearchBranchesByNameUseCase searchBranchesByNameUseCase;
+    private final GetBranchesBySportUseCase getBranchesBySportUseCase;
+    private final GetNearbyBranchesUseCase getNearbyBranchesUseCase;
 
     @GetMapping("/{idBranch}/approved")
     @PreAuthorize("isAuthenticated()")
@@ -31,6 +37,33 @@ public class BranchController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<BranchResponseDto>> getApprovedAndActiveByClub(@PathVariable long idClub) {
         List<BranchResponseDto> result = getApprovedBranchesUseCase.execute(idClub)
+                .stream().map(this::toResponse).toList();
+        return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<BranchResponseDto>> search(@RequestParam String name) {
+        List<BranchResponseDto> result = searchBranchesByNameUseCase.execute(name)
+                .stream().map(this::toResponse).toList();
+        return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/by-sport/{sportId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<BranchResponseDto>> getBySport(@PathVariable Long sportId) {
+        List<BranchResponseDto> result = getBranchesBySportUseCase.execute(sportId)
+                .stream().map(this::toResponse).toList();
+        return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/nearby")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<BranchResponseDto>> getNearby(
+            @RequestParam double lat,
+            @RequestParam double lng,
+            @RequestParam(defaultValue = "10") double radiusKm) {
+        List<BranchResponseDto> result = getNearbyBranchesUseCase.execute(lat, lng, radiusKm)
                 .stream().map(this::toResponse).toList();
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }

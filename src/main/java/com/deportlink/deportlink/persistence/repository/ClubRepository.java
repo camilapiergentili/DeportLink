@@ -57,4 +57,11 @@ public interface ClubRepository extends JpaRepository<ClubEntity, Long> {
             ActiveStatus activeStatus,
             Pageable pageable
     );
+
+    Page<ClubEntity> findByNameContainingIgnoreCaseAndVerificationStatusAndActiveStatus(
+            String name,
+            VerificationStatus verificationStatus,
+            ActiveStatus activeStatus,
+            Pageable pageable
+    );
 }

@@ -21,4 +21,10 @@ public interface BranchRepositoryPort {
     boolean existsByNameIgnoreCaseAndClub(String name, Long clubId);
 
     boolean existsByAddressAndClub(Address address, Long clubId);
+
+    List<Branch> searchApprovedByName(String name);
+
+    List<Branch> findApprovedBySport(Long sportId);
+
+    List<Branch> findNearby(double lat, double lng, double radiusKm);
 }
