@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/branches")
+@RequestMapping("/api/branches/owner")
 @RequiredArgsConstructor
 public class BranchOwnerController {
 

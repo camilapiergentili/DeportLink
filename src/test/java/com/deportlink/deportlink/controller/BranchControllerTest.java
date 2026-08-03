@@ -310,7 +310,7 @@ class BranchControllerTest {
     void admin_getById_rolAdmin_retorna200ConDatos() throws Exception {
         when(getBranchByIdUseCase.execute(1L)).thenReturn(branch());
 
-        mockMvc.perform(get("/api/branches/1").with(ADMIN))
+        mockMvc.perform(get("/api/branches/admin/1").with(ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("Norte"));
@@ -322,7 +322,7 @@ class BranchControllerTest {
     void admin_getById_sucursalNoExiste_retorna404() throws Exception {
         when(getBranchByIdUseCase.execute(99L)).thenThrow(new BranchNotFoundException("Sucursal no encontrada"));
 
-        mockMvc.perform(get("/api/branches/99").with(ADMIN))
+        mockMvc.perform(get("/api/branches/admin/99").with(ADMIN))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("Not Found"));
@@ -330,7 +330,7 @@ class BranchControllerTest {
 
     @Test
     void admin_getById_rolPlayer_retorna403() throws Exception {
-        mockMvc.perform(get("/api/branches/1").with(PLAYER))
+        mockMvc.perform(get("/api/branches/admin/1").with(PLAYER))
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(getBranchByIdUseCase);
@@ -338,7 +338,7 @@ class BranchControllerTest {
 
     @Test
     void admin_getById_sinAutenticacion_retorna401() throws Exception {
-        mockMvc.perform(get("/api/branches/1"))
+        mockMvc.perform(get("/api/branches/admin/1"))
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(getBranchByIdUseCase);
@@ -352,7 +352,7 @@ class BranchControllerTest {
     void admin_getAll_conResultados_retorna200() throws Exception {
         when(getAllBranchesUseCase.execute(10L)).thenReturn(List.of(branch()));
 
-        mockMvc.perform(get("/api/branches/10/club").with(ADMIN))
+        mockMvc.perform(get("/api/branches/admin/10/club").with(ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Norte"));
 
@@ -363,13 +363,13 @@ class BranchControllerTest {
     void admin_getAll_listaVacia_retorna204() throws Exception {
         when(getAllBranchesUseCase.execute(10L)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/branches/10/club").with(ADMIN))
+        mockMvc.perform(get("/api/branches/admin/10/club").with(ADMIN))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void admin_getAll_rolPlayer_retorna403() throws Exception {
-        mockMvc.perform(get("/api/branches/10/club").with(PLAYER))
+        mockMvc.perform(get("/api/branches/admin/10/club").with(PLAYER))
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(getAllBranchesUseCase);
@@ -377,7 +377,7 @@ class BranchControllerTest {
 
     @Test
     void admin_getAll_sinAutenticacion_retorna401() throws Exception {
-        mockMvc.perform(get("/api/branches/10/club"))
+        mockMvc.perform(get("/api/branches/admin/10/club"))
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(getAllBranchesUseCase);
@@ -389,7 +389,7 @@ class BranchControllerTest {
 
     @Test
     void admin_approve_rolAdmin_retorna200ConMensaje() throws Exception {
-        mockMvc.perform(patch("/api/branches/1/approve").with(ADMIN))
+        mockMvc.perform(patch("/api/branches/admin/1/approve").with(ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Sucursal aprobada con éxito"));
 
@@ -400,7 +400,7 @@ class BranchControllerTest {
     void admin_approve_sucursalNoExiste_retorna404() throws Exception {
         when(approveBranchUseCase.execute(99L)).thenThrow(new BranchNotFoundException("Sucursal no encontrada"));
 
-        mockMvc.perform(patch("/api/branches/99/approve").with(ADMIN))
+        mockMvc.perform(patch("/api/branches/admin/99/approve").with(ADMIN))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }
@@ -410,14 +410,14 @@ class BranchControllerTest {
         when(approveBranchUseCase.execute(1L))
                 .thenThrow(new StatusAlreadyAppliedException("La sucursal ya está aprobada"));
 
-        mockMvc.perform(patch("/api/branches/1/approve").with(ADMIN))
+        mockMvc.perform(patch("/api/branches/admin/1/approve").with(ADMIN))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409));
     }
 
     @Test
     void admin_approve_rolPlayer_retorna403() throws Exception {
-        mockMvc.perform(patch("/api/branches/1/approve").with(PLAYER))
+        mockMvc.perform(patch("/api/branches/admin/1/approve").with(PLAYER))
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(approveBranchUseCase);
@@ -425,7 +425,7 @@ class BranchControllerTest {
 
     @Test
     void admin_approve_sinAutenticacion_retorna401() throws Exception {
-        mockMvc.perform(patch("/api/branches/1/approve"))
+        mockMvc.perform(patch("/api/branches/admin/1/approve"))
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(approveBranchUseCase);
@@ -437,7 +437,7 @@ class BranchControllerTest {
 
     @Test
     void admin_reject_rolAdmin_retorna200ConMensaje() throws Exception {
-        mockMvc.perform(patch("/api/branches/1/reject").with(ADMIN))
+        mockMvc.perform(patch("/api/branches/admin/1/reject").with(ADMIN))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Sucursal rechazada con éxito"));
 
@@ -448,7 +448,7 @@ class BranchControllerTest {
     void admin_reject_sucursalNoExiste_retorna404() throws Exception {
         when(rejectBranchUseCase.execute(99L)).thenThrow(new BranchNotFoundException("Sucursal no encontrada"));
 
-        mockMvc.perform(patch("/api/branches/99/reject").with(ADMIN))
+        mockMvc.perform(patch("/api/branches/admin/99/reject").with(ADMIN))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }
@@ -458,14 +458,14 @@ class BranchControllerTest {
         when(rejectBranchUseCase.execute(1L))
                 .thenThrow(new StatusAlreadyAppliedException("La sucursal ya está rechazada"));
 
-        mockMvc.perform(patch("/api/branches/1/reject").with(ADMIN))
+        mockMvc.perform(patch("/api/branches/admin/1/reject").with(ADMIN))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409));
     }
 
     @Test
     void admin_reject_rolPlayer_retorna403() throws Exception {
-        mockMvc.perform(patch("/api/branches/1/reject").with(PLAYER))
+        mockMvc.perform(patch("/api/branches/admin/1/reject").with(PLAYER))
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(rejectBranchUseCase);
@@ -473,7 +473,7 @@ class BranchControllerTest {
 
     @Test
     void admin_reject_sinAutenticacion_retorna401() throws Exception {
-        mockMvc.perform(patch("/api/branches/1/reject"))
+        mockMvc.perform(patch("/api/branches/admin/1/reject"))
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(rejectBranchUseCase);

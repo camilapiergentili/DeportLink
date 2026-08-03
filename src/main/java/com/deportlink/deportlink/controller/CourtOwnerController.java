@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/courts/owners")
+@RequestMapping("/api/courts/owner")
 @RequiredArgsConstructor
 public class CourtOwnerController {
 
