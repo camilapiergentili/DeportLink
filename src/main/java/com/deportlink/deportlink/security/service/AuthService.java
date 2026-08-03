@@ -7,6 +7,8 @@ import com.deportlink.deportlink.persistence.repository.UserRepository;
 import com.deportlink.deportlink.security.config.JwtUtil;
 import com.deportlink.deportlink.security.dto.AuthenticationRequest;
 import com.deportlink.deportlink.security.dto.AuthenticationResponse;
+import com.deportlink.deportlink.security.port.AuthServicePort;
+import com.deportlink.deportlink.security.port.LoginAttemptPort;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,12 +17,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public class AuthService {
+public class AuthService implements AuthServicePort {
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
-    private final LoginAttemptService loginAttemptService;
+    private final LoginAttemptPort loginAttemptService;
 
     public AuthenticationResponse login(AuthenticationRequest request, String ip) {
         if (loginAttemptService.isBlocked(ip)) {

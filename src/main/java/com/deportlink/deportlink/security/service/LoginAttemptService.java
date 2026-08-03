@@ -1,5 +1,6 @@
 package com.deportlink.deportlink.security.service;
 
+import com.deportlink.deportlink.security.port.LoginAttemptPort;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -7,7 +8,7 @@ import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class LoginAttemptService {
+public class LoginAttemptService implements LoginAttemptPort {
 
     private static final int MAX_ATTEMPTS = 5;
     private static final Duration LOCK_DURATION = Duration.ofMinutes(15);

@@ -2,7 +2,7 @@ package com.deportlink.deportlink.security.controller;
 
 import com.deportlink.deportlink.security.dto.AuthenticationRequest;
 import com.deportlink.deportlink.security.dto.AuthenticationResponse;
-import com.deportlink.deportlink.security.service.AuthService;
+import com.deportlink.deportlink.security.port.AuthServicePort;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthServicePort authService;
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(
