@@ -2,6 +2,7 @@ package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.port.out.OwnerGateway;
 import com.deportlink.deportlink.application.usecase.club.*;
+import com.deportlink.deportlink.controller.mapper.ClubMapper;
 import com.deportlink.deportlink.domain.model.Club;
 import com.deportlink.deportlink.dto.request.ClubRequestDto;
 import com.deportlink.deportlink.dto.request.OwnerRequestDto;
@@ -27,6 +28,7 @@ public class ClubOwnerController {
     private final RemoveOwnerFromClubUseCase removeOwnerFromClubUseCase;
     private final ActivateClubUseCase activateClubUseCase;
     private final DeactivateClubUseCase deactivateClubUseCase;
+    private final ClubMapper clubMapper;
 
     @PostMapping
     @PreAuthorize("""
@@ -41,7 +43,7 @@ public class ClubOwnerController {
                 clubDto.getClubType(),
                 clubDto.getOwnerIds()
         );
-        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(club));
+        return ResponseEntity.status(HttpStatus.CREATED).body(clubMapper.toResponse(club));
     }
 
     @DeleteMapping("/{idClub}")
@@ -111,18 +113,6 @@ public class ClubOwnerController {
     public ResponseEntity<Object> deactivate(@PathVariable long idClub) {
         deactivateClubUseCase.execute(idClub);
         return ResponseEntity.ok(Map.of("message", "El club fue desactivado con éxito"));
-    }
-
-    private ClubResponseDto toResponse(Club club) {
-        ClubResponseDto dto = new ClubResponseDto();
-        dto.setId(club.id());
-        dto.setName(club.name());
-        dto.setLegalName(club.legalName());
-        dto.setCuit(club.cuit());
-        dto.setClubType(club.clubType());
-        dto.setVerificationStatus(club.verificationStatus());
-        dto.setActiveStatus(club.activeStatus());
-        return dto;
     }
 
     private OwnerGateway.OwnerCommand toOwnerCommand(OwnerRequestDto dto) {
