@@ -8,6 +8,8 @@ import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.exception.BranchNotFoundException;
 import com.deportlink.deportlink.exception.BranchNotApprovedException;
 import com.deportlink.deportlink.exception.StatusAlreadyAppliedException;
+import com.deportlink.deportlink.controller.mapper.AddressMapperImpl;
+import com.deportlink.deportlink.controller.mapper.BranchMapperImpl;
 import com.deportlink.deportlink.security.advice.JwtAccessDeniedHandler;
 import com.deportlink.deportlink.security.advice.JwtAuthenticationEntryPoint;
 import com.deportlink.deportlink.security.config.PasswordConfig;
@@ -36,7 +38,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = {BranchController.class, BranchAdminController.class})
-@Import({SecurityConfig.class, JwtAuthenticationEntryPoint.class, JwtAccessDeniedHandler.class, PasswordConfig.class})
+@Import({SecurityConfig.class, JwtAuthenticationEntryPoint.class, JwtAccessDeniedHandler.class, PasswordConfig.class,
+        BranchMapperImpl.class, AddressMapperImpl.class})
 @ActiveProfiles("test")
 class BranchControllerTest {
 
