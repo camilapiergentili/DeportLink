@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.branch.*;
-import com.deportlink.deportlink.domain.model.Branch;
+import com.deportlink.deportlink.controller.mapper.BranchMapper;
 import com.deportlink.deportlink.dto.response.BranchResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,17 +21,17 @@ public class BranchAdminController {
     private final GetAllBranchesUseCase getAllBranchesUseCase;
     private final ApproveBranchUseCase approveBranchUseCase;
     private final RejectBranchUseCase rejectBranchUseCase;
-    private final BranchController branchController;
+    private final BranchMapper branchMapper;
 
     @GetMapping("/{id}")
     public ResponseEntity<BranchResponseDto> getById(@PathVariable long id) {
-        return ResponseEntity.ok(branchController.toResponse(getBranchByIdUseCase.execute(id)));
+        return ResponseEntity.ok(branchMapper.toResponse(getBranchByIdUseCase.execute(id)));
     }
 
     @GetMapping("/{idClub}/club")
     public ResponseEntity<List<BranchResponseDto>> getAll(@PathVariable long idClub) {
         List<BranchResponseDto> result = getAllBranchesUseCase.execute(idClub)
-                .stream().map(branchController::toResponse).toList();
+                .stream().map(branchMapper::toResponse).toList();
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 

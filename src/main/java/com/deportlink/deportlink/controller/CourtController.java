@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.court.*;
-import com.deportlink.deportlink.domain.model.Court;
+import com.deportlink.deportlink.controller.mapper.CourtMapper;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +23,7 @@ public class CourtController {
     private final GetApprovedCourtsUseCase getApprovedCourtsUseCase;
     private final GetApprovedCourtsByBranchUseCase getApprovedCourtsByBranchUseCase;
     private final GetCourtsByBranchAndSportUseCase getCourtsByBranchAndSportUseCase;
+    private final CourtMapper courtMapper;
 
     @GetMapping("/{idCourt}")
     @PreAuthorize("""
@@ -30,13 +31,13 @@ public class CourtController {
         or (hasRole('OWNER') and @courtAuthorization.isOwnerOfCourt(#idCourt, authentication))
     """)
     public ResponseEntity<CourtResponseDto> getById(@PathVariable long idCourt) {
-        return ResponseEntity.ok(toResponse(getCourtByIdUseCase.execute(idCourt)));
+        return ResponseEntity.ok(courtMapper.toResponse(getCourtByIdUseCase.execute(idCourt)));
     }
 
     @GetMapping("/{idCourt}/active")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CourtResponseDto> getByIdApprovedAndActive(@PathVariable long idCourt) {
-        return ResponseEntity.ok(toResponse(getActiveCourtUseCase.execute(idCourt)));
+        return ResponseEntity.ok(courtMapper.toResponse(getActiveCourtUseCase.execute(idCourt)));
     }
 
     @GetMapping("/branch/{idBranch}/active")
@@ -44,7 +45,7 @@ public class CourtController {
     public ResponseEntity<List<CourtResponseDto>> getAllByBranchActiveAndApproved(@PathVariable long idBranch) {
         List<CourtResponseDto> result = getApprovedCourtsByBranchUseCase
                 .execute(idBranch, Pageable.unpaged()).getContent()
-                .stream().map(this::toResponse).toList();
+                .stream().map(courtMapper::toResponse).toList();
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
@@ -54,7 +55,7 @@ public class CourtController {
             @PathVariable long idBranch,
             @PageableDefault(size = 12, sort = "id") Pageable pageable) {
         Page<CourtResponseDto> result = getApprovedCourtsByBranchUseCase
-                .execute(idBranch, pageable).map(this::toResponse);
+                .execute(idBranch, pageable).map(courtMapper::toResponse);
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
@@ -63,7 +64,7 @@ public class CourtController {
     public ResponseEntity<List<CourtResponseDto>> getAllActiveAndApproved() {
         List<CourtResponseDto> result = getApprovedCourtsUseCase
                 .execute(Pageable.unpaged()).getContent()
-                .stream().map(this::toResponse).toList();
+                .stream().map(courtMapper::toResponse).toList();
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
@@ -71,7 +72,7 @@ public class CourtController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<CourtResponseDto>> getAllActiveAndApprovedPaginated(
             @PageableDefault(size = 12, sort = "id") Pageable pageable) {
-        Page<CourtResponseDto> result = getApprovedCourtsUseCase.execute(pageable).map(this::toResponse);
+        Page<CourtResponseDto> result = getApprovedCourtsUseCase.execute(pageable).map(courtMapper::toResponse);
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
@@ -81,17 +82,7 @@ public class CourtController {
             @PathVariable long idBranch,
             @PathVariable long idSport) {
         List<CourtResponseDto> result = getCourtsByBranchAndSportUseCase
-                .execute(idBranch, idSport).stream().map(this::toResponse).toList();
+                .execute(idBranch, idSport).stream().map(courtMapper::toResponse).toList();
         return ResponseEntity.ok(result);
-    }
-
-    CourtResponseDto toResponse(Court court) {
-        CourtResponseDto dto = new CourtResponseDto();
-        dto.setId(court.id());
-        dto.setName(court.name());
-        dto.setPricePerHour(court.pricePerHour());
-        dto.setBranchId(court.branchId());
-        dto.setSport(court.sportName());
-        return dto;
     }
 }

@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.schedule.*;
-import com.deportlink.deportlink.domain.model.Schedule;
+import com.deportlink.deportlink.controller.mapper.ScheduleMapper;
 import com.deportlink.deportlink.dto.request.ScheduleRequestDto;
 import com.deportlink.deportlink.dto.response.ScheduleResponseDto;
 import jakarta.validation.Valid;
@@ -25,6 +25,7 @@ public class ScheduleController {
     private final UpdateScheduleUseCase updateScheduleUseCase;
     private final GetAllSchedulesByCourtUseCase getAllSchedulesByCourtUseCase;
     private final GetScheduleByDayUseCase getScheduleByDayUseCase;
+    private final ScheduleMapper scheduleMapper;
 
     @PostMapping("/court/{idCourt}")
     @PreAuthorize("""
@@ -72,7 +73,7 @@ public class ScheduleController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ScheduleResponseDto>> getByCourt(@PathVariable long idCourt) {
         return ResponseEntity.ok(
-                getAllSchedulesByCourtUseCase.execute(idCourt).stream().map(this::toResponse).toList()
+                getAllSchedulesByCourtUseCase.execute(idCourt).stream().map(scheduleMapper::toResponse).toList()
         );
     }
 
@@ -82,16 +83,6 @@ public class ScheduleController {
             @PathVariable long idCourt,
             @RequestParam LocalDate day) {
 
-        return ResponseEntity.ok(toResponse(getScheduleByDayUseCase.execute(idCourt, day)));
-    }
-
-    private ScheduleResponseDto toResponse(Schedule schedule) {
-        ScheduleResponseDto dto = new ScheduleResponseDto();
-        dto.setId(schedule.id());
-        dto.setDay(schedule.day());
-        dto.setOpeningTime(schedule.openingTime());
-        dto.setClosingTime(schedule.closingTime());
-        dto.setSlotDuration(schedule.slotDuration().toMinutes());
-        return dto;
+        return ResponseEntity.ok(scheduleMapper.toResponse(getScheduleByDayUseCase.execute(idCourt, day)));
     }
 }

@@ -2,6 +2,7 @@ package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.court.GetAllCourtsByBranchUseCase;
 import com.deportlink.deportlink.application.usecase.court.GetAllCourtsUseCase;
+import com.deportlink.deportlink.controller.mapper.CourtMapper;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,19 +19,19 @@ public class CourtAdminController {
 
     private final GetAllCourtsByBranchUseCase getAllCourtsByBranchUseCase;
     private final GetAllCourtsUseCase getAllCourtsUseCase;
-    private final CourtController courtController;
+    private final CourtMapper courtMapper;
 
     @GetMapping("/branch/{idBranch}")
     public ResponseEntity<List<CourtResponseDto>> getAllByBranch(@PathVariable long idBranch) {
         List<CourtResponseDto> result = getAllCourtsByBranchUseCase.execute(idBranch)
-                .stream().map(courtController::toResponse).toList();
+                .stream().map(courtMapper::toResponse).toList();
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
     @GetMapping
     public ResponseEntity<List<CourtResponseDto>> getAll() {
         List<CourtResponseDto> result = getAllCourtsUseCase.execute()
-                .stream().map(courtController::toResponse).toList();
+                .stream().map(courtMapper::toResponse).toList();
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 }

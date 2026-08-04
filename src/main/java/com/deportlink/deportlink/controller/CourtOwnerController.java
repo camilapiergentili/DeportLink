@@ -1,6 +1,7 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.court.*;
+import com.deportlink.deportlink.controller.mapper.CourtMapper;
 import com.deportlink.deportlink.domain.model.Court;
 import com.deportlink.deportlink.dto.request.CourtRequestDto;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
@@ -24,7 +25,7 @@ public class CourtOwnerController {
     private final DeleteCourtUseCase deleteCourtUseCase;
     private final ActivateCourtUseCase activateCourtUseCase;
     private final DeactivateCourtUseCase deactivateCourtUseCase;
-    private final CourtController courtController;
+    private final CourtMapper courtMapper;
 
     @PostMapping
     @PreAuthorize("""
@@ -36,7 +37,7 @@ public class CourtOwnerController {
                 courtDto.getName(), courtDto.getPricePerHour(),
                 courtDto.getIdBranch(), courtDto.getIdSport()
         );
-        return ResponseEntity.status(HttpStatus.CREATED).body(courtController.toResponse(court));
+        return ResponseEntity.status(HttpStatus.CREATED).body(courtMapper.toResponse(court));
     }
 
     @DeleteMapping("/{idCourt}")
@@ -60,7 +61,7 @@ public class CourtOwnerController {
             @PathVariable long idCourt,
             @Valid @RequestBody CourtRequestDto courtDto) {
         Court court = updateCourtUseCase.execute(idCourt, courtDto.getName(), courtDto.getIdSport());
-        return ResponseEntity.ok(courtController.toResponse(court));
+        return ResponseEntity.ok(courtMapper.toResponse(court));
     }
 
     @PatchMapping("/{idCourt}/price")

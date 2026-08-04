@@ -5,9 +5,7 @@ import com.deportlink.deportlink.application.usecase.branch.GetBranchUseCase;
 import com.deportlink.deportlink.application.usecase.branch.GetBranchesBySportUseCase;
 import com.deportlink.deportlink.application.usecase.branch.GetNearbyBranchesUseCase;
 import com.deportlink.deportlink.application.usecase.branch.SearchBranchesByNameUseCase;
-import com.deportlink.deportlink.domain.model.Address;
-import com.deportlink.deportlink.domain.model.Branch;
-import com.deportlink.deportlink.dto.response.AddressResponseDto;
+import com.deportlink.deportlink.controller.mapper.BranchMapper;
 import com.deportlink.deportlink.dto.response.BranchResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,18 +24,19 @@ public class BranchController {
     private final SearchBranchesByNameUseCase searchBranchesByNameUseCase;
     private final GetBranchesBySportUseCase getBranchesBySportUseCase;
     private final GetNearbyBranchesUseCase getNearbyBranchesUseCase;
+    private final BranchMapper branchMapper;
 
     @GetMapping("/{idBranch}/approved")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BranchResponseDto> getApprovedById(@PathVariable long idBranch) {
-        return ResponseEntity.ok(toResponse(getBranchUseCase.execute(idBranch)));
+        return ResponseEntity.ok(branchMapper.toResponse(getBranchUseCase.execute(idBranch)));
     }
 
     @GetMapping("/{idClub}/active-approved")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<BranchResponseDto>> getApprovedAndActiveByClub(@PathVariable long idClub) {
         List<BranchResponseDto> result = getApprovedBranchesUseCase.execute(idClub)
-                .stream().map(this::toResponse).toList();
+                .stream().map(branchMapper::toResponse).toList();
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
@@ -45,7 +44,7 @@ public class BranchController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<BranchResponseDto>> search(@RequestParam String name) {
         List<BranchResponseDto> result = searchBranchesByNameUseCase.execute(name)
-                .stream().map(this::toResponse).toList();
+                .stream().map(branchMapper::toResponse).toList();
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
@@ -53,7 +52,7 @@ public class BranchController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<BranchResponseDto>> getBySport(@PathVariable Long sportId) {
         List<BranchResponseDto> result = getBranchesBySportUseCase.execute(sportId)
-                .stream().map(this::toResponse).toList();
+                .stream().map(branchMapper::toResponse).toList();
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
     }
 
@@ -64,31 +63,7 @@ public class BranchController {
             @RequestParam double lng,
             @RequestParam(defaultValue = "10") double radiusKm) {
         List<BranchResponseDto> result = getNearbyBranchesUseCase.execute(lat, lng, radiusKm)
-                .stream().map(this::toResponse).toList();
+                .stream().map(branchMapper::toResponse).toList();
         return result.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(result);
-    }
-
-    BranchResponseDto toResponse(Branch branch) {
-        BranchResponseDto dto = new BranchResponseDto();
-        dto.setId(branch.id());
-        dto.setName(branch.name());
-        dto.setClubId(branch.clubId());
-        dto.setVerificationStatus(branch.verificationStatus());
-        dto.setActiveStatus(branch.activeStatus());
-        dto.setAddress(toAddressResponse(branch.address()));
-        return dto;
-    }
-
-    private AddressResponseDto toAddressResponse(Address address) {
-        if (address == null) return null;
-        AddressResponseDto dto = new AddressResponseDto();
-        dto.setStreetName(address.streetName());
-        dto.setNumber(address.number());
-        dto.setCity(address.city());
-        dto.setProvince(address.province());
-        dto.setPostalCode(address.postalCode());
-        dto.setLatitude(address.latitude());
-        dto.setLongitude(address.longitude());
-        return dto;
     }
 }

@@ -1,9 +1,9 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.branch.*;
-import com.deportlink.deportlink.domain.model.Address;
+import com.deportlink.deportlink.controller.mapper.AddressMapper;
+import com.deportlink.deportlink.controller.mapper.BranchMapper;
 import com.deportlink.deportlink.domain.model.Branch;
-import com.deportlink.deportlink.dto.request.AddressRequestDto;
 import com.deportlink.deportlink.dto.request.BranchRequestDto;
 import com.deportlink.deportlink.dto.response.BranchResponseDto;
 import jakarta.validation.Valid;
@@ -25,7 +25,8 @@ public class BranchOwnerController {
     private final DeleteBranchUseCase deleteBranchUseCase;
     private final ActivateBranchUseCase activateBranchUseCase;
     private final DeactivateBranchUseCase deactivateBranchUseCase;
-    private final BranchController branchController;
+    private final BranchMapper branchMapper;
+    private final AddressMapper addressMapper;
 
     @PostMapping
     @PreAuthorize("""
@@ -35,10 +36,10 @@ public class BranchOwnerController {
     public ResponseEntity<BranchResponseDto> create(@RequestBody @Valid BranchRequestDto branchDto) {
         Branch branch = createBranchUseCase.execute(
                 branchDto.getName(),
-                toAddress(branchDto.getAddressRequestDto()),
+                addressMapper.toDomain(branchDto.getAddressRequestDto()),
                 branchDto.getIdClub()
         );
-        return ResponseEntity.status(HttpStatus.CREATED).body(branchController.toResponse(branch));
+        return ResponseEntity.status(HttpStatus.CREATED).body(branchMapper.toResponse(branch));
     }
 
     @DeleteMapping("/{id}")
@@ -58,7 +59,7 @@ public class BranchOwnerController {
     """)
     public ResponseEntity<Object> update(@PathVariable long id,
                                          @Valid @RequestBody BranchRequestDto branchDto) {
-        updateBranchUseCase.execute(id, branchDto.getName(), toAddress(branchDto.getAddressRequestDto()));
+        updateBranchUseCase.execute(id, branchDto.getName(), addressMapper.toDomain(branchDto.getAddressRequestDto()));
         return ResponseEntity.ok(Map.of("message", "Sucursal actualizada con éxito"));
     }
 
@@ -80,12 +81,5 @@ public class BranchOwnerController {
     public ResponseEntity<Object> deactivate(@PathVariable long idBranch) {
         deactivateBranchUseCase.execute(idBranch);
         return ResponseEntity.ok(Map.of("message", "Sucursal desactivada con éxito"));
-    }
-
-    private Address toAddress(AddressRequestDto dto) {
-        return new Address(
-                dto.getStreetName(), dto.getNumber(), dto.getCity(),
-                dto.getProvince(), dto.getPostalCode(), dto.getLatitude(), dto.getLongitude()
-        );
     }
 }
