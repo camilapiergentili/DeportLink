@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.sport.*;
-import com.deportlink.deportlink.controller.mapper.SportMapper;
+import com.deportlink.deportlink.mapper.dto.SportMapper;
 import com.deportlink.deportlink.domain.model.Sport;
 import com.deportlink.deportlink.dto.request.SportRequestDto;
 import com.deportlink.deportlink.dto.response.SportResponseDto;

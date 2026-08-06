@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.schedule.*;
-import com.deportlink.deportlink.controller.mapper.ScheduleMapper;
+import com.deportlink.deportlink.mapper.dto.ScheduleMapper;
 import com.deportlink.deportlink.dto.request.ScheduleRequestDto;
 import com.deportlink.deportlink.dto.response.ScheduleResponseDto;
 import jakarta.validation.Valid;

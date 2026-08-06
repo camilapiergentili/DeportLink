@@ -1,4 +1,4 @@
-package com.deportlink.deportlink.controller.mapper;
+package com.deportlink.deportlink.mapper.dto;
 
 import com.deportlink.deportlink.domain.model.Player;
 import com.deportlink.deportlink.dto.response.PlayerResponseDto;

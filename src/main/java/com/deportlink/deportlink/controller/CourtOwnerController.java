@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.court.*;
-import com.deportlink.deportlink.controller.mapper.CourtMapper;
+import com.deportlink.deportlink.mapper.dto.CourtMapper;
 import com.deportlink.deportlink.domain.model.Court;
 import com.deportlink.deportlink.dto.request.CourtRequestDto;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;

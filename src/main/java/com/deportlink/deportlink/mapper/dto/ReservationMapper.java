@@ -1,4 +1,4 @@
-package com.deportlink.deportlink.controller.mapper;
+package com.deportlink.deportlink.mapper.dto;
 
 import com.deportlink.deportlink.domain.model.Reservation;
 import com.deportlink.deportlink.domain.model.Ticket;

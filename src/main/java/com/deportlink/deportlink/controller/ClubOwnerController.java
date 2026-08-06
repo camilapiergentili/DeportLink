@@ -2,7 +2,7 @@ package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.port.out.OwnerGateway;
 import com.deportlink.deportlink.application.usecase.club.*;
-import com.deportlink.deportlink.controller.mapper.ClubMapper;
+import com.deportlink.deportlink.mapper.dto.ClubMapper;
 import com.deportlink.deportlink.domain.model.Club;
 import com.deportlink.deportlink.dto.request.ClubRequestDto;
 import com.deportlink.deportlink.dto.request.OwnerRequestDto;

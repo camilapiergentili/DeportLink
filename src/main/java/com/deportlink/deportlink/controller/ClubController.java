@@ -4,7 +4,7 @@ import com.deportlink.deportlink.application.usecase.club.GetAllClubsUseCase;
 import com.deportlink.deportlink.application.usecase.club.GetApprovedClubsUseCase;
 import com.deportlink.deportlink.application.usecase.club.GetClubUseCase;
 import com.deportlink.deportlink.application.usecase.club.SearchClubsByNameUseCase;
-import com.deportlink.deportlink.controller.mapper.ClubMapper;
+import com.deportlink.deportlink.mapper.dto.ClubMapper;
 import com.deportlink.deportlink.dto.response.ClubResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

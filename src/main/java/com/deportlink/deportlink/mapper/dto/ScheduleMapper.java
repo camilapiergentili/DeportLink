@@ -1,4 +1,4 @@
-package com.deportlink.deportlink.controller.mapper;
+package com.deportlink.deportlink.mapper.dto;
 
 import com.deportlink.deportlink.domain.model.Schedule;
 import com.deportlink.deportlink.dto.response.ScheduleResponseDto;

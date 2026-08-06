@@ -1,8 +1,8 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.branch.*;
-import com.deportlink.deportlink.controller.mapper.AddressMapper;
-import com.deportlink.deportlink.controller.mapper.BranchMapper;
+import com.deportlink.deportlink.mapper.dto.AddressMapper;
+import com.deportlink.deportlink.mapper.dto.BranchMapper;
 import com.deportlink.deportlink.domain.model.Branch;
 import com.deportlink.deportlink.dto.request.BranchRequestDto;
 import com.deportlink.deportlink.dto.response.BranchResponseDto;

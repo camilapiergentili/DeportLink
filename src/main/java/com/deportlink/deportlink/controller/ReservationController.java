@@ -5,7 +5,7 @@ import com.deportlink.deportlink.application.usecase.reservation.CancelReservati
 import com.deportlink.deportlink.application.usecase.reservation.GetAvailableSlotsUseCase;
 import com.deportlink.deportlink.application.usecase.reservation.GetPlayerReservationsUseCase;
 import com.deportlink.deportlink.application.usecase.reservation.RescheduleReservationUseCase;
-import com.deportlink.deportlink.controller.mapper.ReservationMapper;
+import com.deportlink.deportlink.mapper.dto.ReservationMapper;
 import com.deportlink.deportlink.domain.model.Reservation;
 import com.deportlink.deportlink.dto.request.RescheduleRequestDto;
 import com.deportlink.deportlink.dto.request.ReservationRequestDto;

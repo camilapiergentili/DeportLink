@@ -5,7 +5,7 @@ import com.deportlink.deportlink.application.usecase.branch.GetBranchUseCase;
 import com.deportlink.deportlink.application.usecase.branch.GetBranchesBySportUseCase;
 import com.deportlink.deportlink.application.usecase.branch.GetNearbyBranchesUseCase;
 import com.deportlink.deportlink.application.usecase.branch.SearchBranchesByNameUseCase;
-import com.deportlink.deportlink.controller.mapper.BranchMapper;
+import com.deportlink.deportlink.mapper.dto.BranchMapper;
 import com.deportlink.deportlink.dto.response.BranchResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

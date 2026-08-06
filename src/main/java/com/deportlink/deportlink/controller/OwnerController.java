@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.owner.*;
-import com.deportlink.deportlink.controller.mapper.OwnerMapper;
+import com.deportlink.deportlink.mapper.dto.OwnerMapper;
 import com.deportlink.deportlink.domain.model.Owner;
 import com.deportlink.deportlink.dto.request.OwnerRequestDto;
 import com.deportlink.deportlink.dto.response.OwnerResponseDto;

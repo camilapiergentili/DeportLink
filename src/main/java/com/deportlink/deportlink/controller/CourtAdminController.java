@@ -2,7 +2,7 @@ package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.court.GetAllCourtsByBranchUseCase;
 import com.deportlink.deportlink.application.usecase.court.GetAllCourtsUseCase;
-import com.deportlink.deportlink.controller.mapper.CourtMapper;
+import com.deportlink.deportlink.mapper.dto.CourtMapper;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

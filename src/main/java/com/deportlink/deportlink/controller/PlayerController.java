@@ -1,7 +1,7 @@
 package com.deportlink.deportlink.controller;
 
 import com.deportlink.deportlink.application.usecase.player.*;
-import com.deportlink.deportlink.controller.mapper.PlayerMapper;
+import com.deportlink.deportlink.mapper.dto.PlayerMapper;
 import com.deportlink.deportlink.dto.request.PlayerRequestDto;
 import com.deportlink.deportlink.dto.response.PlayerResponseDto;
 import com.deportlink.deportlink.model.entity.UserMain;
