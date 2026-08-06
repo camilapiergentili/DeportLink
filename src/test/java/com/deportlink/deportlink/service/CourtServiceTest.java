@@ -2,6 +2,7 @@ package com.deportlink.deportlink.service;
 
 import com.deportlink.deportlink.application.usecase.court.*;
 import com.deportlink.deportlink.domain.model.Court;
+import com.deportlink.deportlink.domain.port.out.PageRequest;
 import com.deportlink.deportlink.exception.CourtNotFoundException;
 import com.deportlink.deportlink.model.entity.*;
 import com.deportlink.deportlink.persistence.repository.*;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,6 +85,6 @@ public class CourtServiceTest {
 
     @Test
     public void testGetAllActiveAndApproved_Success() {
-        assertNotNull(getApprovedCourtsUseCase.execute(Pageable.unpaged()));
+        assertNotNull(getApprovedCourtsUseCase.execute(PageRequest.unpaged()));
     }
 }

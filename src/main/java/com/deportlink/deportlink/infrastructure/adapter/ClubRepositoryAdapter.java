@@ -2,6 +2,8 @@ package com.deportlink.deportlink.infrastructure.adapter;
 
 import com.deportlink.deportlink.domain.model.Club;
 import com.deportlink.deportlink.domain.port.out.ClubRepositoryPort;
+import com.deportlink.deportlink.domain.port.out.PageRequest;
+import com.deportlink.deportlink.domain.port.out.PageResult;
 import com.deportlink.deportlink.enums.ActiveStatus;
 import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.exception.ClubNotFoundException;
@@ -12,7 +14,6 @@ import com.deportlink.deportlink.persistence.repository.BranchRepository;
 import com.deportlink.deportlink.persistence.repository.ClubRepository;
 import com.deportlink.deportlink.persistence.repository.OwnerRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -52,14 +53,16 @@ public class ClubRepositoryAdapter implements ClubRepositoryPort {
     }
 
     @Override
-    public Page<Club> findByStatus(VerificationStatus vs, ActiveStatus as, Pageable pageable) {
-        return clubRepository.findByVerificationStatusAndActiveStatus(vs, as, pageable)
-                .map(this::toDomain);
+    public PageResult<Club> findByStatus(VerificationStatus vs, ActiveStatus as, PageRequest pageRequest) {
+        Pageable pageable = SpringPagingMapper.toSpringPageable(pageRequest);
+        return SpringPagingMapper.toPageResult(
+                clubRepository.findByVerificationStatusAndActiveStatus(vs, as, pageable), this::toDomain);
     }
 
     @Override
-    public Page<Club> findAll(Pageable pageable) {
-        return clubRepository.findAll(pageable).map(this::toDomain);
+    public PageResult<Club> findAll(PageRequest pageRequest) {
+        Pageable pageable = SpringPagingMapper.toSpringPageable(pageRequest);
+        return SpringPagingMapper.toPageResult(clubRepository.findAll(pageable), this::toDomain);
     }
 
     @Override
@@ -73,10 +76,12 @@ public class ClubRepositoryAdapter implements ClubRepositoryPort {
     }
 
     @Override
-    public Page<Club> searchApprovedByName(String name, Pageable pageable) {
-        return clubRepository.findByNameContainingIgnoreCaseAndVerificationStatusAndActiveStatus(
-                name, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, pageable
-        ).map(this::toDomain);
+    public PageResult<Club> searchApprovedByName(String name, PageRequest pageRequest) {
+        Pageable pageable = SpringPagingMapper.toSpringPageable(pageRequest);
+        return SpringPagingMapper.toPageResult(
+                clubRepository.findByNameContainingIgnoreCaseAndVerificationStatusAndActiveStatus(
+                        name, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, pageable
+                ), this::toDomain);
     }
 
     // ─── Entity builders ────────────────────────────────────────────────────────

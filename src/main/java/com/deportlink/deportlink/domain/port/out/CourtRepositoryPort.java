@@ -1,8 +1,6 @@
 package com.deportlink.deportlink.domain.port.out;
 
 import com.deportlink.deportlink.domain.model.Court;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,10 +18,10 @@ public interface CourtRepositoryPort {
     /** Canchas ACTIVAS de una sucursal (sin filtrar por estado de sucursal — el use case lo valida). */
     List<Court> findActiveByBranch(Long branchId);
 
-    Page<Court> findActiveByBranchPaginated(Long branchId, Pageable pageable);
+    PageResult<Court> findActiveByBranchPaginated(Long branchId, PageRequest pageRequest);
 
     /** Canchas donde la sucursal es APPROVED+ACTIVE y la cancha es ACTIVE. */
-    Page<Court> findApprovedPaginated(Pageable pageable);
+    PageResult<Court> findApprovedPaginated(PageRequest pageRequest);
 
     List<Court> findByBranchAndSport(Long branchId, Long sportId);
 

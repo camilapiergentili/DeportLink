@@ -2,6 +2,7 @@ package com.deportlink.deportlink.service;
 
 import com.deportlink.deportlink.application.usecase.club.*;
 import com.deportlink.deportlink.domain.model.Club;
+import com.deportlink.deportlink.domain.port.out.PageRequest;
 import com.deportlink.deportlink.enums.ClubType;
 import com.deportlink.deportlink.exception.ClubAlreadyExistsException;
 import com.deportlink.deportlink.model.entity.OwnerEntity;
@@ -12,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,7 +91,7 @@ public class ClubServiceTest {
                 ClubType.SA, Set.of(testOwner.getId()));
         createClubUseCase.execute("Club 2", "Club 2 Legal", "30555555555",
                 ClubType.SRL, Set.of(testOwner.getId()));
-        assertTrue(getAllClubsUseCase.execute(Pageable.unpaged()).getTotalElements() >= 2);
+        assertTrue(getAllClubsUseCase.execute(PageRequest.unpaged()).totalElements() >= 2);
     }
 
     @Test

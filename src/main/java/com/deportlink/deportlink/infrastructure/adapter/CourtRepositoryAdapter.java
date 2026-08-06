@@ -2,6 +2,8 @@ package com.deportlink.deportlink.infrastructure.adapter;
 
 import com.deportlink.deportlink.domain.model.Court;
 import com.deportlink.deportlink.domain.port.out.CourtRepositoryPort;
+import com.deportlink.deportlink.domain.port.out.PageRequest;
+import com.deportlink.deportlink.domain.port.out.PageResult;
 import com.deportlink.deportlink.enums.ActiveStatus;
 import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.exception.CourtNotFoundException;
@@ -10,7 +12,6 @@ import com.deportlink.deportlink.persistence.repository.BranchRepository;
 import com.deportlink.deportlink.persistence.repository.CourtRepository;
 import com.deportlink.deportlink.persistence.repository.SportRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -55,16 +56,20 @@ public class CourtRepositoryAdapter implements CourtRepositoryPort {
     }
 
     @Override
-    public Page<Court> findActiveByBranchPaginated(Long branchId, Pageable pageable) {
-        return courtRepository.findByBranch_IdAndActiveStatus(branchId, ActiveStatus.ACTIVE, pageable)
-                .map(this::toDomain);
+    public PageResult<Court> findActiveByBranchPaginated(Long branchId, PageRequest pageRequest) {
+        Pageable pageable = SpringPagingMapper.toSpringPageable(pageRequest);
+        return SpringPagingMapper.toPageResult(
+                courtRepository.findByBranch_IdAndActiveStatus(branchId, ActiveStatus.ACTIVE, pageable),
+                this::toDomain);
     }
 
     @Override
-    public Page<Court> findApprovedPaginated(Pageable pageable) {
-        return courtRepository.findApprovedClean(
-                VerificationStatus.APPROVED, ActiveStatus.ACTIVE, ActiveStatus.ACTIVE, pageable
-        ).map(this::toDomain);
+    public PageResult<Court> findApprovedPaginated(PageRequest pageRequest) {
+        Pageable pageable = SpringPagingMapper.toSpringPageable(pageRequest);
+        return SpringPagingMapper.toPageResult(
+                courtRepository.findApprovedClean(
+                        VerificationStatus.APPROVED, ActiveStatus.ACTIVE, ActiveStatus.ACTIVE, pageable
+                ), this::toDomain);
     }
 
     @Override
