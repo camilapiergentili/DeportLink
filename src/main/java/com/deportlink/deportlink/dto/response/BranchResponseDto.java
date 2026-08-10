@@ -11,10 +11,12 @@ import java.util.List;
 @Setter
 public class BranchResponseDto {
 
-    private long id;
+    private Long id;
     private String name;
-    private List<CourtResponseDto> courts;
+    private Long clubId;
     private AddressResponseDto address;
     private VerificationStatus verificationStatus;
     private ActiveStatus activeStatus;
+    // courts cargadas bajo demanda vía GET /api/courts/branch/{id}
+    private List<CourtResponseDto> courts;
 }

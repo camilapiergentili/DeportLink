@@ -26,6 +26,4 @@ public class ReservationRequestDto {
     @Positive
     private long idCourt;
 
-    @Positive
-    private long idPlayer;
 }

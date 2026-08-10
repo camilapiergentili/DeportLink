@@ -13,7 +13,15 @@ import java.util.Set;
 
 
 @Entity
-@Table(name= "court")
+@Table(
+    name = "court",
+    indexes = {
+        // Cubre findByBranch_IdAndActiveStatus (listado paginado de canchas activas por sede)
+        @Index(name = "idx_court_branch_active", columnList = "branch_id, active_status"),
+        // Cubre findByBranch_IdAndSport_Id (filtrado por deporte dentro de una sede)
+        @Index(name = "idx_court_branch_sport", columnList = "branch_id, sport_id")
+    }
+)
 @Getter
 @Setter
 @AllArgsConstructor
@@ -22,7 +30,7 @@ public class CourtEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     private String name;
     private double pricePerHour;
 

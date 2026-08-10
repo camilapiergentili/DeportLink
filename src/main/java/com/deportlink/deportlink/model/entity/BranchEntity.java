@@ -12,7 +12,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "branches")
+@Table(
+    name = "branches",
+    indexes = {
+        // Cubre findActiveAndApprovedByClubId — extiende el índice FK de club_id con los filtros de estado
+        @Index(name = "idx_branches_club_verification_active", columnList = "club_id, verification_status, active_status")
+    }
+)
 @Getter
 @Setter
 @AllArgsConstructor
@@ -21,7 +27,7 @@ public class BranchEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     private String name;
 
     @OneToOne(cascade = CascadeType.ALL)

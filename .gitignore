@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Dump crudo usado como referencia para armar el baseline de Flyway (no es parte del proyecto)
+real_schema.sql

@@ -19,7 +19,7 @@ public class SportEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     private String nameSport;
 
     @OneToMany(mappedBy = "sport", cascade = CascadeType.ALL, orphanRemoval = true)
