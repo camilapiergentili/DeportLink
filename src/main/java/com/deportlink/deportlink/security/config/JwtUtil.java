@@ -17,10 +17,15 @@ import java.util.function.Function;
 public class JwtUtil {
 
     private final Key secretKey;
+    private final long expirationMs;
 
-    public JwtUtil(@Value("${jwt.secret}") String secretKey) {
+    public JwtUtil(
+            @Value("${jwt.secret}") String secretKey,
+            @Value("${jwt.expiration}") long expirationMs
+    ) {
         byte[] keyBytes = Base64.getDecoder().decode(secretKey);
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+        this.expirationMs = expirationMs;
     }
 
     public String generateToken(UserEntity userEntity) {
@@ -30,7 +35,7 @@ public class JwtUtil {
                 .claim("id", userEntity.getId())
                 .claim("role", "ROLE_" + userEntity.getRole().name())
                 .setIssuedAt(new Date(System.currentTimeMillis())) // Fecha de creación
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // Vence en 10 horas
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMs)) // Vence en 10 horas
                 .signWith(this.secretKey) // Lo firma con la clave secreta del servidor
                 .compact(); // Lo transforma en el texto largo "eyJhbGci..."
     }
@@ -64,7 +69,7 @@ public class JwtUtil {
     }
 
     // C. El extractor central (El que abre el paquete usando la llave secreta)
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = Jwts.parserBuilder()
                 .setSigningKey(this.secretKey)
                 .build()

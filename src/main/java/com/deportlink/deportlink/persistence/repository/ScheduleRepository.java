@@ -23,4 +23,7 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long> 
     );
 
     Optional<ScheduleEntity> findByCourtIdAndDay(long idCourt, DayOfWeek day);
+
+    @Query("SELECT s FROM ScheduleEntity s WHERE s.id = :id AND s.court.id = :courtId")
+    Optional<ScheduleEntity> findByIdAndCourtId(@Param("id") long id, @Param("courtId") long courtId);
 }

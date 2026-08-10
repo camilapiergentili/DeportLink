@@ -13,7 +13,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "clubs")
+@Table(
+    name = "clubs",
+    uniqueConstraints = {
+        // Garantía a nivel DB — complementa la validación en el service
+        @UniqueConstraint(name = "uq_clubs_cuit", columnNames = "cuit"),
+        @UniqueConstraint(name = "uq_clubs_legal_name", columnNames = "legal_name")
+    },
+    indexes = {
+        // Cubre todas las queries de listado: findApprovedWithEagerLoading, findApprovedPaginated
+        @Index(name = "idx_clubs_verification_active", columnList = "verification_status, active_status")
+    }
+)
 @Setter
 @Getter
 @AllArgsConstructor
@@ -22,7 +33,7 @@ public class ClubEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     private String name;
     private String legalName;

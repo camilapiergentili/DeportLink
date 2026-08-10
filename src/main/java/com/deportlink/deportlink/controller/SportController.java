@@ -1,13 +1,15 @@
 package com.deportlink.deportlink.controller;
 
+import com.deportlink.deportlink.application.usecase.sport.*;
+import com.deportlink.deportlink.mapper.dto.SportMapper;
+import com.deportlink.deportlink.domain.model.Sport;
 import com.deportlink.deportlink.dto.request.SportRequestDto;
 import com.deportlink.deportlink.dto.response.SportResponseDto;
-import com.deportlink.deportlink.service.SportService;
-import com.deportlink.deportlink.service.implementation.SportServiceImplementation;
 import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,33 +17,38 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/sports")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SportController {
 
-    private final SportService sportService;
+    private final CreateSportUseCase createSportUseCase;
+    private final GetSportByIdUseCase getSportByIdUseCase;
+    private final GetAllSportsUseCase getAllSportsUseCase;
+    private final DeleteSportUseCase deleteSportUseCase;
+    private final SportMapper sportMapper;
 
     @PostMapping
-    public ResponseEntity<SportResponseDto> create(@Valid @RequestBody SportRequestDto sportDto){
-        SportResponseDto sportResponse = sportService.create(sportDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(sportResponse);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<SportResponseDto> create(@Valid @RequestBody SportRequestDto sportDto) {
+        Sport sport = createSportUseCase.execute(sportDto.getNameSport());
+        return ResponseEntity.status(HttpStatus.CREATED).body(sportMapper.toResponse(sport));
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<SportResponseDto>> getAll() {
-        return ResponseEntity.ok(sportService.getAll());
+        return ResponseEntity.ok(getAllSportsUseCase.execute().stream().map(sportMapper::toResponse).toList());
     }
 
     @GetMapping("/{idSport}")
-    public ResponseEntity<SportResponseDto> getById(@PathVariable long idSport){
-        SportResponseDto sportResponse = sportService.getByIdResponse(idSport);
-        return ResponseEntity.ok(sportResponse);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<SportResponseDto> getById(@PathVariable long idSport) {
+        return ResponseEntity.ok(sportMapper.toResponse(getSportByIdUseCase.execute(idSport)));
     }
 
     @DeleteMapping("/{idSport}")
-    public ResponseEntity<Object> delete(@PathVariable long idSport){
-        sportService.delete(idSport);
-        return ResponseEntity.ok(Map.of("mesaage", "Deporte eliminado con exito"));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Object> delete(@PathVariable long idSport) {
+        deleteSportUseCase.execute(idSport);
+        return ResponseEntity.ok(Map.of("message", "Deporte eliminado con éxito"));
     }
-
-
 }

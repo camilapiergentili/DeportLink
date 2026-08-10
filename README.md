@@ -183,6 +183,13 @@ DeportLink/
 
 ---
 
+## ⚠️ Deuda técnica conocida
+
+- **Mapeo manual repetido en `infrastructure/adapter/`**: los adapters `OwnerRepositoryAdapter`, `PlayerRepositoryAdapter`, `SportRepositoryAdapter` y `ScheduleRepositoryAdapter` repiten el mismo patrón manual de mapeo dominio ↔ entidad JPA (buscar+actualizar campo a campo si el id existe, crear entidad nueva si no). Es repetición de forma, no de lógica compartida — cada adapter es independiente y no hay riesgo de que un cambio en uno rompa a otro. `BranchRepositoryAdapter`, `CourtRepositoryAdapter`, `ClubRepositoryAdapter` y `ReservationRepositoryAdapter` quedan fuera de esta nota porque además del mapeo tienen lógica real (reconciliación de relaciones en Club, reglas de inmutabilidad post-creación en Reservation) que no debe automatizarse sin revisión cuidadosa caso por caso.
+  Decisión: no se migra a MapStruct por ahora — el costo de la abstracción adicional no se justifica todavía para 4 clases chicas. Revisar si esta carpeta crece o si el mapeo se vuelve más complejo.
+
+---
+
 ## 👩‍💻 Autora
 
 **Camila Piergentili**  

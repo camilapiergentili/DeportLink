@@ -11,7 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "owners")
+@Table(
+    name = "owners",
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uq_owners_cuil", columnNames = "cuil")
+    }
+)
 @PrimaryKeyJoinColumn(name = "id")
 @Getter
 @Setter

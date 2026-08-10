@@ -1,15 +1,16 @@
 package com.deportlink.deportlink.controller;
 
+import com.deportlink.deportlink.application.usecase.owner.*;
+import com.deportlink.deportlink.mapper.dto.OwnerMapper;
+import com.deportlink.deportlink.domain.model.Owner;
 import com.deportlink.deportlink.dto.request.OwnerRequestDto;
 import com.deportlink.deportlink.dto.response.OwnerResponseDto;
-import com.deportlink.deportlink.exception.OwnerAlreadyExistsException;
-import com.deportlink.deportlink.service.OwnerService;
-import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import com.deportlink.deportlink.security.resolver.CurrentUserId;
 import jakarta.validation.Valid;
-
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
@@ -20,47 +21,59 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OwnerController {
 
-    private final OwnerService ownerService;
+    private final RegisterOwnerUseCase registerOwnerUseCase;
+    private final GetOwnerByIdUseCase getOwnerByIdUseCase;
+    private final GetAllOwnersUseCase getAllOwnersUseCase;
+    private final UpdateOwnerUseCase updateOwnerUseCase;
+    private final DeleteOwnerUseCase deleteOwnerUseCase;
+    private final OwnerMapper ownerMapper;
 
     @PostMapping
-    public ResponseEntity<OwnerResponseDto> register(@RequestBody @Valid OwnerRequestDto dto)
-            throws OwnerAlreadyExistsException {
-
-        OwnerResponseDto response = ownerService.register(dto);
-
-        URI location = URI.create("/owners" + response.getId());
-
-        return ResponseEntity
-                .created(location)
-                .body(response);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<OwnerResponseDto> register(@RequestBody @Valid OwnerRequestDto dto) {
+        Owner owner = registerOwnerUseCase.execute(dto);
+        URI location = URI.create("/api/owners/" + owner.id());
+        return ResponseEntity.created(location).body(ownerMapper.toResponse(owner));
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OwnerResponseDto>> getAll() {
-        List<OwnerResponseDto> response = ownerService.getAll();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(getAllOwnersUseCase.execute().stream().map(ownerMapper::toResponse).toList());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OwnerResponseDto> getById(@PathVariable long id){
-        OwnerResponseDto ownerResponse = ownerService.getByIdResponse(id);
-        return ResponseEntity.ok(ownerResponse);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<OwnerResponseDto> getById(@PathVariable long id) {
+        return ResponseEntity.ok(ownerMapper.toResponse(getOwnerByIdUseCase.execute(id)));
+    }
+
+    @GetMapping("/my-profile")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<OwnerResponseDto> profileOwner(@CurrentUserId Long userId) {
+        return ResponseEntity.ok(ownerMapper.toResponse(getOwnerByIdUseCase.execute(userId)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Object> update(@PathVariable long id,
-                                         @RequestBody @Valid OwnerRequestDto ownerDto){
-        ownerService.update(id, ownerDto);
-        return ResponseEntity.ok(Map.of("message", "Owner actualizado con exito"));
+    @PreAuthorize("""
+        hasRole('ADMIN')
+        or (hasRole('OWNER') and #id == principal.id)
+    """)
+    public ResponseEntity<Object> update(
+            @PathVariable long id,
+            @RequestBody @Valid OwnerRequestDto dto) {
+
+        updateOwnerUseCase.execute(id, dto);
+        return ResponseEntity.ok(Map.of("message", "Dueño actualizado con éxito"));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> delete(@PathVariable long id){
-        ownerService.deleteById(id);
-        return ResponseEntity.ok(Map.of("message", "Owner eliminado con exito"));
+    @PreAuthorize("""
+        hasRole('ADMIN')
+        or (hasRole('OWNER') and #id == principal.id)
+    """)
+    public ResponseEntity<Object> delete(@PathVariable long id) {
+        deleteOwnerUseCase.execute(id);
+        return ResponseEntity.ok(Map.of("message", "Dueño eliminado con éxito"));
     }
-
-
-
-
 }

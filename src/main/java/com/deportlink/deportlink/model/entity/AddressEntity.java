@@ -18,7 +18,7 @@ AddressEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     private String streetName;
     private int number;

@@ -9,10 +9,12 @@ import java.util.Set;
 @Setter
 public class CourtResponseDto {
 
-    private long id;
+    private Long id;
     private String name;
     private double pricePerHour;
+    private Long branchId;
     private String sport;
+    // horarios cargados bajo demanda vía GET /api/schedules/court/{id}
     private Set<ScheduleResponseDto> availabilities;
 
 }
