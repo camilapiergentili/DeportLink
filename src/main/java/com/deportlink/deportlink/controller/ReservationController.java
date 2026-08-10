@@ -10,14 +10,13 @@ import com.deportlink.deportlink.domain.model.Reservation;
 import com.deportlink.deportlink.dto.request.RescheduleRequestDto;
 import com.deportlink.deportlink.dto.request.ReservationRequestDto;
 import com.deportlink.deportlink.dto.response.ReservationResponseDto;
-import com.deportlink.deportlink.model.entity.UserMain;
+import com.deportlink.deportlink.security.resolver.CurrentUserId;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -40,9 +39,9 @@ public class ReservationController {
     @PreAuthorize("hasRole('PLAYER')")
     public ResponseEntity<ReservationResponseDto> book(
             @RequestBody @Valid ReservationRequestDto dto,
-            @AuthenticationPrincipal UserMain user) {
+            @CurrentUserId Long userId) {
         Reservation reservation = bookReservationUseCase.execute(
-                dto.getIdCourt(), user.getId(), dto.getDay(), dto.getStartTime()
+                dto.getIdCourt(), userId, dto.getDay(), dto.getStartTime()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(reservationMapper.toResponse(reservation));
     }
@@ -51,8 +50,8 @@ public class ReservationController {
     @PreAuthorize("hasRole('PLAYER')")
     public ResponseEntity<ReservationResponseDto> cancel(
             @PathVariable Long reservationId,
-            @AuthenticationPrincipal UserMain user) {
-        Reservation cancelled = cancelReservationUseCase.execute(reservationId, user.getId());
+            @CurrentUserId Long userId) {
+        Reservation cancelled = cancelReservationUseCase.execute(reservationId, userId);
         return ResponseEntity.ok(reservationMapper.toResponse(cancelled));
     }
 
@@ -61,9 +60,9 @@ public class ReservationController {
     public ResponseEntity<ReservationResponseDto> reschedule(
             @PathVariable Long reservationId,
             @RequestBody @Valid RescheduleRequestDto dto,
-            @AuthenticationPrincipal UserMain user) {
+            @CurrentUserId Long userId) {
         Reservation rescheduled = rescheduleReservationUseCase.execute(
-                reservationId, user.getId(), dto.getNewDay(), dto.getNewStartTime()
+                reservationId, userId, dto.getNewDay(), dto.getNewStartTime()
         );
         return ResponseEntity.ok(reservationMapper.toResponse(rescheduled));
     }

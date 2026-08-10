@@ -4,13 +4,12 @@ import com.deportlink.deportlink.application.usecase.player.*;
 import com.deportlink.deportlink.mapper.dto.PlayerMapper;
 import com.deportlink.deportlink.dto.request.PlayerRequestDto;
 import com.deportlink.deportlink.dto.response.PlayerResponseDto;
-import com.deportlink.deportlink.model.entity.UserMain;
+import com.deportlink.deportlink.security.resolver.CurrentUserId;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -34,8 +33,8 @@ public class PlayerController {
 
     @GetMapping("/my-profile")
     @PreAuthorize("hasRole('PLAYER')")
-    public ResponseEntity<PlayerResponseDto> profilePlayer(@AuthenticationPrincipal UserMain user) {
-        return ResponseEntity.ok(playerMapper.toResponse(getPlayerByIdUseCase.execute(user.getId())));
+    public ResponseEntity<PlayerResponseDto> profilePlayer(@CurrentUserId Long userId) {
+        return ResponseEntity.ok(playerMapper.toResponse(getPlayerByIdUseCase.execute(userId)));
     }
 
     @PostMapping

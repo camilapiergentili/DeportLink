@@ -5,12 +5,11 @@ import com.deportlink.deportlink.mapper.dto.OwnerMapper;
 import com.deportlink.deportlink.domain.model.Owner;
 import com.deportlink.deportlink.dto.request.OwnerRequestDto;
 import com.deportlink.deportlink.dto.response.OwnerResponseDto;
-import com.deportlink.deportlink.model.entity.UserMain;
+import com.deportlink.deportlink.security.resolver.CurrentUserId;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -51,8 +50,8 @@ public class OwnerController {
 
     @GetMapping("/my-profile")
     @PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<OwnerResponseDto> profileOwner(@AuthenticationPrincipal UserMain user) {
-        return ResponseEntity.ok(ownerMapper.toResponse(getOwnerByIdUseCase.execute(user.getId())));
+    public ResponseEntity<OwnerResponseDto> profileOwner(@CurrentUserId Long userId) {
+        return ResponseEntity.ok(ownerMapper.toResponse(getOwnerByIdUseCase.execute(userId)));
     }
 
     @PutMapping("/{id}")
