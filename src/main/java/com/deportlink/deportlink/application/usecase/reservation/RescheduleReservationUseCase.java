@@ -47,6 +47,17 @@ public class RescheduleReservationUseCase {
         log.info("Rescheduling: reservationId={}, playerId={}, newDay={}, newTime={}",
                 reservationId, playerId, newDay, newStartTime);
 
+        // Lock pesimista sobre la cancha — PRIMERA lectura de la transacción, antes de
+        // cualquier SELECT plano. Se deriva vía JOIN sin conocer el courtId de antemano (viene
+        // de la reserva). Si esta no fuera la primera lectura, el snapshot de REPEATABLE READ
+        // de MySQL quedaría fijado antes del lock, y dos reprogramaciones concurrentes podrían
+        // pasar la verificación de disponibilidad (findBookedSlots) con datos anteriores al
+        // commit ajeno — confirmado reproducible al 100% con RescheduleReservationConcurrencyTest
+        // antes de este fix. Mismo mecanismo que BookReservationUseCase, adaptado: ahí el
+        // courtId ya viene como parámetro; acá hay que derivarlo sin perder el orden.
+        Long courtId = courtGateway.findCourtIdByReservationForUpdate(reservationId)
+                .orElseThrow(() -> new ReservationNotFoundException("No se encontró la reserva"));
+
         PlayerSnapshot player = playerGateway.findById(playerId)
                 .orElseThrow(() -> new PlayerNotFoundException("No se encontró el jugador"));
 
@@ -57,20 +68,20 @@ public class RescheduleReservationUseCase {
             throw new ReservationNotFoundException("No se encontró la reserva");
         }
 
-        // Lock sobre la cancha del nuevo slot antes de verificar disponibilidad.
-        // Misma estrategia que BookReservationUseCase — sin el lock, dos reprogramaciones
-        // concurrentes hacia el mismo slot pueden pasar la validación simultáneamente.
-        CourtSnapshot court = courtGateway.findByIdForUpdate(existing.courtId())
+        // El lock ya está tomado (findCourtIdByReservationForUpdate) — este segundo FOR UPDATE
+        // sobre la misma fila no vuelve a bloquear; reusa la query existente (misma que
+        // BookReservationUseCase) para traer las relaciones que necesita el snapshot.
+        CourtSnapshot court = courtGateway.findByIdForUpdate(courtId)
                 .orElseThrow(() -> new ReservationNotFoundException("La cancha de la reserva no existe"));
 
-        SlotConfig slotConfig = scheduleGateway.findByCourtAndDay(existing.courtId(), newDay.getDayOfWeek())
+        SlotConfig slotConfig = scheduleGateway.findByCourtAndDay(courtId, newDay.getDayOfWeek())
                 .orElseThrow(() -> new ScheduleNotFoundException("No hay agenda disponible para ese día"));
 
         if (!slotConfig.isValidSlot(newStartTime)) {
             throw new SlotNotAvailableException("El horario no corresponde a un turno válido");
         }
 
-        Set<LocalTime> booked = reservationRepository.findBookedSlots(existing.courtId(), newDay);
+        Set<LocalTime> booked = reservationRepository.findBookedSlots(courtId, newDay);
         if (booked.contains(newStartTime)) {
             throw new SlotNotAvailableException("El horario ya está reservado");
         }
@@ -79,7 +90,7 @@ public class RescheduleReservationUseCase {
         Reservation rescheduled = reservationRepository.save(existing.markAsRescheduled());
 
         TimeSlot newSlot = new TimeSlot(newDay, newStartTime, slotConfig.slotDuration());
-        Reservation newReservation = Reservation.create(existing.courtId(), playerId, newSlot);
+        Reservation newReservation = Reservation.create(courtId, playerId, newSlot);
 
         double price = newSlot.durationInHours() * court.pricePerHour();
         Ticket ticket = Ticket.issue(
