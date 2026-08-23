@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class StatusAlreadyAppliedException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class StatusAlreadyAppliedException extends BusinessException {
     public StatusAlreadyAppliedException(String message) {
-        super(message);
+        super(message, HttpStatus.CONFLICT);
     }
 }

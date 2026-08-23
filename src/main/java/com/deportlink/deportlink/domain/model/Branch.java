@@ -3,6 +3,7 @@ package com.deportlink.deportlink.domain.model;
 import com.deportlink.deportlink.enums.ActiveStatus;
 import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.exception.BranchNotApprovedException;
+import com.deportlink.deportlink.exception.InvalidStatusTransitionException;
 import com.deportlink.deportlink.exception.StatusAlreadyAppliedException;
 
 public record Branch(
@@ -18,12 +19,12 @@ public record Branch(
     }
 
     public Branch approve() {
-        if (!isPending()) throw new IllegalStateException("Solo se pueden aprobar sucursales en estado PENDING");
+        if (!isPending()) throw new InvalidStatusTransitionException("Solo se pueden aprobar sucursales en estado PENDING");
         return withStatuses(VerificationStatus.APPROVED, ActiveStatus.ACTIVE);
     }
 
     public Branch reject() {
-        if (!isPending()) throw new IllegalStateException("Solo se pueden rechazar sucursales en estado PENDING");
+        if (!isPending()) throw new InvalidStatusTransitionException("Solo se pueden rechazar sucursales en estado PENDING");
         return withStatuses(VerificationStatus.REJECTED, ActiveStatus.INACTIVE);
     }
 

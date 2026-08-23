@@ -45,8 +45,7 @@ public class ScheduleRepositoryAdapter implements ScheduleRepositoryPort {
 
     @Override
     public List<Schedule> findAllByCourtId(Long courtId) {
-        return scheduleRepository.findAll().stream()
-                .filter(s -> s.getCourt() != null && s.getCourt().getId().equals(courtId))
+        return scheduleRepository.findByCourtId(courtId).stream()
                 .map(this::toSchedule)
                 .toList();
     }
@@ -67,8 +66,16 @@ public class ScheduleRepositoryAdapter implements ScheduleRepositoryPort {
     }
 
     @Override
-    public boolean existsReservationForDay(Long courtId, int mysqlDay) {
-        return scheduleRepository.existsReservationForDay(courtId, mysqlDay);
+    public boolean existsReservationForDay(Long courtId, DayOfWeek day) {
+        return scheduleRepository.existsReservationForDay(courtId, toMySQLDayOfWeek(day));
+    }
+
+    // La query de ScheduleRepository usa DAYOFWEEK() nativo de MySQL, cuya convención
+    // (domingo=1 ... sábado=7) difiere de java.time.DayOfWeek (lunes=1 ... domingo=7).
+    // Esta conversión debe vivir acá — es el único lugar que debe saber que la persistencia
+    // es MySQL; el puerto y el use case solo conocen DayOfWeek.
+    private int toMySQLDayOfWeek(DayOfWeek day) {
+        return (day.getValue() % 7) + 1;
     }
 
     private void updateEntity(ScheduleEntity entity, Schedule schedule) {

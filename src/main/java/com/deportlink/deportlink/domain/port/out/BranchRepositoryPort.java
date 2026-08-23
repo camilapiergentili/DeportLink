@@ -18,6 +18,9 @@ public interface BranchRepositoryPort {
 
     void delete(Long id);
 
+    /** True si la sucursal, o alguna de sus canchas, tiene una reserva asociada — bloquea el borrado. */
+    boolean hasReservations(Long branchId);
+
     boolean existsByNameIgnoreCaseAndClub(String name, Long clubId);
 
     boolean existsByAddressAndClub(Address address, Long clubId);

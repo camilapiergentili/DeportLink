@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class InvalidStatusTransitionException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class InvalidStatusTransitionException extends BusinessException {
     public InvalidStatusTransitionException(String message) {
-        super(message);
+        super(message, HttpStatus.CONFLICT);
     }
 }

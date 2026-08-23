@@ -37,6 +37,10 @@ public record Court(
         return new Court(id, name, pricePerHour, branchId, sportId, sportName, activeStatus);
     }
 
+    public Court moveToBranch(Long newBranchId) {
+        return new Court(id, name, pricePerHour, newBranchId, sportId, sportName, activeStatus);
+    }
+
     public boolean isActive() { return activeStatus == ActiveStatus.ACTIVE; }
 
     public Court withId(Long id) {

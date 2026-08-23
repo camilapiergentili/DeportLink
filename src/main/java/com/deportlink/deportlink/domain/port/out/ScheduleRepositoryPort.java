@@ -14,5 +14,5 @@ public interface ScheduleRepositoryPort {
     Optional<Schedule> findByCourtIdAndDay(Long courtId, DayOfWeek day);
     Optional<Schedule> findByIdAndCourtId(Long id, Long courtId);
     void delete(Long id);
-    boolean existsReservationForDay(Long courtId, int mysqlDay);
+    boolean existsReservationForDay(Long courtId, DayOfWeek day);
 }

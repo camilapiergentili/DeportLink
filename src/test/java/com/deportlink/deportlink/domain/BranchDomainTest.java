@@ -5,6 +5,7 @@ import com.deportlink.deportlink.domain.model.Branch;
 import com.deportlink.deportlink.enums.ActiveStatus;
 import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.exception.BranchNotApprovedException;
+import com.deportlink.deportlink.exception.InvalidStatusTransitionException;
 import com.deportlink.deportlink.exception.StatusAlreadyAppliedException;
 import org.junit.jupiter.api.Test;
 
@@ -62,15 +63,15 @@ class BranchDomainTest {
     }
 
     @Test
-    void approve_aprobadaLanzaIllegalState() {
+    void approve_aprobadaLanzaInvalidStatusTransition() {
         assertThatThrownBy(() -> approved().approve())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidStatusTransitionException.class);
     }
 
     @Test
-    void approve_rechazadaLanzaIllegalState() {
+    void approve_rechazadaLanzaInvalidStatusTransition() {
         assertThatThrownBy(() -> rejected().approve())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidStatusTransitionException.class);
     }
 
     // ─── reject() ───────────────────────────────────────────────────────────────
@@ -84,9 +85,9 @@ class BranchDomainTest {
     }
 
     @Test
-    void reject_aprobadaLanzaIllegalState() {
+    void reject_aprobadaLanzaInvalidStatusTransition() {
         assertThatThrownBy(() -> approved().reject())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidStatusTransitionException.class);
     }
 
     // ─── activate() ─────────────────────────────────────────────────────────────

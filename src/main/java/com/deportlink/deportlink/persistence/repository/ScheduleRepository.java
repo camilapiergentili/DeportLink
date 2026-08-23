@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.DayOfWeek;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -23,6 +24,8 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long> 
     );
 
     Optional<ScheduleEntity> findByCourtIdAndDay(long idCourt, DayOfWeek day);
+
+    List<ScheduleEntity> findByCourtId(Long courtId);
 
     @Query("SELECT s FROM ScheduleEntity s WHERE s.id = :id AND s.court.id = :courtId")
     Optional<ScheduleEntity> findByIdAndCourtId(@Param("id") long id, @Param("courtId") long courtId);

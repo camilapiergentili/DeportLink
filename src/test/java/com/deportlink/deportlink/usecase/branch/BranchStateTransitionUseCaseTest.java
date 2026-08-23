@@ -8,6 +8,7 @@ import com.deportlink.deportlink.enums.ActiveStatus;
 import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.exception.BranchNotFoundException;
 import com.deportlink.deportlink.exception.BranchNotApprovedException;
+import com.deportlink.deportlink.exception.InvalidStatusTransitionException;
 import com.deportlink.deportlink.exception.StatusAlreadyAppliedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -70,11 +71,11 @@ class BranchStateTransitionUseCaseTest {
     }
 
     @Test
-    void approve_aprobadaLanzaIllegalState() {
+    void approve_aprobadaLanzaInvalidStatusTransition() {
         when(branchRepository.findById(ID)).thenReturn(Optional.of(approved()));
 
         assertThatThrownBy(() -> new ApproveBranchUseCase(branchRepository).execute(ID))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidStatusTransitionException.class);
     }
 
     // ─── RejectBranchUseCase ─────────────────────────────────────────────────────
@@ -100,11 +101,11 @@ class BranchStateTransitionUseCaseTest {
     }
 
     @Test
-    void reject_aprobadaLanzaIllegalState() {
+    void reject_aprobadaLanzaInvalidStatusTransition() {
         when(branchRepository.findById(ID)).thenReturn(Optional.of(approved()));
 
         assertThatThrownBy(() -> new RejectBranchUseCase(branchRepository).execute(ID))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidStatusTransitionException.class);
     }
 
     // ─── ActivateBranchUseCase ───────────────────────────────────────────────────

@@ -22,6 +22,10 @@ public class PlayerEntity extends UserEntity {
     @JoinColumn(name = "id_player")
     private Set<AddressEntity> addresses = new HashSet<>();
 
-    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
+    // Sin cascade ni orphanRemoval: Reservation representa historial y no debe
+    // eliminarse como efecto secundario de borrar/anonimizar un Player.
+    // Reservation se persiste directamente vía ReservationRepositoryAdapter, no a
+    // través de esta colección — quitar el cascade no afecta la creación de reservas.
+    @OneToMany(mappedBy = "player")
     private Set<ReservationEntity> reservations = new HashSet<>();
 }

@@ -56,4 +56,11 @@ public interface ReservationRepository extends JpaRepository<ReservationEntity, 
             @Param("day") LocalDate day,
             @Param("activeStatuses") List<StatusReservation> activeStatuses
     );
+
+    // Usados por DeleteCourtUseCase/DeleteBranchUseCase para bloquear el borrado
+    // de una cancha o sucursal que tenga alguna reserva asociada (cualquier estado,
+    // no solo las activas — igual de conservador que ClubRepositoryPort.hasBranches).
+    boolean existsByCourt_Id(Long courtId);
+
+    boolean existsByCourt_Branch_Id(Long branchId);
 }

@@ -16,10 +16,11 @@ public class DeletePlayerUseCase {
 
     @Transactional
     public void execute(Long id) {
-        log.info("Deleting player: playerId={}", id);
+        log.info("Anonymizing player: playerId={}", id);
         playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException("El jugador no se encontró"));
+        // El puerto anonimiza en vez de borrar físicamente — preserva Reservation/Ticket.
         playerRepository.delete(id);
-        log.info("Player deleted: playerId={}", id);
+        log.info("Player anonymized: playerId={}", id);
     }
 }
