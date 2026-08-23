@@ -135,6 +135,31 @@ La API quedará disponible en: `http://localhost:8080`
 
 ---
 
+## 🧪 Desarrollo local
+
+Por defecto (`application.properties`) la app corre con `spring.jpa.hibernate.ddl-auto=validate`: al arrancar, Hibernate solo **compara** las entidades contra el esquema real y falla si no coinciden — nunca lo modifica. El esquema lo administra exclusivamente Flyway (`src/main/resources/db/migration/`).
+
+Para iterar rápido en desarrollo local sin tener que escribir una migración de Flyway por cada cambio chico de entidad, existe el perfil `dev` (`application-dev.properties`), que activa `ddl-auto=update` — ahí Hibernate sí puede alterar el esquema automáticamente. **No es el perfil default**: hay que activarlo a propósito.
+
+Con Maven:
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+Con el jar empaquetado:
+```bash
+java -jar target/deportLink-*.jar --spring.profiles.active=dev
+```
+
+O con variable de entorno (sirve para ambas formas de arranque):
+```bash
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+```
+
+> ⚠️ **`ddl-auto=update` nunca debe usarse fuera de desarrollo local.** No lo actives en ambientes compartidos, staging ni producción — ahí el esquema lo controla únicamente Flyway con `ddl-auto=validate` (el default). Usarlo fuera de tu máquina puede alterar el esquema real de forma silenciosa y dejarlo inconsistente con las migraciones versionadas.
+
+---
+
 ## 📁 Estructura del proyecto
 
 ```
