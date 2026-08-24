@@ -112,6 +112,7 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
         entity.setClub(clubRepository.getReferenceById(branch.clubId()));
         entity.setVerificationStatus(branch.verificationStatus());
         entity.setActiveStatus(branch.activeStatus());
+        entity.setCancellationWindowHours(branch.cancellationWindowHours());
         return entity;
     }
 
@@ -121,6 +122,7 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
         entity.setName(branch.name());
         entity.setVerificationStatus(branch.verificationStatus());
         entity.setActiveStatus(branch.activeStatus());
+        entity.setCancellationWindowHours(branch.cancellationWindowHours());
         // Update address in-place to preserve the AddressEntity row
         applyAddressFields(entity.getAddress(), branch.address());
         return entity;
@@ -141,7 +143,8 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
                 address,
                 entity.getClub().getId(),
                 entity.getVerificationStatus(),
-                entity.getActiveStatus()
+                entity.getActiveStatus(),
+                entity.getCancellationWindowHours()
         );
     }
 

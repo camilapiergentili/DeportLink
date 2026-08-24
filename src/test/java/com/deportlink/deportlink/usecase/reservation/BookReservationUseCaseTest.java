@@ -63,7 +63,7 @@ class BookReservationUseCaseTest {
     private static final LocalTime START_TIME = LocalTime.of(10, 0);
 
     private static CourtSnapshot court() {
-        return new CourtSnapshot(COURT_ID, 100.0, "Cancha 1", "Fútbol", "Sucursal Centro", "Av. Siempre Viva 123");
+        return new CourtSnapshot(COURT_ID, 100.0, "Cancha 1", "Fútbol", "Sucursal Centro", "Av. Siempre Viva 123", 12);
     }
 
     private static PlayerSnapshot player() {

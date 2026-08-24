@@ -17,6 +17,7 @@ public class BranchResponseDto {
     private AddressResponseDto address;
     private VerificationStatus verificationStatus;
     private ActiveStatus activeStatus;
+    private Integer cancellationWindowHours;
     // courts cargadas bajo demanda vía GET /api/courts/branch/{id}
     private List<CourtResponseDto> courts;
 }

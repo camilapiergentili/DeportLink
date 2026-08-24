@@ -85,6 +85,7 @@ public class CascadeDeletionRegressionTest {
         testBranch = new BranchEntity();
         testBranch.setClub(club);
         testBranch.setName("Test Branch Cascade");
+        testBranch.setCancellationWindowHours(12);
         testBranch = branchRepository.save(testBranch);
 
         testCourt = new CourtEntity();

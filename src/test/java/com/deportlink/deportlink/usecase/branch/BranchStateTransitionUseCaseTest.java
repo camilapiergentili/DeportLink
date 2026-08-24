@@ -35,22 +35,22 @@ class BranchStateTransitionUseCaseTest {
     }
 
     private static Branch pending() {
-        return new Branch(ID, "Norte", address(), 10L, VerificationStatus.PENDING, ActiveStatus.INACTIVE);
+        return new Branch(ID, "Norte", address(), 10L, VerificationStatus.PENDING, ActiveStatus.INACTIVE, 12);
     }
 
     private static Branch approved() {
-        return new Branch(ID, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE);
+        return new Branch(ID, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, 12);
     }
 
     private static Branch approvedInactive() {
-        return new Branch(ID, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.INACTIVE);
+        return new Branch(ID, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.INACTIVE, 12);
     }
 
     // ─── ApproveBranchUseCase ────────────────────────────────────────────────────
 
     @Test
     void approve_pendingResultaApprovedActive() {
-        Branch savedResult = new Branch(ID, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE);
+        Branch savedResult = new Branch(ID, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, 12);
         when(branchRepository.findById(ID)).thenReturn(Optional.of(pending()));
         when(branchRepository.save(any())).thenReturn(savedResult);
 
@@ -82,7 +82,7 @@ class BranchStateTransitionUseCaseTest {
 
     @Test
     void reject_pendingResultaRejectedInactive() {
-        Branch savedResult = new Branch(ID, "Norte", address(), 10L, VerificationStatus.REJECTED, ActiveStatus.INACTIVE);
+        Branch savedResult = new Branch(ID, "Norte", address(), 10L, VerificationStatus.REJECTED, ActiveStatus.INACTIVE, 12);
         when(branchRepository.findById(ID)).thenReturn(Optional.of(pending()));
         when(branchRepository.save(any())).thenReturn(savedResult);
 
@@ -112,7 +112,7 @@ class BranchStateTransitionUseCaseTest {
 
     @Test
     void activate_approvedInactiveResultaActive() {
-        Branch savedResult = new Branch(ID, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE);
+        Branch savedResult = new Branch(ID, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, 12);
         when(branchRepository.findById(ID)).thenReturn(Optional.of(approvedInactive()));
         when(branchRepository.save(any())).thenReturn(savedResult);
 
@@ -149,7 +149,7 @@ class BranchStateTransitionUseCaseTest {
 
     @Test
     void deactivate_approvedActiveResultaInactive() {
-        Branch savedResult = new Branch(ID, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.INACTIVE);
+        Branch savedResult = new Branch(ID, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.INACTIVE, 12);
         when(branchRepository.findById(ID)).thenReturn(Optional.of(approved()));
         when(branchRepository.save(any())).thenReturn(savedResult);
 

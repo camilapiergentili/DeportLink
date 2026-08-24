@@ -122,6 +122,7 @@ class RescheduleReservationConcurrencyTest {
         BranchEntity branch = new BranchEntity();
         branch.setClub(club);
         branch.setName("Sucursal Reschedule");
+        branch.setCancellationWindowHours(12);
         // findByIdForUpdateWithRelations hace JOIN FETCH (INNER) b.address — sin esto,
         // una Branch sin dirección queda excluida del resultado y la cancha "no se encuentra".
         branch.setAddress(address);

@@ -105,6 +105,7 @@ class ReservationUniqueSlotConstraintTest {
         BranchEntity branch = new BranchEntity();
         branch.setClub(club);
         branch.setName("Sucursal Unique Slot");
+        branch.setCancellationWindowHours(12);
         branch.setAddress(address);
         branch = branchRepository.save(branch);
 

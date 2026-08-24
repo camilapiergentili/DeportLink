@@ -117,6 +117,7 @@ class BookReservationVsDeleteBranchConcurrencyTest {
         BranchEntity branch = new BranchEntity();
         branch.setClub(club);
         branch.setName("Sucursal Delete Branch Race");
+        branch.setCancellationWindowHours(12);
         branch.setAddress(address);
         branch = branchRepository.save(branch);
         branchId = branch.getId();

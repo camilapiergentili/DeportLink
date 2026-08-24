@@ -37,6 +37,7 @@ public interface CourtGateway {
             String name,
             String sportName,
             String branchName,
-            String branchAddress
+            String branchAddress,
+            int cancellationWindowHours
     ) {}
 }

@@ -40,7 +40,8 @@ public class CourtGatewayAdapter implements CourtGateway {
                 entity.getName(),
                 entity.getSport().getNameSport(),
                 entity.getBranch().getName(),
-                formatAddress(entity.getBranch().getAddress())
+                formatAddress(entity.getBranch().getAddress()),
+                entity.getBranch().getCancellationWindowHours()
         );
     }
 

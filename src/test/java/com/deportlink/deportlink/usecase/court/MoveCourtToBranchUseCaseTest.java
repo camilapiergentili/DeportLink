@@ -41,7 +41,7 @@ class MoveCourtToBranchUseCaseTest {
     }
 
     private static Branch branch(VerificationStatus vs, ActiveStatus as) {
-        return new Branch(NEW_BRANCH_ID, "Sucursal Sur", address(), 99L, vs, as);
+        return new Branch(NEW_BRANCH_ID, "Sucursal Sur", address(), 99L, vs, as, 12);
     }
 
     private MoveCourtToBranchUseCase useCase() {
