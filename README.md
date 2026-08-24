@@ -118,6 +118,9 @@ DB_USERNAME=root
 DB_PASSWORD=tu_contraseña
 JWT_SECRET=mi_clave_super_secreta
 SERVER_PORT=8080
+# Solo necesario si NO vas a correr con el perfil "dev" (ver sección "Desarrollo local" más
+# abajo) — con el perfil dev activo, CORS_ALLOWED_ORIGINS ya viene resuelto a este mismo valor.
+CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
 **3. Crear la base de datos**
@@ -157,6 +160,17 @@ SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
 ```
 
 > ⚠️ **`ddl-auto=update` nunca debe usarse fuera de desarrollo local.** No lo actives en ambientes compartidos, staging ni producción — ahí el esquema lo controla únicamente Flyway con `ddl-auto=validate` (el default). Usarlo fuera de tu máquina puede alterar el esquema real de forma silenciosa y dejarlo inconsistente con las migraciones versionadas.
+
+### CORS por ambiente
+
+Los orígenes permitidos para CORS (`cors.allowed-origins`) no tienen ningún valor hardcodeado en `application.properties` — se resuelven así según el ambiente:
+
+| Ambiente | Cómo se setea |
+|---|---|
+| **Desarrollo local** | Activá el perfil `dev` (ver arriba). `application-dev.properties` ya trae `cors.allowed-origins=http://localhost:5173` fijo, para no depender de ninguna variable de entorno al iterar local. |
+| **Staging / Producción** | Variable de entorno **`CORS_ALLOWED_ORIGINS`**, con uno o más orígenes separados por coma (ej: `CORS_ALLOWED_ORIGINS=https://miapp.com,https://admin.miapp.com`). |
+
+Si no corrés con el perfil `dev` **y** `CORS_ALLOWED_ORIGINS` no está seteada (o queda vacía), la app **no arranca**: `SecurityConfig` valida esto explícitamente al levantar el contexto y corta con un mensaje claro señalando la variable de entorno, en vez de subir con CORS mal configurado y que el problema aparezca recién con el frontend fallando en producción.
 
 ---
 
