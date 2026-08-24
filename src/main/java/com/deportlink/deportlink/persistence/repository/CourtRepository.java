@@ -73,6 +73,14 @@ public interface CourtRepository extends JpaRepository<CourtEntity, Long> {
     @Query("SELECT c FROM CourtEntity c WHERE c.id = :id")
     Optional<CourtEntity> findByIdForUpdate(@Param("id") long id);
 
+    // Bloquea todas las canchas de la sucursal en una sola sentencia atómica — ver
+    // BranchRepositoryPort.lockCourtsForUpdate para el porqué (no se puede primero listar los
+    // court_id con un SELECT plano y bloquear cada uno en un loop: ese SELECT plano inicial
+    // sería la primera lectura de la transacción y fijaría el snapshot antes de cualquier lock).
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT c FROM CourtEntity c WHERE c.branch.id = :branchId")
+    List<CourtEntity> findByBranchIdForUpdate(@Param("branchId") Long branchId);
+
     // CourtEntity como raíz del FROM (no ReservationEntity) — el lock PESSIMISTIC_WRITE recae
     // sobre la fila de court, que es el recurso realmente disputado por dos reprogramaciones
     // concurrentes hacia el mismo turno. Ver CourtGateway.findCourtIdByReservationForUpdate.

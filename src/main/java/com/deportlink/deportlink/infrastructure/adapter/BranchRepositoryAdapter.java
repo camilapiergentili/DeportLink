@@ -10,6 +10,7 @@ import com.deportlink.deportlink.model.entity.AddressEntity;
 import com.deportlink.deportlink.model.entity.BranchEntity;
 import com.deportlink.deportlink.persistence.repository.BranchRepository;
 import com.deportlink.deportlink.persistence.repository.ClubRepository;
+import com.deportlink.deportlink.persistence.repository.CourtRepository;
 import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,7 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
     private final BranchRepository branchRepository;
     private final ClubRepository clubRepository;
     private final ReservationRepository reservationRepository;
+    private final CourtRepository courtRepository;
 
     @Override
     public Branch save(Branch branch) {
@@ -36,6 +38,11 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
     @Override
     public Optional<Branch> findById(Long id) {
         return branchRepository.findById(id).map(this::toDomain);
+    }
+
+    @Override
+    public void lockCourtsForUpdate(Long branchId) {
+        courtRepository.findByBranchIdForUpdate(branchId);
     }
 
     @Override

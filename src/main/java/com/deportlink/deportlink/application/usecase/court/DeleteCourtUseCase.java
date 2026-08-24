@@ -15,7 +15,11 @@ public class DeleteCourtUseCase {
     private final CourtRepositoryPort courtRepository;
 
     public void execute(Long id) {
-        courtRepository.findById(id)
+        // Lock pesimista — primera lectura de la transacción, antes de chequear reservas.
+        // Sin esto, "no tiene reservas" podría verificarse contra un snapshot desactualizado
+        // si hay una reserva confirmándose en paralelo (mismo mecanismo que
+        // BookReservationUseCase / el fix de RescheduleReservationUseCase).
+        courtRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new CourtNotFoundException("No se encontró la cancha"));
 
         // Reservation es historial — nunca se borra en cascada. Si la cancha tiene

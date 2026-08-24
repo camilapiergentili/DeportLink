@@ -15,6 +15,17 @@ public class DeleteBranchUseCase {
     private final BranchRepositoryPort branchRepository;
 
     public void execute(Long id) {
+        // Lock pesimista sobre las canchas de la sucursal ANTES de confirmar que la sucursal
+        // existe — a propósito, aunque parezca al revés. Tiene que ser la primera lectura de
+        // la transacción (ver BranchRepositoryPort.lockCourtsForUpdate); si findById corriera
+        // primero, ese SELECT plano fijaría el snapshot de REPEATABLE READ de MySQL antes del
+        // lock, y hasReservations() más abajo podría seguir viendo datos anteriores al commit
+        // de una reserva confirmándose en paralelo sobre alguna cancha de esta sucursal (mismo
+        // bug que se corrigió en RescheduleReservationUseCase). El lock por branchId no
+        // distingue "no existe" de "existe sin canchas" — por eso el findById de abajo sigue
+        // haciendo falta para el BranchNotFoundException, solo que ahora corre después.
+        branchRepository.lockCourtsForUpdate(id);
+
         branchRepository.findById(id)
                 .orElseThrow(() -> new BranchNotFoundException("Sucursal no encontrada"));
 

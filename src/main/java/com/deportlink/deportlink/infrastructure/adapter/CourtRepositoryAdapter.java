@@ -42,6 +42,11 @@ public class CourtRepositoryAdapter implements CourtRepositoryPort {
     }
 
     @Override
+    public Optional<Court> findByIdForUpdate(Long id) {
+        return courtRepository.findByIdForUpdate(id).map(this::toDomain);
+    }
+
+    @Override
     public void delete(Long id) {
         courtRepository.deleteById(id);
     }
