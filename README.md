@@ -229,6 +229,12 @@ DeportLink/
 
 ---
 
+## 🚧 Limitaciones conocidas / trabajo futuro
+
+- **Rate limiting de login en memoria (no distribuido)**: `LoginAttemptService` lleva el conteo de intentos fallidos en un `ConcurrentHashMap` local al proceso. Funciona correctamente en el despliegue actual en Railway (configuración default, 1 sola instancia, sin réplicas activadas). Si en el futuro se activan Replicas en Railway (más de una instancia), este contador deja de ser efectivo porque cada instancia lleva su propio conteo por separado — antes de subir réplicas, migrar a un store compartido (Redis o una tabla). Ver auditoría del 20/08/2026 para el detalle del riesgo.
+
+---
+
 ## 👩‍💻 Autora
 
 **Camila Piergentili**  
