@@ -18,7 +18,6 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -89,77 +88,18 @@ class RescheduleReservationConcurrencyTest {
 
     @BeforeEach
     void setUp() {
-        OwnerEntity owner = new OwnerEntity();
-        owner.setEmail("owner-reschedule-" + System.nanoTime() + "@example.com");
-        owner.setPassword("irrelevant");
-        owner.setFirstName("Test");
-        owner.setLastName("Owner");
-        owner.setDni(20123456789L);
-        owner.setCuil("cuil-" + System.nanoTime());
-        owner.setDateOfBirth(LocalDate.of(1985, 1, 1));
-        owner = ownerRepository.save(owner);
-
-        SportEntity sport = new SportEntity();
-        sport.setNameSport("Football");
-        sport = sportRepository.save(sport);
-
-        ClubEntity club = new ClubEntity();
-        club.setName("Club Reschedule");
-        club.setLegalName("Club Reschedule " + System.nanoTime());
-        club.setCuit("cuit-" + System.nanoTime());
-        club.getOwners().add(owner);
-        club = clubRepository.save(club);
-
-        AddressEntity address = new AddressEntity();
-        address.setStreetName("Av. Siempre Viva");
-        address.setNumber(742);
-        address.setCity("CABA");
-        address.setProvince("Buenos Aires");
-        address.setPostalCode(1043);
-        address.setLatitude(-34.6);
-        address.setLongitude(-58.4);
-
-        BranchEntity branch = new BranchEntity();
-        branch.setClub(club);
-        branch.setName("Sucursal Reschedule");
-        branch.setCancellationWindowHours(12);
-        // findByIdForUpdateWithRelations hace JOIN FETCH (INNER) b.address — sin esto,
-        // una Branch sin dirección queda excluida del resultado y la cancha "no se encuentra".
-        branch.setAddress(address);
-        branch = branchRepository.save(branch);
-
-        CourtEntity court = new CourtEntity();
-        court.setName("Cancha Reschedule");
-        court.setBranch(branch);
-        court.setSport(sport);
-        court.setPricePerHour(100.0);
-        court = courtRepository.save(court);
-        courtId = court.getId();
+        var fixtures = new ConcurrencyTestFixtures(ownerRepository, sportRepository, clubRepository,
+                branchRepository, courtRepository, scheduleRepository, playerRepository);
 
         day = LocalDate.now().plusDays(7);
         newStartTime = LocalTime.of(15, 0); // turno nuevo que ambos van a disputar
 
-        ScheduleEntity schedule = new ScheduleEntity();
-        schedule.setDay(day.getDayOfWeek());
-        schedule.setOpeningTime(LocalTime.of(8, 0));
-        schedule.setClosingTime(LocalTime.of(22, 0));
-        schedule.setSlotDuration(Duration.ofHours(1));
-        schedule.setCourt(court);
-        scheduleRepository.save(schedule);
+        var branch = fixtures.createBranchWithCourts("reschedule", day, 1);
+        courtId = branch.courtId();
 
-        PlayerEntity p1 = new PlayerEntity();
-        p1.setEmail("player1-reschedule-" + System.nanoTime() + "@example.com");
-        p1.setPassword("irrelevant");
-        p1.setFirstName("Player");
-        p1.setLastName("One");
-        playerId1 = playerRepository.save(p1).getId();
-
-        PlayerEntity p2 = new PlayerEntity();
-        p2.setEmail("player2-reschedule-" + System.nanoTime() + "@example.com");
-        p2.setPassword("irrelevant");
-        p2.setFirstName("Player");
-        p2.setLastName("Two");
-        playerId2 = playerRepository.save(p2).getId();
+        List<Long> players = fixtures.createPlayers("reschedule", 2);
+        playerId1 = players.get(0);
+        playerId2 = players.get(1);
 
         // Cada jugador arranca con su propia reserva RESERVADO, en horarios distintos entre sí
         // y distintos del turno nuevo que van a disputar — así el único conflicto real es el

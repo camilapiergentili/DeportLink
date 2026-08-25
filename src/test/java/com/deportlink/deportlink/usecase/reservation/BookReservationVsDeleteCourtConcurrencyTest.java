@@ -16,7 +16,6 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -84,68 +83,16 @@ class BookReservationVsDeleteCourtConcurrencyTest {
 
     @BeforeEach
     void setUp() {
-        OwnerEntity owner = new OwnerEntity();
-        owner.setEmail("owner-delete-race-" + System.nanoTime() + "@example.com");
-        owner.setPassword("irrelevant");
-        owner.setFirstName("Test");
-        owner.setLastName("Owner");
-        owner.setDni(20123456789L);
-        owner.setCuil("cuil-" + System.nanoTime());
-        owner.setDateOfBirth(LocalDate.of(1985, 1, 1));
-        owner = ownerRepository.save(owner);
-
-        SportEntity sport = new SportEntity();
-        sport.setNameSport("Football");
-        sport = sportRepository.save(sport);
-
-        ClubEntity club = new ClubEntity();
-        club.setName("Club Delete Race");
-        club.setLegalName("Club Delete Race " + System.nanoTime());
-        club.setCuit("cuit-" + System.nanoTime());
-        club.getOwners().add(owner);
-        club = clubRepository.save(club);
-
-        AddressEntity address = new AddressEntity();
-        address.setStreetName("Av. Siempre Viva");
-        address.setNumber(742);
-        address.setCity("CABA");
-        address.setProvince("Buenos Aires");
-        address.setPostalCode(1043);
-        address.setLatitude(-34.6);
-        address.setLongitude(-58.4);
-
-        BranchEntity branch = new BranchEntity();
-        branch.setClub(club);
-        branch.setName("Sucursal Delete Race");
-        branch.setCancellationWindowHours(12);
-        branch.setAddress(address);
-        branch = branchRepository.save(branch);
-
-        CourtEntity court = new CourtEntity();
-        court.setName("Cancha Delete Race");
-        court.setBranch(branch);
-        court.setSport(sport);
-        court.setPricePerHour(100.0);
-        court = courtRepository.save(court);
-        courtId = court.getId();
+        var fixtures = new ConcurrencyTestFixtures(ownerRepository, sportRepository, clubRepository,
+                branchRepository, courtRepository, scheduleRepository, playerRepository);
 
         day = LocalDate.now().plusDays(7);
         startTime = LocalTime.of(10, 0);
 
-        ScheduleEntity schedule = new ScheduleEntity();
-        schedule.setDay(day.getDayOfWeek());
-        schedule.setOpeningTime(LocalTime.of(8, 0));
-        schedule.setClosingTime(LocalTime.of(22, 0));
-        schedule.setSlotDuration(Duration.ofHours(1));
-        schedule.setCourt(court);
-        scheduleRepository.save(schedule);
+        var branch = fixtures.createBranchWithCourts("delete-race", day, 1);
+        courtId = branch.courtId();
 
-        PlayerEntity player = new PlayerEntity();
-        player.setEmail("player-delete-race-" + System.nanoTime() + "@example.com");
-        player.setPassword("irrelevant");
-        player.setFirstName("Player");
-        player.setLastName("One");
-        playerId = playerRepository.save(player).getId();
+        playerId = fixtures.createPlayers("delete-race", 1).get(0);
     }
 
     @RepeatedTest(5)

@@ -16,7 +16,6 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -84,79 +83,21 @@ class BookReservationVsDeleteBranchConcurrencyTest {
 
     @BeforeEach
     void setUp() {
-        OwnerEntity owner = new OwnerEntity();
-        owner.setEmail("owner-delete-branch-race-" + System.nanoTime() + "@example.com");
-        owner.setPassword("irrelevant");
-        owner.setFirstName("Test");
-        owner.setLastName("Owner");
-        owner.setDni(20123456789L);
-        owner.setCuil("cuil-" + System.nanoTime());
-        owner.setDateOfBirth(LocalDate.of(1985, 1, 1));
-        owner = ownerRepository.save(owner);
-
-        SportEntity sport = new SportEntity();
-        sport.setNameSport("Football");
-        sport = sportRepository.save(sport);
-
-        ClubEntity club = new ClubEntity();
-        club.setName("Club Delete Branch Race");
-        club.setLegalName("Club Delete Branch Race " + System.nanoTime());
-        club.setCuit("cuit-" + System.nanoTime());
-        club.getOwners().add(owner);
-        club = clubRepository.save(club);
-
-        AddressEntity address = new AddressEntity();
-        address.setStreetName("Av. Siempre Viva");
-        address.setNumber(742);
-        address.setCity("CABA");
-        address.setProvince("Buenos Aires");
-        address.setPostalCode(1043);
-        address.setLatitude(-34.6);
-        address.setLongitude(-58.4);
-
-        BranchEntity branch = new BranchEntity();
-        branch.setClub(club);
-        branch.setName("Sucursal Delete Branch Race");
-        branch.setCancellationWindowHours(12);
-        branch.setAddress(address);
-        branch = branchRepository.save(branch);
-        branchId = branch.getId();
-
-        // Dos canchas en la misma sucursal — la clave de este test: findByBranchIdForUpdate
-        // tiene que bloquear AMBAS filas en una sola sentencia, no solo la que se reserva.
-        CourtEntity courtA = new CourtEntity();
-        courtA.setName("Cancha A");
-        courtA.setBranch(branch);
-        courtA.setSport(sport);
-        courtA.setPricePerHour(100.0);
-        courtA = courtRepository.save(courtA);
-        courtAId = courtA.getId();
-
-        CourtEntity courtB = new CourtEntity();
-        courtB.setName("Cancha B");
-        courtB.setBranch(branch);
-        courtB.setSport(sport);
-        courtB.setPricePerHour(100.0);
-        courtB = courtRepository.save(courtB);
-        courtBId = courtB.getId();
+        var fixtures = new ConcurrencyTestFixtures(ownerRepository, sportRepository, clubRepository,
+                branchRepository, courtRepository, scheduleRepository, playerRepository);
 
         day = LocalDate.now().plusDays(7);
         startTime = LocalTime.of(10, 0);
 
-        ScheduleEntity schedule = new ScheduleEntity();
-        schedule.setDay(day.getDayOfWeek());
-        schedule.setOpeningTime(LocalTime.of(8, 0));
-        schedule.setClosingTime(LocalTime.of(22, 0));
-        schedule.setSlotDuration(Duration.ofHours(1));
-        schedule.setCourt(courtA);
-        scheduleRepository.save(schedule);
+        // Dos canchas en la misma sucursal — la clave de este test: findByBranchIdForUpdate
+        // tiene que bloquear AMBAS filas en una sola sentencia, no solo la que se reserva.
+        // Solo courtA (la primera) recibe Schedule — courtB nunca se reserva, no la necesita.
+        var branch = fixtures.createBranchWithCourts("delete-branch-race", day, 2);
+        branchId = branch.branchId();
+        courtAId = branch.courtIds().get(0);
+        courtBId = branch.courtIds().get(1);
 
-        PlayerEntity player = new PlayerEntity();
-        player.setEmail("player-delete-branch-race-" + System.nanoTime() + "@example.com");
-        player.setPassword("irrelevant");
-        player.setFirstName("Player");
-        player.setLastName("One");
-        playerId = playerRepository.save(player).getId();
+        playerId = fixtures.createPlayers("delete-branch-race", 1).get(0);
     }
 
     @RepeatedTest(5)
