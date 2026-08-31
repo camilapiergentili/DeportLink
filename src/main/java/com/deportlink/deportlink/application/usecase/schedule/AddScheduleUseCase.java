@@ -32,7 +32,17 @@ public class AddScheduleUseCase {
     public void execute(Long courtId, List<ScheduleRequestDto> scheduleDtos) {
         log.info("Adding schedules for court: courtId={}, count={}", courtId, scheduleDtos.size());
 
-        Court court = courtRepository.findById(courtId)
+        // Lock pesimista sobre la cancha — PRIMERA lectura de la transacción, antes de leer los
+        // horarios existentes o decidir si el nuevo horario solapa con alguno. Sin esto, dos altas
+        // concurrentes para la misma cancha pueden leer ambas el mismo estado de `availability`
+        // antes de que cualquiera inserte, pasar juntas filterConflicts() y terminar insertando dos
+        // filas para el mismo (court_id, day_of_week) — lo que rompe con un 500 la próxima consulta
+        // de disponibilidad/reserva para esa cancha/día (findByCourtIdAndDay espera 0 o 1 fila).
+        // Mismo patrón que BookReservationUseCase/RescheduleReservationUseCase/DeleteCourtUseCase/
+        // DeleteBranchUseCase/UpdateScheduleUseCase/DeleteScheduleUseCase: todas compiten por la
+        // misma fila de Court y quedan serializadas entre sí. Ver docs/software-review-2026-08-31.md,
+        // finding F16.
+        Court court = courtRepository.findByIdForUpdate(courtId)
                 .orElseThrow(() -> new CourtNotFoundException("No se encontró la cancha"));
 
         if (!court.isActive()) {
