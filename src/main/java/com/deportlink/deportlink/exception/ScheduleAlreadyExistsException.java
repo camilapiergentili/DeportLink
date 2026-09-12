@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class ScheduleAlreadyExistsException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class ScheduleAlreadyExistsException extends BusinessException {
     public ScheduleAlreadyExistsException(String message) {
-        super(message);
+        super(message, HttpStatus.CONFLICT);
     }
 }

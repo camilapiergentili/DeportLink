@@ -20,7 +20,7 @@ public class CreateBranchUseCase {
     private final BranchRepositoryPort branchRepository;
     private final ClubRepositoryPort clubRepository;
 
-    public Branch execute(String name, Address address, Long clubId) {
+    public Branch execute(String name, Address address, Long clubId, int cancellationWindowHours) {
         Club club = clubRepository.findById(clubId)
                 .orElseThrow(() -> new ClubNotFoundException("Club no encontrado"));
         if (!club.isApproved()) {
@@ -32,6 +32,6 @@ public class CreateBranchUseCase {
         if (branchRepository.existsByAddressAndClub(address, clubId)) {
             throw new BranchAlreadyExistsException("Ya existe una sucursal en esta dirección");
         }
-        return branchRepository.save(Branch.create(name, address, clubId));
+        return branchRepository.save(Branch.create(name, address, clubId, cancellationWindowHours));
     }
 }

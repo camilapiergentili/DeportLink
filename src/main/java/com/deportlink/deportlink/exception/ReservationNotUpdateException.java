@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class ReservationNotUpdateException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class ReservationNotUpdateException extends BusinessException {
     public ReservationNotUpdateException(String message) {
-        super(message);
+        super(message, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 }

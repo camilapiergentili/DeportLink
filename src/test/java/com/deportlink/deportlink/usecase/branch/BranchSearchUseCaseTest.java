@@ -27,7 +27,7 @@ class BranchSearchUseCaseTest {
 
     private static Branch branch(Long id, String name, double lat, double lng) {
         Address addr = new Address("Calle", 1, "CABA", "Buenos Aires", 1000, lat, lng);
-        return new Branch(id, name, addr, 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE);
+        return new Branch(id, name, addr, 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, 12);
     }
 
     // ─── SearchBranchesByNameUseCase ─────────────────────────────────────────────

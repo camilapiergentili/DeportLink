@@ -3,6 +3,7 @@ package com.deportlink.deportlink.application.usecase.schedule;
 import com.deportlink.deportlink.domain.model.Schedule;
 import com.deportlink.deportlink.domain.port.out.ReservationRepositoryPort;
 import com.deportlink.deportlink.domain.port.out.ScheduleRepositoryPort;
+import com.deportlink.deportlink.exception.InvalidReservationDataException;
 import com.deportlink.deportlink.exception.InvalidTimeRangeException;
 import com.deportlink.deportlink.exception.ReservationNotUpdateException;
 import com.deportlink.deportlink.exception.ScheduleNotFoundException;
@@ -41,7 +42,7 @@ public class UpdateScheduleUseCase {
 
         for (ReservationRepositoryPort.ActiveSlot slot : active) {
             if (slot.startTime() == null || slot.duration() == null) {
-                throw new IllegalStateException("Una reserva tiene datos incompletos");
+                throw new InvalidReservationDataException("Una reserva tiene datos incompletos");
             }
             LocalTime end = slot.startTime().plusMinutes(slot.duration().toMinutes());
             if (slot.startTime().isBefore(opening) || end.isAfter(closing)) {

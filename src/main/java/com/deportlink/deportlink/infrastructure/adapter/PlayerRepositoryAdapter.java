@@ -3,17 +3,18 @@ package com.deportlink.deportlink.infrastructure.adapter;
 import com.deportlink.deportlink.domain.model.Player;
 import com.deportlink.deportlink.domain.model.PlayerAddress;
 import com.deportlink.deportlink.domain.port.out.PlayerRepositoryPort;
-import com.deportlink.deportlink.enums.StatusReservation;
 import com.deportlink.deportlink.exception.PlayerNotFoundException;
 import com.deportlink.deportlink.model.Rol;
 import com.deportlink.deportlink.model.entity.AddressEntity;
 import com.deportlink.deportlink.model.entity.PlayerEntity;
 import com.deportlink.deportlink.persistence.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 public class PlayerRepositoryAdapter implements PlayerRepositoryPort {
 
     private final PlayerRepository playerRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public Player save(Player player) {
@@ -57,15 +59,29 @@ public class PlayerRepositoryAdapter implements PlayerRepositoryPort {
         return playerRepository.findByEmail(email).map(this::toPlayer);
     }
 
+    /**
+     * "Eliminar" un Player no borra la fila: Reservation.player_id depende de su id,
+     * y Reservation/Ticket son historial que no debe perderse (regla de negocio P0.1).
+     * En su lugar, se anonimiza — se sobreescriben los campos identificables y se
+     * genera una contraseña aleatoria que nadie conoce. La cuenta deja de ser
+     * utilizable (el email viejo ya no resuelve a ningún usuario vía findByEmail,
+     * y el nuevo tiene una contraseña que nadie tiene) sin tocar Spring Security
+     * ni el estado de las reservas existentes.
+     */
     @Override
     public void delete(Long id) {
         PlayerEntity entity = playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException("El jugador no se encontró"));
-        entity.getReservations().stream()
-                .filter(r -> r.getStatus().occupiesSlot())
-                .forEach(r -> r.setStatus(StatusReservation.CANCELADO));
+
+        entity.setFirstName("Usuario");
+        entity.setLastName("eliminado");
+        // Determinístico por id → único, satisface la unique constraint de email
+        // y libera el email original para que otro jugador pueda registrarse con él.
+        entity.setEmail("player-deleted-" + id + "@deportlink.invalid");
+        entity.setPhone(null);
+        entity.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
+
         playerRepository.save(entity);
-        playerRepository.delete(entity);
     }
 
     @Override

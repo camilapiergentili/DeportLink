@@ -31,6 +31,7 @@ class UpdateBranchUseCaseTest {
 
     private static final Long BRANCH_ID = 1L;
     private static final Long CLUB_ID = 10L;
+    private static final int WINDOW = 12;
 
     private static Address address() {
         return new Address("Av. Corrientes", 1234, "CABA", "Buenos Aires", 1043, -34.603, -58.381);
@@ -41,7 +42,7 @@ class UpdateBranchUseCaseTest {
     }
 
     private static Branch approvedBranch() {
-        return new Branch(BRANCH_ID, "Norte", address(), CLUB_ID, VerificationStatus.APPROVED, ActiveStatus.ACTIVE);
+        return new Branch(BRANCH_ID, "Norte", address(), CLUB_ID, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, WINDOW);
     }
 
     // ─── Casos exitosos ──────────────────────────────────────────────────────────
@@ -49,13 +50,13 @@ class UpdateBranchUseCaseTest {
     @Test
     void execute_cambiaSoloElNombreMantieneEstado() {
         Branch existing = approvedBranch();
-        Branch saved = new Branch(BRANCH_ID, "Sur", address(), CLUB_ID, VerificationStatus.APPROVED, ActiveStatus.ACTIVE);
+        Branch saved = new Branch(BRANCH_ID, "Sur", address(), CLUB_ID, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, WINDOW);
 
         when(branchRepository.findById(BRANCH_ID)).thenReturn(Optional.of(existing));
         when(branchRepository.existsByNameIgnoreCaseAndClub("Sur", CLUB_ID)).thenReturn(false);
         when(branchRepository.save(any())).thenReturn(saved);
 
-        Branch result = useCase.execute(BRANCH_ID, "Sur", address());
+        Branch result = useCase.execute(BRANCH_ID, "Sur", address(), WINDOW);
 
         assertThat(result.name()).isEqualTo("Sur");
         assertThat(result.verificationStatus()).isEqualTo(VerificationStatus.APPROVED);
@@ -65,13 +66,13 @@ class UpdateBranchUseCaseTest {
     @Test
     void execute_cambiaDireccionReiniciaAPendingInactive() {
         Branch existing = approvedBranch();
-        Branch saved = new Branch(BRANCH_ID, "Norte", otherAddress(), CLUB_ID, VerificationStatus.PENDING, ActiveStatus.INACTIVE);
+        Branch saved = new Branch(BRANCH_ID, "Norte", otherAddress(), CLUB_ID, VerificationStatus.PENDING, ActiveStatus.INACTIVE, WINDOW);
 
         when(branchRepository.findById(BRANCH_ID)).thenReturn(Optional.of(existing));
         when(branchRepository.existsByAddressAndClub(otherAddress(), CLUB_ID)).thenReturn(false);
         when(branchRepository.save(any())).thenReturn(saved);
 
-        Branch result = useCase.execute(BRANCH_ID, "Norte", otherAddress());
+        Branch result = useCase.execute(BRANCH_ID, "Norte", otherAddress(), WINDOW);
 
         assertThat(result.verificationStatus()).isEqualTo(VerificationStatus.PENDING);
         assertThat(result.activeStatus()).isEqualTo(ActiveStatus.INACTIVE);
@@ -83,7 +84,7 @@ class UpdateBranchUseCaseTest {
         when(branchRepository.findById(BRANCH_ID)).thenReturn(Optional.of(existing));
         when(branchRepository.save(any())).thenReturn(existing);
 
-        useCase.execute(BRANCH_ID, "Norte", address());
+        useCase.execute(BRANCH_ID, "Norte", address(), WINDOW);
 
         // Si no cambió ni nombre ni dirección, no se llaman las validaciones de unicidad
         verify(branchRepository, never()).existsByNameIgnoreCaseAndClub(any(), any());
@@ -94,13 +95,13 @@ class UpdateBranchUseCaseTest {
     void execute_cambiaDireccionNoValidaNombre() {
         Branch existing = approvedBranch();
         Address newAddr = otherAddress();
-        Branch saved = new Branch(BRANCH_ID, "Norte", newAddr, CLUB_ID, VerificationStatus.PENDING, ActiveStatus.INACTIVE);
+        Branch saved = new Branch(BRANCH_ID, "Norte", newAddr, CLUB_ID, VerificationStatus.PENDING, ActiveStatus.INACTIVE, WINDOW);
 
         when(branchRepository.findById(BRANCH_ID)).thenReturn(Optional.of(existing));
         when(branchRepository.existsByAddressAndClub(newAddr, CLUB_ID)).thenReturn(false);
         when(branchRepository.save(any())).thenReturn(saved);
 
-        useCase.execute(BRANCH_ID, "Norte", newAddr);
+        useCase.execute(BRANCH_ID, "Norte", newAddr, WINDOW);
 
         // El nombre no cambió, no se debe verificar unicidad de nombre
         verify(branchRepository, never()).existsByNameIgnoreCaseAndClub(any(), any());
@@ -109,13 +110,13 @@ class UpdateBranchUseCaseTest {
     @Test
     void execute_cambiaNombreNoValidaDireccion() {
         Branch existing = approvedBranch();
-        Branch saved = new Branch(BRANCH_ID, "Sur", address(), CLUB_ID, VerificationStatus.APPROVED, ActiveStatus.ACTIVE);
+        Branch saved = new Branch(BRANCH_ID, "Sur", address(), CLUB_ID, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, WINDOW);
 
         when(branchRepository.findById(BRANCH_ID)).thenReturn(Optional.of(existing));
         when(branchRepository.existsByNameIgnoreCaseAndClub("Sur", CLUB_ID)).thenReturn(false);
         when(branchRepository.save(any())).thenReturn(saved);
 
-        useCase.execute(BRANCH_ID, "Sur", address());
+        useCase.execute(BRANCH_ID, "Sur", address(), WINDOW);
 
         // La dirección no cambió, no se debe verificar unicidad de dirección
         verify(branchRepository, never()).existsByAddressAndClub(any(), any());
@@ -127,7 +128,7 @@ class UpdateBranchUseCaseTest {
     void execute_sucursalNoEncontradaLanzaBranchNotFound() {
         when(branchRepository.findById(BRANCH_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.execute(BRANCH_ID, "Sur", address()))
+        assertThatThrownBy(() -> useCase.execute(BRANCH_ID, "Sur", address(), WINDOW))
                 .isInstanceOf(BranchNotFoundException.class);
 
         verify(branchRepository, never()).save(any());
@@ -138,7 +139,7 @@ class UpdateBranchUseCaseTest {
         when(branchRepository.findById(BRANCH_ID)).thenReturn(Optional.of(approvedBranch()));
         when(branchRepository.existsByNameIgnoreCaseAndClub("Sur", CLUB_ID)).thenReturn(true);
 
-        assertThatThrownBy(() -> useCase.execute(BRANCH_ID, "Sur", address()))
+        assertThatThrownBy(() -> useCase.execute(BRANCH_ID, "Sur", address(), WINDOW))
                 .isInstanceOf(BranchAlreadyExistsException.class);
 
         verify(branchRepository, never()).save(any());
@@ -150,7 +151,7 @@ class UpdateBranchUseCaseTest {
         when(branchRepository.findById(BRANCH_ID)).thenReturn(Optional.of(approvedBranch()));
         when(branchRepository.existsByAddressAndClub(newAddr, CLUB_ID)).thenReturn(true);
 
-        assertThatThrownBy(() -> useCase.execute(BRANCH_ID, "Norte", newAddr))
+        assertThatThrownBy(() -> useCase.execute(BRANCH_ID, "Norte", newAddr, WINDOW))
                 .isInstanceOf(BranchAlreadyExistsException.class);
 
         verify(branchRepository, never()).save(any());

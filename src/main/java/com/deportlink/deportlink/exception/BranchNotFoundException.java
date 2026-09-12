@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class BranchNotFoundException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class BranchNotFoundException extends BusinessException {
     public BranchNotFoundException(String message) {
-        super(message);
+        super(message, HttpStatus.NOT_FOUND);
     }
 }

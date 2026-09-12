@@ -1,8 +1,10 @@
 package com.deportlink.deportlink.exception.handler;
 
-import com.deportlink.deportlink.exception.*;
+import com.deportlink.deportlink.exception.BusinessException;
+import com.deportlink.deportlink.exception.TooManyRequestsException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -20,86 +22,33 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({
-            PlayerNotFoundException.class,
-            ClubNotFoundException.class,
-            BranchNotFoundException.class,
-            CourtNotFoundException.class,
-            AddressNotFoundException.class,
-            ScheduleNotFoundException.class,
-            ReservationNotFoundException.class,
-            SportNotFoundException.class,
-            OwnerNotFoundException.class,
-            UserNotFoundException.class
-    })
-    public ResponseEntity<ErrorResponse> handleNotFoundException(RuntimeException ex, HttpServletRequest request) {
-        log.error("Resource not found: {}", ex.getMessage());
+    // Único punto de traducción para TODAS las excepciones de negocio (~35 y creciendo): cada
+    // una declara su propio HttpStatus en su constructor (ver BusinessException). Agregar una
+    // excepción de negocio nueva no requiere tocar esta clase — principio abierto/cerrado. Antes
+    // había que sumarla a mano a una de varias listas @ExceptionHandler({...}); si alguien se
+    // olvidaba, la excepción caía silenciosamente en handleGenericException con 500 (pasó con
+    // ClubHasBranchesException y ScheduleHasReservationsException).
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex, HttpServletRequest request) {
+        log.error("{}: {}", ex.getClass().getSimpleName(), ex.getMessage());
 
-        return buildErrorResponse(HttpStatus.NOT_FOUND,
-                "Not Found",
+        return buildErrorResponse(ex.getStatus(),
+                ex.getStatus().getReasonPhrase(),
                 ex.getMessage(),
                 request);
     }
 
-    @ExceptionHandler({
-            ClubNotActivedException.class,
-            ClubNotApprovedException.class,
-            BranchNotActiveException.class,
-            BranchNotApprovedException.class,
-            OwnerNotBelongsToClubException.class
-    })
-    public ResponseEntity<ErrorResponse> handleForbiddenException(RuntimeException ex, HttpServletRequest request) {
-        log.error("Forbidden: {}", ex.getMessage());
-
-        return buildErrorResponse(HttpStatus.FORBIDDEN,
-                "Forbidden",
-                ex.getMessage(),
-                request);
-    }
-
-    @ExceptionHandler({
-            PlayerAlreadyExistsException.class,
-            ClubAlreadyExistsException.class,
-            BranchAlreadyExistsException.class,
-            CourtAlreadyExistsException.class,
-            ScheduleAlreadyExistsException.class,
-            SportAlreadyExistsException.class,
-            OwnerAlreadyExistsException.class,
-            SlotNotAvailableException.class,
-            StatusAlreadyAppliedException.class
-    })
-    public ResponseEntity<ErrorResponse> handleConflictException(RuntimeException ex, HttpServletRequest request) {
-        log.error("Conflict: {}", ex.getMessage());
+    // Una violación de integridad (FK, unique) en este dominio siempre refleja un conflicto de
+    // negocio conocido (p. ej. una reserva creada justo entre el chequeo y el delete de una
+    // sucursal/cancha/club/horario) — nunca un error interno. Se traduce a 409 en vez de dejarla
+    // caer en el handler genérico de 500.
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.error("Data integrity violation: {}", ex.getMessage());
 
         return buildErrorResponse(HttpStatus.CONFLICT,
                 "Conflict",
-                ex.getMessage(),
-                request);
-    }
-
-    @ExceptionHandler({
-            CancellationTimeExceededException.class,
-            InvalidTimeRangeException.class,
-            NegativePriceException.class,
-            ReservationNotUpdateException.class,
-            UnderageException.class
-    })
-    public ResponseEntity<ErrorResponse> handleUnprocessableException(RuntimeException ex, HttpServletRequest request) {
-        log.error("Unprocessable entity: {}", ex.getMessage());
-
-        return buildErrorResponse(HttpStatus.UNPROCESSABLE_ENTITY,
-                "Unprocessable Entity",
-                ex.getMessage(),
-                request);
-    }
-
-    @ExceptionHandler(InvalidStatusTransitionException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidStatusTransition(InvalidStatusTransitionException ex, HttpServletRequest request) {
-        log.error("Invalid status transition: {}", ex.getMessage());
-
-        return buildErrorResponse(HttpStatus.CONFLICT,
-                "Conflict",
-                ex.getMessage(),
+                "No se pudo completar la operación porque el recurso tiene datos asociados",
                 request);
     }
 
@@ -141,12 +90,18 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", "Credenciales inválidas", request);
     }
 
+    // TooManyRequestsException también es una BusinessException, pero Spring resuelve el
+    // handler más específico de la jerarquía — este gana sobre handleBusinessException. Se
+    // mantiene aparte porque loguea la IP bloqueada, algo que ninguna otra excepción necesita.
     @ExceptionHandler(TooManyRequestsException.class)
     public ResponseEntity<ErrorResponse> handleTooManyRequests(TooManyRequestsException ex, HttpServletRequest request) {
         log.warn("IP bloqueada por exceso de intentos: {}", request.getRemoteAddr());
         return buildErrorResponse(HttpStatus.TOO_MANY_REQUESTS, "Too Many Requests", ex.getMessage(), request);
     }
 
+    // Red de seguridad final: a partir de este refactor, ya no debería recibir excepciones de
+    // negocio (todas extienden BusinessException y las captura el handler de arriba) — solo
+    // errores de programación reales, no anticipados.
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);

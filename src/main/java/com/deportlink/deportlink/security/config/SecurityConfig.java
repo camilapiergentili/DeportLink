@@ -4,6 +4,7 @@ import com.deportlink.deportlink.security.advice.JwtAccessDeniedHandler;
 import com.deportlink.deportlink.security.advice.JwtAuthenticationEntryPoint;
 import com.deportlink.deportlink.security.service.JwtFilter;
 import com.deportlink.deportlink.security.service.UserDetailsServiceImpl;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -39,8 +40,37 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final JwtAccessDeniedHandler accessDeniedHandler;
 
+    // Sin default hardcodeado a propósito: si CORS_ALLOWED_ORIGINS no está seteada (o queda
+    // vacía), cors.allowed-origins resuelve a un string vacío — ver application.properties —
+    // y esto termina en una lista vacía, no en un valor de desarrollo colado por accidente.
     @Value("${cors.allowed-origins}")
     private List<String> corsAllowedOrigins;
+
+    /**
+     * Falla el arranque con un mensaje claro si corsAllowedOrigins quedó vacío — ya sea porque
+     * CORS_ALLOWED_ORIGINS no está seteada o porque quedó seteada pero en blanco. Sin este
+     * chequeo, la app subiría igual (una lista vacía es una configuración válida para
+     * CorsConfiguration, solo que bloquea todo el tráfico cross-origin) y el problema recién
+     * se notaría en producción, con el frontend fallando y sin ningún mensaje que apunte a la
+     * causa real.
+     */
+    @PostConstruct
+    void validateCorsAllowedOrigins() {
+        boolean isBlank = corsAllowedOrigins == null
+                || corsAllowedOrigins.isEmpty()
+                || corsAllowedOrigins.stream().allMatch(String::isBlank);
+
+        if (isBlank) {
+            throw new IllegalStateException(
+                    "CORS_ALLOWED_ORIGINS no está seteada, o quedó vacía/mal configurada. "
+                            + "Verificá esa variable de entorno antes de levantar la app "
+                            + "(ej: CORS_ALLOWED_ORIGINS=https://miapp.com,https://admin.miapp.com). "
+                            + "En desarrollo local, activá el perfil 'dev' en su lugar "
+                            + "(--spring.profiles.active=dev), que ya trae configurado "
+                            + "http://localhost:5173."
+            );
+        }
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {

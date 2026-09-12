@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class TooManyRequestsException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class TooManyRequestsException extends BusinessException {
     public TooManyRequestsException(String message) {
-        super(message);
+        super(message, HttpStatus.TOO_MANY_REQUESTS);
     }
 }

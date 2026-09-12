@@ -1,5 +1,6 @@
 package com.deportlink.deportlink.dto.request;
 
+import com.deportlink.deportlink.dto.validation.PasswordMatches;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -9,6 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
+@PasswordMatches
 public class UserRequestDto {
 
     @NotBlank

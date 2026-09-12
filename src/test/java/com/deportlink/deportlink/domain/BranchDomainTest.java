@@ -5,6 +5,8 @@ import com.deportlink.deportlink.domain.model.Branch;
 import com.deportlink.deportlink.enums.ActiveStatus;
 import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.exception.BranchNotApprovedException;
+import com.deportlink.deportlink.exception.InvalidCancellationWindowException;
+import com.deportlink.deportlink.exception.InvalidStatusTransitionException;
 import com.deportlink.deportlink.exception.StatusAlreadyAppliedException;
 import org.junit.jupiter.api.Test;
 
@@ -22,33 +24,48 @@ class BranchDomainTest {
         return new Address("Av. Santa Fe", 900, "CABA", "Buenos Aires", 1059, -34.595, -58.372);
     }
 
+    private static final int WINDOW = 12;
+
     private static Branch pending() {
-        return new Branch(1L, "Norte", address(), 10L, VerificationStatus.PENDING, ActiveStatus.INACTIVE);
+        return new Branch(1L, "Norte", address(), 10L, VerificationStatus.PENDING, ActiveStatus.INACTIVE, WINDOW);
     }
 
     private static Branch approved() {
-        return new Branch(1L, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE);
+        return new Branch(1L, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, WINDOW);
     }
 
     private static Branch approvedInactive() {
-        return new Branch(1L, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.INACTIVE);
+        return new Branch(1L, "Norte", address(), 10L, VerificationStatus.APPROVED, ActiveStatus.INACTIVE, WINDOW);
     }
 
     private static Branch rejected() {
-        return new Branch(1L, "Norte", address(), 10L, VerificationStatus.REJECTED, ActiveStatus.INACTIVE);
+        return new Branch(1L, "Norte", address(), 10L, VerificationStatus.REJECTED, ActiveStatus.INACTIVE, WINDOW);
     }
 
     // ─── Branch.create() ────────────────────────────────────────────────────────
 
     @Test
     void create_siempreNacePendingInactive() {
-        Branch branch = Branch.create("Norte", address(), 10L);
+        Branch branch = Branch.create("Norte", address(), 10L, WINDOW);
 
         assertThat(branch.id()).isNull();
         assertThat(branch.verificationStatus()).isEqualTo(VerificationStatus.PENDING);
         assertThat(branch.activeStatus()).isEqualTo(ActiveStatus.INACTIVE);
         assertThat(branch.name()).isEqualTo("Norte");
         assertThat(branch.clubId()).isEqualTo(10L);
+        assertThat(branch.cancellationWindowHours()).isEqualTo(WINDOW);
+    }
+
+    @Test
+    void create_ventanaCeroLanzaInvalidCancellationWindow() {
+        assertThatThrownBy(() -> Branch.create("Norte", address(), 10L, 0))
+                .isInstanceOf(InvalidCancellationWindowException.class);
+    }
+
+    @Test
+    void create_ventanaNegativaLanzaInvalidCancellationWindow() {
+        assertThatThrownBy(() -> Branch.create("Norte", address(), 10L, -1))
+                .isInstanceOf(InvalidCancellationWindowException.class);
     }
 
     // ─── approve() ──────────────────────────────────────────────────────────────
@@ -62,15 +79,15 @@ class BranchDomainTest {
     }
 
     @Test
-    void approve_aprobadaLanzaIllegalState() {
+    void approve_aprobadaLanzaInvalidStatusTransition() {
         assertThatThrownBy(() -> approved().approve())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidStatusTransitionException.class);
     }
 
     @Test
-    void approve_rechazadaLanzaIllegalState() {
+    void approve_rechazadaLanzaInvalidStatusTransition() {
         assertThatThrownBy(() -> rejected().approve())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidStatusTransitionException.class);
     }
 
     // ─── reject() ───────────────────────────────────────────────────────────────
@@ -84,9 +101,9 @@ class BranchDomainTest {
     }
 
     @Test
-    void reject_aprobadaLanzaIllegalState() {
+    void reject_aprobadaLanzaInvalidStatusTransition() {
         assertThatThrownBy(() -> approved().reject())
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(InvalidStatusTransitionException.class);
     }
 
     // ─── activate() ─────────────────────────────────────────────────────────────
@@ -138,7 +155,7 @@ class BranchDomainTest {
     @Test
     void update_mismaDireccionMantienEstado() {
         Branch original = approved();
-        Branch result = original.update("Sucursal Sur", address());
+        Branch result = original.update("Sucursal Sur", address(), WINDOW);
 
         assertThat(result.name()).isEqualTo("Sucursal Sur");
         assertThat(result.verificationStatus()).isEqualTo(VerificationStatus.APPROVED);
@@ -148,7 +165,7 @@ class BranchDomainTest {
     @Test
     void update_diferenteDireccionReiniciaPendingInactive() {
         Branch original = approved();
-        Branch result = original.update("Sucursal Sur", otherAddress());
+        Branch result = original.update("Sucursal Sur", otherAddress(), WINDOW);
 
         assertThat(result.verificationStatus()).isEqualTo(VerificationStatus.PENDING);
         assertThat(result.activeStatus()).isEqualTo(ActiveStatus.INACTIVE);
@@ -158,17 +175,25 @@ class BranchDomainTest {
     @Test
     void update_preservaIdYClubId() {
         Branch original = approved();
-        Branch result = original.update("Nuevo nombre", address());
+        Branch result = original.update("Nuevo nombre", address(), WINDOW);
 
         assertThat(result.id()).isEqualTo(original.id());
         assertThat(result.clubId()).isEqualTo(original.clubId());
+    }
+
+    @Test
+    void update_actualizaLaVentanaDeCancelacion() {
+        Branch original = approved();
+        Branch result = original.update(original.name(), original.address(), 24);
+
+        assertThat(result.cancellationWindowHours()).isEqualTo(24);
     }
 
     // ─── withId() ───────────────────────────────────────────────────────────────
 
     @Test
     void withId_preservaTodosLosCamposExceptoId() {
-        Branch original = Branch.create("Norte", address(), 10L);
+        Branch original = Branch.create("Norte", address(), 10L, WINDOW);
         Branch result = original.withId(99L);
 
         assertThat(result.id()).isEqualTo(99L);
@@ -177,6 +202,7 @@ class BranchDomainTest {
         assertThat(result.clubId()).isEqualTo(original.clubId());
         assertThat(result.verificationStatus()).isEqualTo(original.verificationStatus());
         assertThat(result.activeStatus()).isEqualTo(original.activeStatus());
+        assertThat(result.cancellationWindowHours()).isEqualTo(original.cancellationWindowHours());
     }
 
     // ─── Queries de estado ───────────────────────────────────────────────────────

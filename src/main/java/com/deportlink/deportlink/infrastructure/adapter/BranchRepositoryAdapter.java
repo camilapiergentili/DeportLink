@@ -10,6 +10,8 @@ import com.deportlink.deportlink.model.entity.AddressEntity;
 import com.deportlink.deportlink.model.entity.BranchEntity;
 import com.deportlink.deportlink.persistence.repository.BranchRepository;
 import com.deportlink.deportlink.persistence.repository.ClubRepository;
+import com.deportlink.deportlink.persistence.repository.CourtRepository;
+import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +24,8 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
 
     private final BranchRepository branchRepository;
     private final ClubRepository clubRepository;
+    private final ReservationRepository reservationRepository;
+    private final CourtRepository courtRepository;
 
     @Override
     public Branch save(Branch branch) {
@@ -34,6 +38,11 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
     @Override
     public Optional<Branch> findById(Long id) {
         return branchRepository.findById(id).map(this::toDomain);
+    }
+
+    @Override
+    public void lockCourtsForUpdate(Long branchId) {
+        courtRepository.findByBranchIdForUpdate(branchId);
     }
 
     @Override
@@ -52,6 +61,11 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
     @Override
     public void delete(Long id) {
         branchRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean hasReservations(Long branchId) {
+        return reservationRepository.existsByCourt_Branch_Id(branchId);
     }
 
     @Override
@@ -98,6 +112,7 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
         entity.setClub(clubRepository.getReferenceById(branch.clubId()));
         entity.setVerificationStatus(branch.verificationStatus());
         entity.setActiveStatus(branch.activeStatus());
+        entity.setCancellationWindowHours(branch.cancellationWindowHours());
         return entity;
     }
 
@@ -107,15 +122,9 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
         entity.setName(branch.name());
         entity.setVerificationStatus(branch.verificationStatus());
         entity.setActiveStatus(branch.activeStatus());
+        entity.setCancellationWindowHours(branch.cancellationWindowHours());
         // Update address in-place to preserve the AddressEntity row
-        AddressEntity addr = entity.getAddress();
-        addr.setStreetName(branch.address().streetName());
-        addr.setNumber(branch.address().number());
-        addr.setCity(branch.address().city());
-        addr.setProvince(branch.address().province());
-        addr.setPostalCode(branch.address().postalCode());
-        addr.setLatitude(branch.address().latitude());
-        addr.setLongitude(branch.address().longitude());
+        applyAddressFields(entity.getAddress(), branch.address());
         return entity;
     }
 
@@ -134,12 +143,16 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
                 address,
                 entity.getClub().getId(),
                 entity.getVerificationStatus(),
-                entity.getActiveStatus()
+                entity.getActiveStatus(),
+                entity.getCancellationWindowHours()
         );
     }
 
     private AddressEntity toAddressEntity(Address address) {
-        AddressEntity entity = new AddressEntity();
+        return applyAddressFields(new AddressEntity(), address);
+    }
+
+    private AddressEntity applyAddressFields(AddressEntity entity, Address address) {
         entity.setStreetName(address.streetName());
         entity.setNumber(address.number());
         entity.setCity(address.city());

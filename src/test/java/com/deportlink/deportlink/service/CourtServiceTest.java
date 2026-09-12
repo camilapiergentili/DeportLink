@@ -60,6 +60,7 @@ public class CourtServiceTest {
         BranchEntity branch = new BranchEntity();
         branch.setClub(club);
         branch.setName("Test Branch");
+        branch.setCancellationWindowHours(12);
         branch = branchRepository.save(branch);
 
         testCourt = new CourtEntity();

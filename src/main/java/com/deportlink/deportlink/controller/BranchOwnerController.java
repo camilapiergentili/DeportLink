@@ -37,7 +37,8 @@ public class BranchOwnerController {
         Branch branch = createBranchUseCase.execute(
                 branchDto.getName(),
                 addressMapper.toDomain(branchDto.getAddressRequestDto()),
-                branchDto.getIdClub()
+                branchDto.getIdClub(),
+                branchDto.getCancellationWindowHours()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(branchMapper.toResponse(branch));
     }
@@ -59,7 +60,9 @@ public class BranchOwnerController {
     """)
     public ResponseEntity<Object> update(@PathVariable long id,
                                          @Valid @RequestBody BranchRequestDto branchDto) {
-        updateBranchUseCase.execute(id, branchDto.getName(), addressMapper.toDomain(branchDto.getAddressRequestDto()));
+        updateBranchUseCase.execute(id, branchDto.getName(),
+                addressMapper.toDomain(branchDto.getAddressRequestDto()),
+                branchDto.getCancellationWindowHours());
         return ResponseEntity.ok(Map.of("message", "Sucursal actualizada con éxito"));
     }
 

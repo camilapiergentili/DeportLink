@@ -76,7 +76,7 @@ class BranchControllerTest {
 
     private static Branch branch() {
         Address addr = new Address("Av. Corrientes", 1234, "CABA", "Buenos Aires", 1043, -34.6, -58.4);
-        return new Branch(1L, "Norte", addr, 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE);
+        return new Branch(1L, "Norte", addr, 10L, VerificationStatus.APPROVED, ActiveStatus.ACTIVE, 12);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
