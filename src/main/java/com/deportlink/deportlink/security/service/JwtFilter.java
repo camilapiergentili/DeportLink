@@ -24,6 +24,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private JwtUtil jwtUtil;
     private UserDetailsService userDetailsService;
+    private com.deportlink.deportlink.security.advice.JwtAuthenticationEntryPoint entryPoint;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -50,9 +51,9 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             // El token es inválido — respondemos 401 directamente
-            response.setContentType("application/json");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\": \"Token inválido o expirado\"}");
+            SecurityContextHolder.clearContext();
+            entryPoint.commence(request, response,
+                    new org.springframework.security.authentication.BadCredentialsException("Token inválido o expirado"));
             return; // Cortamos acá, no seguimos con el filter
         }
 
