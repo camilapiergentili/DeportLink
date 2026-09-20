@@ -22,6 +22,14 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler({org.springframework.http.converter.HttpMessageNotReadableException.class,
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
+            org.springframework.web.method.annotation.HandlerMethodValidationException.class})
+    public ResponseEntity<ErrorResponse> handleMalformedRequest(Exception ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Bad Request",
+                "Los datos o parámetros de la solicitud no son válidos", request);
+    }
+
     // Único punto de traducción para TODAS las excepciones de negocio (~35 y creciendo): cada
     // una declara su propio HttpStatus en su constructor (ver BusinessException). Agregar una
     // excepción de negocio nueva no requiere tocar esta clase — principio abierto/cerrado. Antes
@@ -54,7 +62,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        log.error("Validation failed: {}", ex.getMessage());
+        log.warn("Validation failed on {}: {} fields", request.getRequestURI(), ex.getBindingResult().getFieldErrorCount());
 
         Map<String, String> validationErrors = new LinkedHashMap<>();
 
