@@ -1,0 +1,53 @@
+name: CI
+
+# Corre en cada Pull Request hacia main/development y en cada push a esas ramas
+# (el push cubre el momento posterior al merge: confirma que la rama integrada sigue verde).
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+# Si llegan commits nuevos a la misma rama mientras hay una corrida en curso,
+# la vieja se cancela: solo importa el resultado del último commit.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Principio de mínimo privilegio: este job solo necesita leer el código.
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven # cachea ~/.m2 entre corridas para no re-descargar dependencias
+
+      # ubuntu-latest trae Docker, así que los tests con Testcontainers (concurrencia,
+      # constraints de MySQL real) corren acá aunque no puedan correr en algunas máquinas locales.
+      # `verify` = compilar + tests + reporte de JaCoCo (ya configurado en el pom).
+      - name: Build and run tests
+        run: ./mvnw -B -ntp clean verify
+
+      - name: Upload test and coverage reports
+        if: always() # también cuando fallan los tests: es cuando más se necesitan
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            target/surefire-reports/
+            target/site/jacoco/
+          if-no-files-found: ignore
+          retention-days: 14
