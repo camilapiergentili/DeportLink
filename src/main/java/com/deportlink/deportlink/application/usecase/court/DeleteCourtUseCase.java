@@ -1,6 +1,7 @@
 package com.deportlink.deportlink.application.usecase.court;
 
 import com.deportlink.deportlink.domain.port.out.CourtRepositoryPort;
+import com.deportlink.deportlink.exception.CourtHasClassSlotsException;
 import com.deportlink.deportlink.exception.CourtHasReservationsException;
 import com.deportlink.deportlink.exception.CourtNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,13 @@ public class DeleteCourtUseCase {
         if (courtRepository.hasReservations(id)) {
             throw new CourtHasReservationsException(
                     "No se puede eliminar la cancha: tiene reservas asociadas");
+        }
+
+        // ClassSlot tampoco es historial que deba arrastrarse en cascada — mismo criterio que
+        // Reservation arriba (ver Etapa 1C, sección 5).
+        if (courtRepository.hasClassSlots(id)) {
+            throw new CourtHasClassSlotsException(
+                    "No se puede eliminar la cancha: tiene horarios de clase asociados");
         }
 
         courtRepository.delete(id);

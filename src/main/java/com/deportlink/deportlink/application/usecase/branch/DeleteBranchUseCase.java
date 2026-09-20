@@ -1,6 +1,7 @@
 package com.deportlink.deportlink.application.usecase.branch;
 
 import com.deportlink.deportlink.domain.port.out.BranchRepositoryPort;
+import com.deportlink.deportlink.exception.BranchHasClassSlotsException;
 import com.deportlink.deportlink.exception.BranchHasReservationsException;
 import com.deportlink.deportlink.exception.BranchNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,12 @@ public class DeleteBranchUseCase {
         if (branchRepository.hasReservations(id)) {
             throw new BranchHasReservationsException(
                     "No se puede eliminar la sucursal: ella o alguna de sus canchas tiene reservas asociadas");
+        }
+
+        // Mismo criterio que hasReservations arriba, extendido a ClassSlot (Etapa 1C, sección 5).
+        if (branchRepository.hasClassSlots(id)) {
+            throw new BranchHasClassSlotsException(
+                    "No se puede eliminar la sucursal: alguna de sus canchas tiene horarios de clase asociados");
         }
 
         branchRepository.delete(id);
