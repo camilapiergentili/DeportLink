@@ -99,6 +99,22 @@ class PlayerControllerTest {
     }
 
     @Test
+    void register_passwordSuperaLimiteDeBytesDelEncoder_retorna400YNoRegistraAlJugador() throws Exception {
+        // 73 bytes ASCII: supera el límite de 72 bytes que BCrypt acepta (ver N1,
+        // docs/software-review-2026-09-11.md). Antes del fix, esto llegaba a
+        // passwordEncoder.encode() y explotaba con IllegalArgumentException -> 500.
+        String tooLongPassword = "a".repeat(73);
+
+        mockMvc.perform(post("/api/players")
+                        .contentType("application/json")
+                        .content(registerBody(tooLongPassword, tooLongPassword)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+
+        verifyNoInteractions(registerPlayerUseCase);
+    }
+
+    @Test
     void register_passwordsIguales_registraAlJugador() throws Exception {
         Player saved = new Player(1L, "New", "Player", "newplayer@example.com",
                 "1234567890", "encoded-irrelevant", Set.of());
