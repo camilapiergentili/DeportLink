@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class OwnerNotBelongsToClubException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class OwnerNotBelongsToClubException extends BusinessException {
     public OwnerNotBelongsToClubException(String message) {
-        super(message);
+        super(message, HttpStatus.FORBIDDEN);
     }
 }

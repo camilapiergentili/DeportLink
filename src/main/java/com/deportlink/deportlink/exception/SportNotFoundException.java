@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class SportNotFoundException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class SportNotFoundException extends BusinessException {
     public SportNotFoundException(String message) {
-        super(message);
+        super(message, HttpStatus.NOT_FOUND);
     }
 }

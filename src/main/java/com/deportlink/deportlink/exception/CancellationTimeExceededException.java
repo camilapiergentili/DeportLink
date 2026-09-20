@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class CancellationTimeExceededException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class CancellationTimeExceededException extends BusinessException {
     public CancellationTimeExceededException(String message) {
-        super(message);
+        super(message, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 }

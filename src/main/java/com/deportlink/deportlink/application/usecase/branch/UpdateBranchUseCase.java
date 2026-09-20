@@ -16,7 +16,7 @@ public class UpdateBranchUseCase {
 
     private final BranchRepositoryPort branchRepository;
 
-    public Branch execute(Long id, String name, Address newAddress) {
+    public Branch execute(Long id, String name, Address newAddress, int cancellationWindowHours) {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new BranchNotFoundException("Sucursal no encontrada"));
         if (!branch.name().equalsIgnoreCase(name)
@@ -27,6 +27,6 @@ public class UpdateBranchUseCase {
                 && branchRepository.existsByAddressAndClub(newAddress, branch.clubId())) {
             throw new BranchAlreadyExistsException("Ya existe una sucursal en esta dirección");
         }
-        return branchRepository.save(branch.update(name, newAddress));
+        return branchRepository.save(branch.update(name, newAddress, cancellationWindowHours));
     }
 }

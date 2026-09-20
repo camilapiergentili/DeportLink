@@ -10,6 +10,7 @@ import com.deportlink.deportlink.exception.CourtNotFoundException;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.persistence.repository.BranchRepository;
 import com.deportlink.deportlink.persistence.repository.CourtRepository;
+import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import com.deportlink.deportlink.persistence.repository.SportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +26,7 @@ public class CourtRepositoryAdapter implements CourtRepositoryPort {
     private final CourtRepository courtRepository;
     private final BranchRepository branchRepository;
     private final SportRepository sportRepository;
+    private final ReservationRepository reservationRepository;
 
     @Override
     public Court save(Court court) {
@@ -40,8 +42,18 @@ public class CourtRepositoryAdapter implements CourtRepositoryPort {
     }
 
     @Override
+    public Optional<Court> findByIdForUpdate(Long id) {
+        return courtRepository.findByIdForUpdate(id).map(this::toDomain);
+    }
+
+    @Override
     public void delete(Long id) {
         courtRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean hasReservations(Long courtId) {
+        return reservationRepository.existsByCourt_Id(courtId);
     }
 
     @Override

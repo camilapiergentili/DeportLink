@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class AddressNotFoundException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class AddressNotFoundException extends BusinessException {
     public AddressNotFoundException(String message) {
-        super(message);
+        super(message, HttpStatus.NOT_FOUND);
     }
 }

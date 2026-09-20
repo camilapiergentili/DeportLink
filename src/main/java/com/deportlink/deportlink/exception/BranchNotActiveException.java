@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class BranchNotActiveException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class BranchNotActiveException extends BusinessException {
     public BranchNotActiveException(String message) {
-        super(message);
+        super(message, HttpStatus.FORBIDDEN);
     }
 }

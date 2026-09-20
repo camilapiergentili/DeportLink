@@ -27,8 +27,6 @@ public record Reservation(
         Ticket ticket
 ) {
 
-    private static final int CANCELLATION_WINDOW_HOURS = 12;
-
     /**
      * Crea una reserva nueva. El dominio garantiza que la fecha sea futura.
      * El id es null hasta que la infraestructura persiste y lo asigna.
@@ -43,18 +41,26 @@ public record Reservation(
     /**
      * Cancela la reserva. El dominio verifica:
      * 1. Que el estado permita cancelación.
-     * 2. Que no hayan pasado menos de 12 horas.
+     * 2. Que no hayan pasado menos de {@code cancellationWindowHours} horas.
+     * <p>
+     * La ventana es configurable por sucursal (Branch) — este método no la conoce ni la
+     * resuelve, la recibe ya resuelta. Reservation es su propio agregado y no depende de
+     * Branch; quien la llama (CancelReservationUseCase) resuelve el valor VIGENTE de la
+     * sucursal de la cancha de esta reserva y lo pasa acá, cada vez — nunca se guarda un
+     * valor histórico en la Reservation misma.
      *
      * @param now momento actual — inyectado para facilitar el testing sin mocks de reloj.
+     * @param cancellationWindowHours ventana de cancelación vigente de la sucursal, en horas.
      */
-    public Reservation cancel(LocalDateTime now) {
+    public Reservation cancel(LocalDateTime now, int cancellationWindowHours) {
         if (status == StatusReservation.CANCELADO || status == StatusReservation.FINALIZADO) {
             throw new InvalidStatusTransitionException("La reserva no puede cancelarse en su estado actual");
         }
         long hoursUntil = ChronoUnit.HOURS.between(now, timeSlot.toDateTime());
-        if (hoursUntil < CANCELLATION_WINDOW_HOURS) {
+        if (hoursUntil < cancellationWindowHours) {
             throw new CancellationTimeExceededException(
-                    "El turno no puede cancelarse con menos de 12 horas de anticipación");
+                    "El turno no puede cancelarse con menos de " + cancellationWindowHours
+                            + " horas de anticipación");
         }
         return withStatus(StatusReservation.CANCELADO);
     }

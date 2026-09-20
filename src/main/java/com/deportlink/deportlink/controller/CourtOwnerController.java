@@ -4,6 +4,7 @@ import com.deportlink.deportlink.application.usecase.court.*;
 import com.deportlink.deportlink.mapper.dto.CourtMapper;
 import com.deportlink.deportlink.domain.model.Court;
 import com.deportlink.deportlink.dto.request.CourtRequestDto;
+import com.deportlink.deportlink.dto.request.MoveCourtBranchRequestDto;
 import com.deportlink.deportlink.dto.response.CourtResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class CourtOwnerController {
     private final DeleteCourtUseCase deleteCourtUseCase;
     private final ActivateCourtUseCase activateCourtUseCase;
     private final DeactivateCourtUseCase deactivateCourtUseCase;
+    private final MoveCourtToBranchUseCase moveCourtToBranchUseCase;
     private final CourtMapper courtMapper;
 
     @PostMapping
@@ -53,14 +55,26 @@ public class CourtOwnerController {
     @PutMapping("/{idCourt}")
     @PreAuthorize("""
         hasRole('ADMIN')
-        or (hasRole('OWNER')
-            and @courtAuthorization.isOwnerOfCourt(#idCourt, authentication)
-            and @branchAuthorization.isOwnerOfBranch(#courtDto.idBranch, authentication))
+        or (hasRole('OWNER') and @courtAuthorization.isOwnerOfCourt(#idCourt, authentication))
     """)
     public ResponseEntity<CourtResponseDto> update(
             @PathVariable long idCourt,
             @Valid @RequestBody CourtRequestDto courtDto) {
         Court court = updateCourtUseCase.execute(idCourt, courtDto.getName(), courtDto.getIdSport());
+        return ResponseEntity.ok(courtMapper.toResponse(court));
+    }
+
+    @PatchMapping("/{idCourt}/branch")
+    @PreAuthorize("""
+        hasRole('ADMIN')
+        or (hasRole('OWNER')
+            and @courtAuthorization.isOwnerOfCourt(#idCourt, authentication)
+            and @branchAuthorization.isOwnerOfBranch(#moveDto.newBranchId, authentication))
+    """)
+    public ResponseEntity<CourtResponseDto> moveToBranch(
+            @PathVariable long idCourt,
+            @Valid @RequestBody MoveCourtBranchRequestDto moveDto) {
+        Court court = moveCourtToBranchUseCase.execute(idCourt, moveDto.getNewBranchId());
         return ResponseEntity.ok(courtMapper.toResponse(court));
     }
 

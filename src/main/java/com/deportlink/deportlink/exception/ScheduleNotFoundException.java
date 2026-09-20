@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class ScheduleNotFoundException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class ScheduleNotFoundException extends BusinessException {
     public ScheduleNotFoundException(String message) {
-        super(message);
+        super(message, HttpStatus.NOT_FOUND);
     }
 }

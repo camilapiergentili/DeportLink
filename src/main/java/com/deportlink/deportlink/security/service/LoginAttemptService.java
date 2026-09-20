@@ -15,6 +15,11 @@ public class LoginAttemptService implements LoginAttemptPort {
 
     private record AttemptRecord(int count, Instant lockedUntil) {}
 
+    // Estado en memoria del proceso — funciona correctamente con una sola instancia (la configuración
+    // actual del despliegue en Railway). Si en el futuro se activan Replicas en Railway (más de una
+    // instancia), este contador deja de ser efectivo porque cada instancia lleva su propio conteo por
+    // separado — antes de subir réplicas, migrar a un store compartido (Redis o una tabla). Ver
+    // auditoría del 20/08/2026 para el detalle del riesgo.
     private final ConcurrentHashMap<String, AttemptRecord> attempts = new ConcurrentHashMap<>();
 
     public boolean isBlocked(String ip) {

@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class CourtNotFoundException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class CourtNotFoundException extends BusinessException {
     public CourtNotFoundException(String message) {
-        super(message);
+        super(message, HttpStatus.NOT_FOUND);
     }
 }

@@ -11,7 +11,19 @@ public interface CourtRepositoryPort {
 
     Optional<Court> findById(Long id);
 
+    /**
+     * Igual que findById, pero adquiere un lock pesimista sobre la cancha. Debe ser la
+     * PRIMERA lectura de la transacción en los flujos que la usan (ver DeleteCourtUseCase) —
+     * si no, el snapshot de REPEATABLE READ de MySQL queda fijado antes del lock, y un chequeo
+     * posterior (hasReservations) puede seguir viendo datos anteriores al commit de una
+     * reserva confirmándose en paralelo. Mismo mecanismo que BookReservationUseCase.
+     */
+    Optional<Court> findByIdForUpdate(Long id);
+
     void delete(Long id);
+
+    /** True si la cancha tiene alguna reserva asociada (cualquier estado) — bloquea el borrado. */
+    boolean hasReservations(Long courtId);
 
     boolean existsByNameAndBranchAndSport(String name, Long branchId, Long sportId);
 

@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class InvalidTimeRangeException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class InvalidTimeRangeException extends BusinessException {
     public InvalidTimeRangeException(String message) {
-        super(message);
+        super(message, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 }

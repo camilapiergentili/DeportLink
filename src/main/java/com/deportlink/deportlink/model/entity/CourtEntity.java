@@ -48,7 +48,13 @@ public class CourtEntity {
     @OneToMany(mappedBy = "court", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ScheduleEntity> schedules = new HashSet<>();
 
-    @OneToMany(mappedBy = "court", cascade = CascadeType.ALL, orphanRemoval = true)
+    // Sin cascade ni orphanRemoval: Reservation representa historial y no debe
+    // eliminarse como efecto secundario de borrar una Court. DeleteCourtUseCase
+    // además bloquea el borrado si existe alguna reserva (ver hasReservations());
+    // esto es la segunda línea de defensa — si ese guard se saltara alguna vez,
+    // el DELETE de la cancha chocaría con la FK fk_reservation_court (RESTRICT)
+    // en vez de arrastrar las reservas silenciosamente.
+    @OneToMany(mappedBy = "court")
     private Set<ReservationEntity> reservations = new HashSet<>();
 
 }

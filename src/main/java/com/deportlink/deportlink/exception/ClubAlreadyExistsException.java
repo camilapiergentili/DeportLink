@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class ClubAlreadyExistsException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class ClubAlreadyExistsException extends BusinessException {
     public ClubAlreadyExistsException(String message) {
-        super(message);
+        super(message, HttpStatus.CONFLICT);
     }
 }

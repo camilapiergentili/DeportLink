@@ -44,6 +44,9 @@ public class BranchEntity {
     @Enumerated(EnumType.STRING)
     private ActiveStatus activeStatus;
 
+    @Column(nullable = false)
+    private int cancellationWindowHours;
+
     @OneToMany(mappedBy = "branch", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CourtEntity> courts = new ArrayList<>();
 

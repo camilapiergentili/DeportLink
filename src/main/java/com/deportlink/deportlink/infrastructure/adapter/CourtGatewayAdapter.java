@@ -28,6 +28,11 @@ public class CourtGatewayAdapter implements CourtGateway {
         return courtRepository.findByIdForUpdateWithRelations(id).map(this::toSnapshot);
     }
 
+    @Override
+    public Optional<Long> findCourtIdByReservationForUpdate(Long reservationId) {
+        return courtRepository.findByReservationIdForUpdate(reservationId).map(CourtEntity::getId);
+    }
+
     private CourtSnapshot toSnapshot(CourtEntity entity) {
         return new CourtSnapshot(
                 entity.getId(),
@@ -35,7 +40,8 @@ public class CourtGatewayAdapter implements CourtGateway {
                 entity.getName(),
                 entity.getSport().getNameSport(),
                 entity.getBranch().getName(),
-                formatAddress(entity.getBranch().getAddress())
+                formatAddress(entity.getBranch().getAddress()),
+                entity.getBranch().getCancellationWindowHours()
         );
     }
 

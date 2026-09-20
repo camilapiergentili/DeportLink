@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class NegativePriceException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class NegativePriceException extends BusinessException {
     public NegativePriceException(String message) {
-        super(message);
+        super(message, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 }

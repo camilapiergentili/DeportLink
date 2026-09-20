@@ -82,8 +82,28 @@ public class PlayerServiceTest {
 
     @Test
     public void testDeletePlayer_Success() {
+        // P0.1: el Player no se borra físicamente — se anonimiza, porque Reservation/Ticket
+        // dependen de su id y deben sobrevivir. Ver PlayerRepositoryAdapter.delete().
+        String originalEmail = testPlayer.email();
+        String originalPassword = playerRepository.findById(testPlayer.id()).orElseThrow().getPassword();
+
         deletePlayerUseCase.execute(testPlayer.id());
 
-        assertTrue(playerRepository.findById(testPlayer.id()).isEmpty());
+        var afterwards = playerRepository.findById(testPlayer.id());
+
+        // El Player sigue existiendo físicamente — no se elimina la fila.
+        assertTrue(afterwards.isPresent(), "El Player debe seguir existiendo físicamente (anonimizado, no eliminado)");
+
+        // El email original deja de estar asociado a ningún Player — no sirve para login.
+        assertNotEquals(originalEmail, afterwards.get().getEmail());
+        assertTrue(playerRepository.findByEmail(originalEmail).isEmpty(),
+                "El email original no debe resolver a ningún usuario después de la anonimización");
+
+        // Los campos identificables quedaron anonimizados según la implementación actual.
+        assertEquals("Usuario", afterwards.get().getFirstName());
+        assertEquals("eliminado", afterwards.get().getLastName());
+        assertNull(afterwards.get().getPhone());
+        assertNotEquals(originalPassword, afterwards.get().getPassword(),
+                "La contraseña debe reemplazarse por una aleatoria e inutilizable");
     }
 }

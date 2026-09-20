@@ -37,6 +37,7 @@ class CreateBranchUseCaseTest {
     // ─── Helpers ────────────────────────────────────────────────────────────────
 
     private static final Long CLUB_ID = 10L;
+    private static final int WINDOW = 12;
 
     private static Address address() {
         return new Address("Av. Corrientes", 1234, "CABA", "Buenos Aires", 1043, -34.603, -58.381);
@@ -62,14 +63,14 @@ class CreateBranchUseCaseTest {
     @Test
     void execute_creaSuccursalEnClubAprobado() {
         Address addr = address();
-        Branch saved = new Branch(1L, "Norte", addr, CLUB_ID, VerificationStatus.PENDING, ActiveStatus.INACTIVE);
+        Branch saved = new Branch(1L, "Norte", addr, CLUB_ID, VerificationStatus.PENDING, ActiveStatus.INACTIVE, WINDOW);
 
         when(clubRepository.findById(CLUB_ID)).thenReturn(Optional.of(approvedClub()));
         when(branchRepository.existsByNameIgnoreCaseAndClub("Norte", CLUB_ID)).thenReturn(false);
         when(branchRepository.existsByAddressAndClub(addr, CLUB_ID)).thenReturn(false);
         when(branchRepository.save(any())).thenReturn(saved);
 
-        Branch result = useCase.execute("Norte", addr, CLUB_ID);
+        Branch result = useCase.execute("Norte", addr, CLUB_ID, WINDOW);
 
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.name()).isEqualTo("Norte");
@@ -80,14 +81,14 @@ class CreateBranchUseCaseTest {
     void execute_sucursalGuardadaConEstadoPendingInactive() {
         Address addr = address();
         ArgumentCaptor<Branch> captor = ArgumentCaptor.forClass(Branch.class);
-        Branch saved = new Branch(1L, "Norte", addr, CLUB_ID, VerificationStatus.PENDING, ActiveStatus.INACTIVE);
+        Branch saved = new Branch(1L, "Norte", addr, CLUB_ID, VerificationStatus.PENDING, ActiveStatus.INACTIVE, WINDOW);
 
         when(clubRepository.findById(CLUB_ID)).thenReturn(Optional.of(approvedClub()));
         when(branchRepository.existsByNameIgnoreCaseAndClub(any(), any())).thenReturn(false);
         when(branchRepository.existsByAddressAndClub(any(), any())).thenReturn(false);
         when(branchRepository.save(captor.capture())).thenReturn(saved);
 
-        useCase.execute("Norte", addr, CLUB_ID);
+        useCase.execute("Norte", addr, CLUB_ID, WINDOW);
 
         Branch branchPasadaAlRepo = captor.getValue();
         assertThat(branchPasadaAlRepo.id()).isNull();
@@ -101,7 +102,7 @@ class CreateBranchUseCaseTest {
     void execute_clubNoExisteLanzaClubNotFound() {
         when(clubRepository.findById(CLUB_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID))
+        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID, WINDOW))
                 .isInstanceOf(ClubNotFoundException.class);
 
         verify(branchRepository, never()).save(any());
@@ -111,7 +112,7 @@ class CreateBranchUseCaseTest {
     void execute_clubPendienteLanzaClubNotApproved() {
         when(clubRepository.findById(CLUB_ID)).thenReturn(Optional.of(pendingClub()));
 
-        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID))
+        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID, WINDOW))
                 .isInstanceOf(ClubNotApprovedException.class);
 
         verify(branchRepository, never()).save(any());
@@ -121,7 +122,7 @@ class CreateBranchUseCaseTest {
     void execute_clubRechazadoLanzaClubNotApproved() {
         when(clubRepository.findById(CLUB_ID)).thenReturn(Optional.of(rejectedClub()));
 
-        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID))
+        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID, WINDOW))
                 .isInstanceOf(ClubNotApprovedException.class);
     }
 
@@ -130,7 +131,7 @@ class CreateBranchUseCaseTest {
         when(clubRepository.findById(CLUB_ID)).thenReturn(Optional.of(approvedClub()));
         when(branchRepository.existsByNameIgnoreCaseAndClub("Norte", CLUB_ID)).thenReturn(true);
 
-        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID))
+        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID, WINDOW))
                 .isInstanceOf(BranchAlreadyExistsException.class)
                 .hasMessageContaining("Norte");
 
@@ -145,7 +146,7 @@ class CreateBranchUseCaseTest {
         when(branchRepository.existsByNameIgnoreCaseAndClub("Norte", CLUB_ID)).thenReturn(false);
         when(branchRepository.existsByAddressAndClub(addr, CLUB_ID)).thenReturn(true);
 
-        assertThatThrownBy(() -> useCase.execute("Norte", addr, CLUB_ID))
+        assertThatThrownBy(() -> useCase.execute("Norte", addr, CLUB_ID, WINDOW))
                 .isInstanceOf(BranchAlreadyExistsException.class)
                 .hasMessageContaining("dirección");
 
@@ -157,7 +158,7 @@ class CreateBranchUseCaseTest {
         when(clubRepository.findById(CLUB_ID)).thenReturn(Optional.of(approvedClub()));
         when(branchRepository.existsByNameIgnoreCaseAndClub("Norte", CLUB_ID)).thenReturn(true);
 
-        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID))
+        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID, WINDOW))
                 .isInstanceOf(BranchAlreadyExistsException.class);
 
         // El short-circuit del nombre evita la segunda query
@@ -170,7 +171,7 @@ class CreateBranchUseCaseTest {
     void execute_siempreVerificaExistenciaDelClubPrimero() {
         when(clubRepository.findById(CLUB_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID))
+        assertThatThrownBy(() -> useCase.execute("Norte", address(), CLUB_ID, WINDOW))
                 .isInstanceOf(ClubNotFoundException.class);
 
         // Nunca llega a consultar el repositorio de sucursales

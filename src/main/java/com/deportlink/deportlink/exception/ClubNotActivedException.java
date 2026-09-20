@@ -1,7 +1,9 @@
 package com.deportlink.deportlink.exception;
 
-public class ClubNotActivedException extends RuntimeException {
+import org.springframework.http.HttpStatus;
+
+public class ClubNotActivedException extends BusinessException {
     public ClubNotActivedException(String message) {
-        super(message);
+        super(message, HttpStatus.FORBIDDEN);
     }
 }

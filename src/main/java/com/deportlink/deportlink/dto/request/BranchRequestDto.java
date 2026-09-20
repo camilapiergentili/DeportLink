@@ -20,4 +20,10 @@ public class BranchRequestDto {
 
     @Positive(message = "El ID del club debe ser mayor a cero")
     private long idClub;
+
+    // Sin default acá a propósito: toda sucursal (nueva o actualizada) debe traer su propio
+    // valor explícitamente — ver V3__add_branch_cancellation_window.sql.
+    @NotNull(message = "La ventana de cancelación es obligatoria")
+    @Positive(message = "La ventana de cancelación debe ser mayor a cero")
+    private Integer cancellationWindowHours;
 }
