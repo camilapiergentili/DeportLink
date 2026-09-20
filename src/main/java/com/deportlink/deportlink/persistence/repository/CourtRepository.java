@@ -140,4 +140,12 @@ public interface CourtRepository extends JpaRepository<CourtEntity, Long> {
     );
 
     List<CourtEntity> findByBranch_IdAndActiveStatus(long branchId, ActiveStatus activeStatus);
+
+    // Deriva y bloquea la Court asociada a un ClassSlot en una sola operación — mismo patrón
+    // exacto que findByReservationIdForUpdate (CourtEntity como raíz del FROM, JOIN hacia la
+    // colección inversa). Ver ClassSlotCourtGateway.findCourtIdByClassSlotForUpdate y
+    // docs/class-management-stage-1c-persistence-design.md, sección 7.2.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT c FROM CourtEntity c JOIN c.classSlots s WHERE s.id = :classSlotId")
+    Optional<CourtEntity> findByClassSlotIdForUpdate(@Param("classSlotId") Long classSlotId);
 }
