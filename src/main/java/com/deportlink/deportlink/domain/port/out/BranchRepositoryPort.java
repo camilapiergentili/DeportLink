@@ -32,6 +32,9 @@ public interface BranchRepositoryPort {
     /** True si la sucursal, o alguna de sus canchas, tiene una reserva asociada — bloquea el borrado. */
     boolean hasReservations(Long branchId);
 
+    /** True si alguna cancha de la sucursal tiene un ClassSlot asociado — bloquea el borrado (Etapa 1C, sección 5). */
+    boolean hasClassSlots(Long branchId);
+
     boolean existsByNameIgnoreCaseAndClub(String name, Long clubId);
 
     boolean existsByAddressAndClub(Address address, Long clubId);

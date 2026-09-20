@@ -25,6 +25,9 @@ public interface CourtRepositoryPort {
     /** True si la cancha tiene alguna reserva asociada (cualquier estado) — bloquea el borrado. */
     boolean hasReservations(Long courtId);
 
+    /** True si la cancha tiene algún ClassSlot asociado — bloquea el borrado (ver Etapa 1C, sección 5). */
+    boolean hasClassSlots(Long courtId);
+
     boolean existsByNameAndBranchAndSport(String name, Long branchId, Long sportId);
 
     /** Canchas ACTIVAS de una sucursal (sin filtrar por estado de sucursal — el use case lo valida). */
