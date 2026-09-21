@@ -1,0 +1,4270 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAPI definition",
+    "version": "v0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost",
+      "description": "Generated server url"
+    }
+  ],
+  "paths": {
+    "/api/schedules/{idSchedule}/court/{idCourt}": {
+      "put": {
+        "tags": [
+          "schedule-controller"
+        ],
+        "operationId": "update",
+        "parameters": [
+          {
+            "name": "idSchedule",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "openingNew",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "closingNew",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "schedule-controller"
+        ],
+        "operationId": "delete",
+        "parameters": [
+          {
+            "name": "idSchedule",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservations/{reservationId}/reschedule": {
+      "put": {
+        "tags": [
+          "reservation-controller"
+        ],
+        "operationId": "reschedule",
+        "parameters": [
+          {
+            "name": "reservationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/players/{id}": {
+      "get": {
+        "tags": [
+          "player-controller"
+        ],
+        "operationId": "getById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerResponseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "player-controller"
+        ],
+        "operationId": "update_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayerRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerResponseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "player-controller"
+        ],
+        "operationId": "delete_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/owners/{id}": {
+      "get": {
+        "tags": [
+          "owner-controller"
+        ],
+        "operationId": "getById_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerResponseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "owner-controller"
+        ],
+        "operationId": "update_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OwnerRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "owner-controller"
+        ],
+        "operationId": "delete_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/instructor/class-slots/{slotId}/reactivate": {
+      "put": {
+        "tags": [
+          "instructor-class-slot-controller"
+        ],
+        "operationId": "reactivate",
+        "parameters": [
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Slot"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/instructor/class-slots/{slotId}/pause": {
+      "put": {
+        "tags": [
+          "instructor-class-slot-controller"
+        ],
+        "operationId": "pause",
+        "parameters": [
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Slot"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/instructor/class-attendances/{attendanceId}/confirm": {
+      "put": {
+        "tags": [
+          "instructor-class-attendance-controller"
+        ],
+        "operationId": "confirm",
+        "parameters": [
+          {
+            "name": "attendanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attendance"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/instructor/class-attendances/{attendanceId}/cancel": {
+      "put": {
+        "tags": [
+          "instructor-class-attendance-controller"
+        ],
+        "operationId": "cancel",
+        "parameters": [
+          {
+            "name": "attendanceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Attendance"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/courts/owner/{idCourt}": {
+      "put": {
+        "tags": [
+          "court-owner-controller"
+        ],
+        "operationId": "update_3",
+        "parameters": [
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourtRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtResponseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "court-owner-controller"
+        ],
+        "operationId": "delete_3",
+        "parameters": [
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clubs/owner/{idClub}": {
+      "put": {
+        "tags": [
+          "club-owner-controller"
+        ],
+        "operationId": "update_4",
+        "parameters": [
+          {
+            "name": "idClub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClubRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "club-owner-controller"
+        ],
+        "operationId": "delete_4",
+        "parameters": [
+          {
+            "name": "idClub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/owner/{id}": {
+      "put": {
+        "tags": [
+          "branch-owner-controller"
+        ],
+        "operationId": "update_5",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BranchRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "branch-owner-controller"
+        ],
+        "operationId": "delete_5",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sports": {
+      "get": {
+        "tags": [
+          "sport-controller"
+        ],
+        "operationId": "getAll",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SportResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "sport-controller"
+        ],
+        "operationId": "create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SportRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SportResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schedules/court/{idCourt}": {
+      "get": {
+        "tags": [
+          "schedule-controller"
+        ],
+        "operationId": "getByCourt",
+        "parameters": [
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScheduleResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "schedule-controller"
+        ],
+        "operationId": "add",
+        "parameters": [
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ScheduleRequestDto"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservations": {
+      "post": {
+        "tags": [
+          "reservation-controller"
+        ],
+        "operationId": "book",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/players": {
+      "post": {
+        "tags": [
+          "player-controller"
+        ],
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayerRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/owners": {
+      "get": {
+        "tags": [
+          "owner-controller"
+        ],
+        "operationId": "getAll_1",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OwnerResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "owner-controller"
+        ],
+        "operationId": "register_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OwnerRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/instructor/player-lookup": {
+      "post": {
+        "tags": [
+          "instructor-lookup-controller"
+        ],
+        "operationId": "player",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayerLookupRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerOption"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/instructor/class-slots": {
+      "get": {
+        "tags": [
+          "instructor-class-slot-controller"
+        ],
+        "operationId": "list",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Slot"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "instructor-class-slot-controller"
+        ],
+        "operationId": "create_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassSlotRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Slot"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/instructor/class-slots/{slotId}/players": {
+      "post": {
+        "tags": [
+          "instructor-class-slot-controller"
+        ],
+        "operationId": "add_1",
+        "parameters": [
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassPlayerRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Enrollment"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/courts/owner": {
+      "post": {
+        "tags": [
+          "court-owner-controller"
+        ],
+        "operationId": "create_2",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourtRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clubs/owner": {
+      "post": {
+        "tags": [
+          "club-owner-controller"
+        ],
+        "operationId": "create_3",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClubRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClubResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clubs/owner/{idClub}/owners": {
+      "post": {
+        "tags": [
+          "club-owner-controller"
+        ],
+        "operationId": "addOwner",
+        "parameters": [
+          {
+            "name": "idClub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OwnerRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/owner": {
+      "post": {
+        "tags": [
+          "branch-owner-controller"
+        ],
+        "operationId": "create_4",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BranchRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "auth-controller"
+        ],
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthenticationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/instructors": {
+      "post": {
+        "tags": [
+          "instructor-admin-controller"
+        ],
+        "operationId": "register_2",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstructorRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/courts/owner/{idCourt}/price": {
+      "patch": {
+        "tags": [
+          "court-owner-controller"
+        ],
+        "operationId": "updatePrice",
+        "parameters": [
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "newPrice",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courts/owner/{idCourt}/deactivate": {
+      "patch": {
+        "tags": [
+          "court-owner-controller"
+        ],
+        "operationId": "deactivate",
+        "parameters": [
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courts/owner/{idCourt}/branch": {
+      "patch": {
+        "tags": [
+          "court-owner-controller"
+        ],
+        "operationId": "moveToBranch",
+        "parameters": [
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveCourtBranchRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courts/owner/{idCourt}/activate": {
+      "patch": {
+        "tags": [
+          "court-owner-controller"
+        ],
+        "operationId": "activate",
+        "parameters": [
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clubs/owner/{idClub}/deactivate": {
+      "patch": {
+        "tags": [
+          "club-owner-controller"
+        ],
+        "operationId": "deactivate_1",
+        "parameters": [
+          {
+            "name": "idClub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clubs/owner/{idClub}/activate": {
+      "patch": {
+        "tags": [
+          "club-owner-controller"
+        ],
+        "operationId": "activate_1",
+        "parameters": [
+          {
+            "name": "idClub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clubs/admin/{idClub}/reject": {
+      "patch": {
+        "tags": [
+          "club-admin-controller"
+        ],
+        "operationId": "reject",
+        "parameters": [
+          {
+            "name": "idClub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clubs/admin/{idClub}/approve": {
+      "patch": {
+        "tags": [
+          "club-admin-controller"
+        ],
+        "operationId": "approve",
+        "parameters": [
+          {
+            "name": "idClub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/owner/{idBranch}/desactivate": {
+      "patch": {
+        "tags": [
+          "branch-owner-controller"
+        ],
+        "operationId": "deactivate_2",
+        "parameters": [
+          {
+            "name": "idBranch",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/owner/{idBranch}/activate": {
+      "patch": {
+        "tags": [
+          "branch-owner-controller"
+        ],
+        "operationId": "activate_2",
+        "parameters": [
+          {
+            "name": "idBranch",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/admin/{id}/reject": {
+      "patch": {
+        "tags": [
+          "branch-admin-controller"
+        ],
+        "operationId": "reject_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/admin/{id}/approve": {
+      "patch": {
+        "tags": [
+          "branch-admin-controller"
+        ],
+        "operationId": "approve_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sports/{idSport}": {
+      "get": {
+        "tags": [
+          "sport-controller"
+        ],
+        "operationId": "getById_2",
+        "parameters": [
+          {
+            "name": "idSport",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SportResponseDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "sport-controller"
+        ],
+        "operationId": "delete_6",
+        "parameters": [
+          {
+            "name": "idSport",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/schedules/court/{idCourt}/day": {
+      "get": {
+        "tags": [
+          "schedule-controller"
+        ],
+        "operationId": "getByDay",
+        "parameters": [
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "day",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservations/player/{playerId}": {
+      "get": {
+        "tags": [
+          "reservation-controller"
+        ],
+        "operationId": "getByPlayer",
+        "parameters": [
+          {
+            "name": "playerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReservationResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reservations/available": {
+      "get": {
+        "tags": [
+          "reservation-controller"
+        ],
+        "operationId": "getAvailableSlots",
+        "parameters": [
+          {
+            "name": "courtId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "day",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/players/my-profile": {
+      "get": {
+        "tags": [
+          "player-controller"
+        ],
+        "operationId": "profilePlayer",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/owners/my-profile": {
+      "get": {
+        "tags": [
+          "owner-controller"
+        ],
+        "operationId": "profileOwner",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OwnerResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "me-controller"
+        ],
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identity"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/instructor/courts": {
+      "get": {
+        "tags": [
+          "instructor-lookup-controller"
+        ],
+        "operationId": "courts",
+        "parameters": [
+          {
+            "name": "branchId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "maximum": 1000000,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtPage"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/instructor/class-slots/{slotId}": {
+      "get": {
+        "tags": [
+          "instructor-class-slot-controller"
+        ],
+        "operationId": "detail",
+        "parameters": [
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlotDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/instructor/class-sessions": {
+      "get": {
+        "tags": [
+          "instructor-class-session-controller"
+        ],
+        "operationId": "list_1",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionSummary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/instructor/class-sessions/{sessionId}": {
+      "get": {
+        "tags": [
+          "instructor-class-session-controller"
+        ],
+        "operationId": "detail_1",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionDetail"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/courts/{idCourt}": {
+      "get": {
+        "tags": [
+          "court-controller"
+        ],
+        "operationId": "getById_3",
+        "parameters": [
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courts/{idCourt}/active": {
+      "get": {
+        "tags": [
+          "court-controller"
+        ],
+        "operationId": "getByIdApprovedAndActive",
+        "parameters": [
+          {
+            "name": "idCourt",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourtResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courts/branch/{idBranch}/sport/{idSport}": {
+      "get": {
+        "tags": [
+          "court-controller"
+        ],
+        "operationId": "getCourtsByBranchAndSport",
+        "parameters": [
+          {
+            "name": "idBranch",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "idSport",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courts/branch/{idBranch}/active": {
+      "get": {
+        "tags": [
+          "court-controller"
+        ],
+        "operationId": "getAllByBranchActiveAndApproved",
+        "parameters": [
+          {
+            "name": "idBranch",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courts/branch/{idBranch}/active/paginated": {
+      "get": {
+        "tags": [
+          "court-controller"
+        ],
+        "operationId": "getAllByBranchActiveAndApprovedPaginated",
+        "parameters": [
+          {
+            "name": "idBranch",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageCourtResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courts/admin": {
+      "get": {
+        "tags": [
+          "court-admin-controller"
+        ],
+        "operationId": "getAll_2",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courts/admin/branch/{idBranch}": {
+      "get": {
+        "tags": [
+          "court-admin-controller"
+        ],
+        "operationId": "getAllByBranch",
+        "parameters": [
+          {
+            "name": "idBranch",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courts/active": {
+      "get": {
+        "tags": [
+          "court-controller"
+        ],
+        "operationId": "getAllActiveAndApproved",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/courts/active/paginated": {
+      "get": {
+        "tags": [
+          "court-controller"
+        ],
+        "operationId": "getAllActiveAndApprovedPaginated",
+        "parameters": [
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageCourtResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clubs/{id}": {
+      "get": {
+        "tags": [
+          "club-controller"
+        ],
+        "operationId": "getById_4",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClubResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clubs/search": {
+      "get": {
+        "tags": [
+          "club-controller"
+        ],
+        "operationId": "search",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageClubResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clubs/approved": {
+      "get": {
+        "tags": [
+          "club-controller"
+        ],
+        "operationId": "getApproved",
+        "parameters": [
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageClubResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clubs/all": {
+      "get": {
+        "tags": [
+          "club-controller"
+        ],
+        "operationId": "getAll_3",
+        "parameters": [
+          {
+            "name": "pageable",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Pageable"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageClubResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/{idClub}/active-approved": {
+      "get": {
+        "tags": [
+          "branch-controller"
+        ],
+        "operationId": "getApprovedAndActiveByClub",
+        "parameters": [
+          {
+            "name": "idClub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BranchResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/{idBranch}/approved": {
+      "get": {
+        "tags": [
+          "branch-controller"
+        ],
+        "operationId": "getApprovedById",
+        "parameters": [
+          {
+            "name": "idBranch",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/search": {
+      "get": {
+        "tags": [
+          "branch-controller"
+        ],
+        "operationId": "search_1",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BranchResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/nearby": {
+      "get": {
+        "tags": [
+          "branch-controller"
+        ],
+        "operationId": "getNearby",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "radiusKm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "default": 10.0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BranchResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/by-sport/{sportId}": {
+      "get": {
+        "tags": [
+          "branch-controller"
+        ],
+        "operationId": "getBySport",
+        "parameters": [
+          {
+            "name": "sportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BranchResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/admin/{id}": {
+      "get": {
+        "tags": [
+          "branch-admin-controller"
+        ],
+        "operationId": "getById_5",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BranchResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branches/admin/{idClub}/club": {
+      "get": {
+        "tags": [
+          "branch-admin-controller"
+        ],
+        "operationId": "getAll_4",
+        "parameters": [
+          {
+            "name": "idClub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BranchResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/instructors/{id}": {
+      "get": {
+        "tags": [
+          "instructor-admin-controller"
+        ],
+        "operationId": "get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Profile"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/reservations/{reservationId}": {
+      "delete": {
+        "tags": [
+          "reservation-controller"
+        ],
+        "operationId": "cancel_1",
+        "parameters": [
+          {
+            "name": "reservationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/instructor/class-slots/{slotId}/players/{playerId}": {
+      "delete": {
+        "tags": [
+          "instructor-class-slot-controller"
+        ],
+        "operationId": "remove",
+        "parameters": [
+          {
+            "name": "slotId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          },
+          {
+            "name": "playerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "exclusiveMinimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Enrollment"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/clubs/owner/{idClub}/owners/{idOwner}": {
+      "delete": {
+        "tags": [
+          "club-owner-controller"
+        ],
+        "operationId": "deleteOwner",
+        "parameters": [
+          {
+            "name": "idClub",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "idOwner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RescheduleRequestDto": {
+        "type": "object",
+        "properties": {
+          "newDay": {
+            "type": "string",
+            "format": "date"
+          },
+          "newStartTime": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "newDay",
+          "newStartTime"
+        ]
+      },
+      "ReservationResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "day": {
+            "type": "string",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RESERVADO",
+              "FINALIZADO",
+              "CANCELADO",
+              "REPROGRAMADO"
+            ]
+          },
+          "ticket": {
+            "$ref": "#/components/schemas/TicketResponseDto"
+          }
+        }
+      },
+      "TicketResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "branchName": {
+            "type": "string"
+          },
+          "branchAddress": {
+            "type": "string"
+          },
+          "courtName": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string"
+          },
+          "player": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "AddressRequestDto": {
+        "type": "object",
+        "properties": {
+          "streetName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "city": {
+            "type": "string",
+            "minLength": 1
+          },
+          "province": {
+            "type": "string",
+            "minLength": 1
+          },
+          "postalCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "maximum": 90.0,
+            "minimum": -90.0
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "maximum": 180.0,
+            "minimum": -180.0
+          }
+        },
+        "required": [
+          "city",
+          "province",
+          "streetName"
+        ]
+      },
+      "PlayerRequestDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 2147483647,
+            "minLength": 8
+          },
+          "confirmPassword": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phone": {
+            "type": "string"
+          },
+          "addressRequestDto": {
+            "$ref": "#/components/schemas/AddressRequestDto"
+          }
+        },
+        "required": [
+          "addressRequestDto",
+          "confirmPassword",
+          "email",
+          "firstName",
+          "lastName",
+          "password"
+        ]
+      },
+      "AddressResponseDto": {
+        "type": "object",
+        "properties": {
+          "streetName": {
+            "type": "string"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "city": {
+            "type": "string"
+          },
+          "province": {
+            "type": "string"
+          },
+          "postalCode": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "PlayerResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "OWNER",
+              "PLAYER",
+              "ADMIN",
+              "INSTRUCTOR"
+            ]
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AddressResponseDto"
+            },
+            "uniqueItems": true
+          }
+        }
+      },
+      "OwnerRequestDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "lastName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 2147483647,
+            "minLength": 8
+          },
+          "confirmPassword": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phone": {
+            "type": "string"
+          },
+          "dni": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cuil": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "confirmPassword",
+          "cuil",
+          "dateOfBirth",
+          "email",
+          "firstName",
+          "lastName",
+          "password"
+        ]
+      },
+      "Slot": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "instructorId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "courtId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "dayOfWeek": {
+            "type": "string",
+            "enum": [
+              "MONDAY",
+              "TUESDAY",
+              "WEDNESDAY",
+              "THURSDAY",
+              "FRIDAY",
+              "SATURDAY",
+              "SUNDAY"
+            ]
+          },
+          "startTime": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "PRINCIPIANTE",
+              "INTERMEDIO",
+              "AVANZADO"
+            ]
+          },
+          "capacity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          }
+        }
+      },
+      "Attendance": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "classSessionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "playerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "CANCELLED"
+            ]
+          }
+        }
+      },
+      "CourtRequestDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pricePerHour": {
+            "type": "number",
+            "format": "double"
+          },
+          "idBranch": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "idSport": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CourtResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "pricePerHour": {
+            "type": "number",
+            "format": "double"
+          },
+          "branchId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sport": {
+            "type": "string"
+          },
+          "availabilities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScheduleResponseDto"
+            },
+            "uniqueItems": true
+          }
+        }
+      },
+      "ScheduleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "day": {
+            "type": "string",
+            "enum": [
+              "MONDAY",
+              "TUESDAY",
+              "WEDNESDAY",
+              "THURSDAY",
+              "FRIDAY",
+              "SATURDAY",
+              "SUNDAY"
+            ]
+          },
+          "openingTime": {
+            "type": "string"
+          },
+          "closingTime": {
+            "type": "string"
+          },
+          "slotDuration": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ClubRequestDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "legalName": {
+            "type": "string",
+            "minLength": 1
+          },
+          "clubType": {
+            "type": "string",
+            "enum": [
+              "SA",
+              "SRL",
+              "SAS",
+              "UNIPERSONAL",
+              "ASOCIACION_CIVIL"
+            ]
+          },
+          "cuit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ownerIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "clubType",
+          "cuit",
+          "legalName",
+          "name",
+          "ownerIds"
+        ]
+      },
+      "BranchRequestDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "addressRequestDto": {
+            "$ref": "#/components/schemas/AddressRequestDto"
+          },
+          "idClub": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cancellationWindowHours": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "addressRequestDto",
+          "cancellationWindowHours",
+          "name"
+        ]
+      },
+      "SportRequestDto": {
+        "type": "object",
+        "properties": {
+          "nameSport": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "nameSport"
+        ]
+      },
+      "SportResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "nameSport": {
+            "type": "string"
+          }
+        }
+      },
+      "ScheduleRequestDto": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "minLength": 1
+          },
+          "openingTime": {
+            "type": "string",
+            "minLength": 1
+          },
+          "closingTime": {
+            "type": "string",
+            "minLength": 1
+          },
+          "slotDuration": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "closingTime",
+          "day",
+          "openingTime",
+          "slotDuration"
+        ]
+      },
+      "ReservationRequestDto": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string"
+          },
+          "idCourt": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "day",
+          "startTime"
+        ]
+      },
+      "BranchResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "clubId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "address": {
+            "$ref": "#/components/schemas/AddressResponseDto"
+          },
+          "verificationStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "activeStatus": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          },
+          "cancellationWindowHours": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "courts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourtResponseDto"
+            }
+          }
+        }
+      },
+      "ClubResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "legalName": {
+            "type": "string"
+          },
+          "cuit": {
+            "type": "string"
+          },
+          "clubType": {
+            "type": "string",
+            "enum": [
+              "SA",
+              "SRL",
+              "SAS",
+              "UNIPERSONAL",
+              "ASOCIACION_CIVIL"
+            ]
+          },
+          "verificationStatus": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "activeStatus": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          },
+          "branches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BranchResponseDto"
+            },
+            "uniqueItems": true
+          }
+        }
+      },
+      "OwnerResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "OWNER",
+              "PLAYER",
+              "ADMIN",
+              "INSTRUCTOR"
+            ]
+          },
+          "dni": {
+            "type": "string"
+          },
+          "cuil": {
+            "type": "string"
+          },
+          "dateOfBirth": {
+            "type": "string"
+          },
+          "clubs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClubResponseDto"
+            }
+          }
+        }
+      },
+      "PlayerLookupRequestDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "PlayerOption": {
+        "type": "object",
+        "properties": {
+          "playerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "playerName": {
+            "type": "string"
+          }
+        }
+      },
+      "ClassSlotRequestDto": {
+        "type": "object",
+        "properties": {
+          "courtId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "dayOfWeek": {
+            "type": "string",
+            "enum": [
+              "MONDAY",
+              "TUESDAY",
+              "WEDNESDAY",
+              "THURSDAY",
+              "FRIDAY",
+              "SATURDAY",
+              "SUNDAY"
+            ]
+          },
+          "startTime": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 1440,
+            "minimum": 1
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "PRINCIPIANTE",
+              "INTERMEDIO",
+              "AVANZADO"
+            ]
+          },
+          "capacity": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 4,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "capacity",
+          "courtId",
+          "dayOfWeek",
+          "durationMinutes",
+          "level",
+          "startTime"
+        ]
+      },
+      "ClassPlayerRequestDto": {
+        "type": "object",
+        "properties": {
+          "playerId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "playerId"
+        ]
+      },
+      "Enrollment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "classSlotId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "playerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AuthenticationRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthenticationResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "InstructorRequestDto": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 72,
+            "minLength": 8,
+            "writeOnly": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "email",
+          "firstName",
+          "lastName",
+          "password"
+        ]
+      },
+      "Profile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "OWNER",
+              "PLAYER",
+              "ADMIN",
+              "INSTRUCTOR"
+            ]
+          }
+        }
+      },
+      "MoveCourtBranchRequestDto": {
+        "type": "object",
+        "properties": {
+          "newBranchId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "newBranchId"
+        ]
+      },
+      "Identity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "OWNER",
+              "PLAYER",
+              "ADMIN",
+              "INSTRUCTOR"
+            ]
+          }
+        }
+      },
+      "CourtOption": {
+        "type": "object",
+        "properties": {
+          "courtId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "courtName": {
+            "type": "string"
+          },
+          "branchId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "branchName": {
+            "type": "string"
+          }
+        }
+      },
+      "CourtPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourtOption"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasNext": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Member": {
+        "type": "object",
+        "properties": {
+          "playerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "playerName": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SlotDetail": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "$ref": "#/components/schemas/Slot"
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Member"
+            }
+          }
+        }
+      },
+      "SessionSummary": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "classSlotId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "day": {
+            "type": "string",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SCHEDULED",
+              "CANCELLED"
+            ]
+          },
+          "courtId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "courtName": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "PRINCIPIANTE",
+              "INTERMEDIO",
+              "AVANZADO"
+            ]
+          },
+          "capacity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pendingCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "confirmedCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cancelledCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "occupancy": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "availableSpots": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ClassAttendanceView": {
+        "type": "object",
+        "properties": {
+          "attendanceId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "playerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "playerName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "CANCELLED"
+            ]
+          }
+        }
+      },
+      "SessionDetail": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/SessionSummary"
+          },
+          "attendees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClassAttendanceView"
+            }
+          }
+        }
+      },
+      "Pageable": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PageCourtResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourtResponseDto"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PageableObject": {
+        "type": "object",
+        "properties": {
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "paged": {
+            "type": "boolean"
+          },
+          "unpaged": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SortObject": {
+        "type": "object",
+        "properties": {
+          "empty": {
+            "type": "boolean"
+          },
+          "sorted": {
+            "type": "boolean"
+          },
+          "unsorted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PageClubResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClubResponseDto"
+            }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/SortObject"
+          },
+          "pageable": {
+            "$ref": "#/components/schemas/PageableObject"
+          },
+          "numberOfElements": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "first": {
+            "type": "boolean"
+          },
+          "last": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
