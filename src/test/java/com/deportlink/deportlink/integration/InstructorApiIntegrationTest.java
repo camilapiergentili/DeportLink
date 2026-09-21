@@ -91,7 +91,10 @@ class InstructorApiIntegrationTest extends OccupancyLifecycleFixture {
         assertEquals("16:00:00",slot.path("startTime").asText());
         var enrollment=call("POST",BASE+"/class-slots/"+id+"/players",teacherToken,Map.of("playerId",playerId),200);
         assertTrue(enrollment.path("active").asBoolean());
-        var sessions=call("GET",BASE+"/class-sessions",teacherToken,null,200);
+        // Explicit range on purpose: the default window is today..today+27, but the 4th generated
+        // occurrence lands on today+28 once today's class time has already passed, so relying on
+        // the default made this assertion depend on the time of day the test runs.
+        var sessions=call("GET",BASE+"/class-sessions?from="+LocalDate.now()+"&to="+LocalDate.now().plusDays(35),teacherToken,null,200);
         assertEquals(4,sessions.size());
         assertEquals(4L,count("SELECT COUNT(*) FROM class_session WHERE class_slot_id=?",id));
         var summary=sessions.get(0);
