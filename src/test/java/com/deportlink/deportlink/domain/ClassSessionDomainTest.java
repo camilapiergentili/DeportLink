@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.*;
@@ -41,11 +42,12 @@ class ClassSessionDomainTest {
 
     @Test
     void create_hoyPeroHoraYaPasada_lanzaInvalidTimeRange() {
-        LocalTime anHourAgo = LocalTime.now().minusHours(1);
-        // Si faltan menos de una hora para medianoche este test podría dar un falso resultado —
-        // no es el caso en la práctica de CI/desarrollo, y evita depender de un reloj inyectable
-        // que el resto del dominio (Reservation.create) tampoco usa para esta validación.
-        assertThatThrownBy(() -> ClassSession.create(1L, LocalDate.now(), anHourAgo, Duration.ofHours(1)))
+        // Fecha y hora se calculan JUNTAS: restar una hora solo a la LocalTime y combinarla con
+        // LocalDate.now() da un instante futuro entre las 00:00 y las 00:59 (23:07 "de hoy" a las
+        // 00:07), y el test dejaba de fallar cuando debía. Sigue sin usar un reloj inyectable, igual
+        // que la validación que ejerce en ClassSession.create.
+        LocalDateTime anHourAgo = LocalDateTime.now().minusHours(1);
+        assertThatThrownBy(() -> ClassSession.create(1L, anHourAgo.toLocalDate(), anHourAgo.toLocalTime(), Duration.ofHours(1)))
                 .isInstanceOf(InvalidTimeRangeException.class);
     }
 
