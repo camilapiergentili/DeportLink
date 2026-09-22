@@ -24,6 +24,8 @@ public class GetAvailableSlotsUseCase {
     private final CourtGateway courtGateway;
     private final ScheduleGateway scheduleGateway;
     private final ReservationRepositoryPort reservationRepository;
+    private final com.deportlink.deportlink.application.port.out.ClassRecurrencePort classRecurrence;
+    private final com.deportlink.deportlink.application.port.out.CourtOccupancyPort courtOccupancy;
 
     // Read-only: no pessimistic lock needed — result is advisory (slots can change after the call).
     // The actual enforcement of availability happens in BookReservationUseCase with the lock.
@@ -38,11 +40,14 @@ public class GetAvailableSlotsUseCase {
                 .orElseThrow(() -> new ScheduleNotFoundException("No hay agenda disponible para ese día"));
 
         Set<LocalTime> booked = reservationRepository.findBookedSlots(courtId, day);
+        Set<LocalTime> recurring = classRecurrence.findActiveStarts(courtId, day.getDayOfWeek());
 
         // generateSlots() lives in SlotConfig (application layer) rather than here
         // so that both this use case and any future scheduling logic share the same algorithm.
         List<LocalTime> available = slotConfig.generateSlots().stream()
                 .filter(slot -> !booked.contains(slot))
+                .filter(slot -> !recurring.contains(slot))
+                .filter(slot -> !courtOccupancy.existsOccupancy(courtId, day, slot))
                 .toList();
 
         log.info("Available slots for courtId={}, day={}: {}", courtId, day, available.size());

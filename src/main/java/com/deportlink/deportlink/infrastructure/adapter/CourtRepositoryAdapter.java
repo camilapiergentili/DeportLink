@@ -9,6 +9,7 @@ import com.deportlink.deportlink.enums.VerificationStatus;
 import com.deportlink.deportlink.exception.CourtNotFoundException;
 import com.deportlink.deportlink.model.entity.CourtEntity;
 import com.deportlink.deportlink.persistence.repository.BranchRepository;
+import com.deportlink.deportlink.persistence.repository.ClassSlotRepository;
 import com.deportlink.deportlink.persistence.repository.CourtRepository;
 import com.deportlink.deportlink.persistence.repository.ReservationRepository;
 import com.deportlink.deportlink.persistence.repository.SportRepository;
@@ -27,6 +28,7 @@ public class CourtRepositoryAdapter implements CourtRepositoryPort {
     private final BranchRepository branchRepository;
     private final SportRepository sportRepository;
     private final ReservationRepository reservationRepository;
+    private final ClassSlotRepository classSlotRepository;
 
     @Override
     public Court save(Court court) {
@@ -54,6 +56,11 @@ public class CourtRepositoryAdapter implements CourtRepositoryPort {
     @Override
     public boolean hasReservations(Long courtId) {
         return reservationRepository.existsByCourt_Id(courtId);
+    }
+
+    @Override
+    public boolean hasClassSlots(Long courtId) {
+        return classSlotRepository.existsByCourt_Id(courtId);
     }
 
     @Override

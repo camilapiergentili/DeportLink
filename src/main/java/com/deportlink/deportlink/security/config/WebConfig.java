@@ -17,5 +17,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(currentUserIdArgumentResolver);
+        resolvers.add(new com.deportlink.deportlink.security.resolver.CurrentActorArgumentResolver());
     }
 }

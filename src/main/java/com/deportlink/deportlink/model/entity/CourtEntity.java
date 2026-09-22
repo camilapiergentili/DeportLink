@@ -57,4 +57,17 @@ public class CourtEntity {
     @OneToMany(mappedBy = "court")
     private Set<ReservationEntity> reservations = new HashSet<>();
 
+    // Mismo criterio que "reservations" arriba: sin cascade ni orphanRemoval — un ClassSlot no
+    // es un dato secundario de la cancha, es un agregado con su propio ciclo de vida (grupo de
+    // alumnos, sesiones, asistencias). DeleteCourtUseCase bloquea el borrado si existe algún
+    // ClassSlot (ver hasClassSlots()); esta ausencia de cascade es la segunda línea de defensa —
+    // si ese guard se saltara, el DELETE chocaría con fk_class_slot_court (RESTRICT) en vez de
+    // arrastrar los ClassSlot silenciosamente. Existe únicamente para que
+    // ClassSlotCourtGatewayAdapter pueda escribir "JOIN c.classSlots" al derivar y bloquear la
+    // Court de un ClassSlot — mismo patrón de lock-por-join que "reservations" ya habilita para
+    // findByReservationIdForUpdate (ver docs/class-management-stage-1c-persistence-design.md,
+    // sección 7.2/7.5).
+    @OneToMany(mappedBy = "court")
+    private Set<ClassSlotEntity> classSlots = new HashSet<>();
+
 }

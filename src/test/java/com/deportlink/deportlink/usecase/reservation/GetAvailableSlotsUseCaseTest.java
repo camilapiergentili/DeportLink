@@ -28,6 +28,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class GetAvailableSlotsUseCaseTest {
+    @Mock private com.deportlink.deportlink.application.port.out.ClassRecurrencePort classRecurrence;
+    @Mock private com.deportlink.deportlink.application.port.out.CourtOccupancyPort courtOccupancy;
 
     @Mock private CourtGateway courtGateway;
     @Mock private ScheduleGateway scheduleGateway;

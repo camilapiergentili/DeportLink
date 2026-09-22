@@ -2,6 +2,7 @@ package com.deportlink.deportlink.application.usecase.reservation;
 
 import com.deportlink.deportlink.application.port.out.CourtGateway;
 import com.deportlink.deportlink.application.port.out.CourtGateway.CourtSnapshot;
+import com.deportlink.deportlink.application.port.out.CourtOccupancyPort;
 import com.deportlink.deportlink.application.port.out.PlayerGateway;
 import com.deportlink.deportlink.application.port.out.PlayerGateway.PlayerSnapshot;
 import com.deportlink.deportlink.application.port.out.ScheduleGateway;
@@ -32,6 +33,8 @@ public class RescheduleReservationUseCase {
     private final CourtGateway courtGateway;
     private final PlayerGateway playerGateway;
     private final ScheduleGateway scheduleGateway;
+    private final CourtOccupancyPort courtOccupancyPort;
+    private final com.deportlink.deportlink.application.port.out.ClassRecurrencePort classRecurrence;
 
     /**
      * Reprogramar = marcar la reserva vieja como REPROGRAMADO + crear una nueva RESERVADO.
@@ -86,6 +89,14 @@ public class RescheduleReservationUseCase {
             throw new SlotNotAvailableException("El horario ya está reservado");
         }
 
+        // Conflicto contra una ClassSession en el nuevo slot — ANTES de tocar cualquier fila
+        // existente, mismo criterio que la validación de arriba. Si esto lanza, no quedó nada
+        // que revertir (ver docs/class-management-stage-1c-persistence-design.md, sección 6.3).
+        if (classRecurrence.findActiveStarts(courtId, newDay.getDayOfWeek()).contains(newStartTime)
+                || courtOccupancyPort.existsOccupancy(courtId, newDay, newStartTime)) {
+            throw new SlotNotAvailableException("El horario ya está ocupado");
+        }
+
         // markAsRescheduled() valida que el estado actual sea RESERVADO — regla de dominio.
         Reservation rescheduled = reservationRepository.save(existing.markAsRescheduled());
 
@@ -101,6 +112,14 @@ public class RescheduleReservationUseCase {
         );
 
         Reservation saved = reservationRepository.save(newReservation.withTicket(ticket));
+
+        // Libera la ocupación vieja y registra la nueva recién ahora, con ambos ids reales ya
+        // asignados — si algo de lo anterior falla, la transacción hace rollback completo y la
+        // ocupación vieja nunca se llega a tocar (atomicidad de la transacción, no lógica de
+        // compensación manual — sección 6.3 del diseño).
+        courtOccupancyPort.releaseForReservation(reservationId);
+        courtOccupancyPort.registerForReservation(saved.id(), courtId, newDay, newStartTime);
+
         log.info("Reservation rescheduled: oldId={}, newId={}", rescheduled.id(), saved.id());
         return saved;
     }

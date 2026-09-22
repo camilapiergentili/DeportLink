@@ -2,6 +2,7 @@ package com.deportlink.deportlink.usecase.reservation;
 
 import com.deportlink.deportlink.application.port.out.CourtGateway;
 import com.deportlink.deportlink.application.port.out.CourtGateway.CourtSnapshot;
+import com.deportlink.deportlink.application.port.out.CourtOccupancyPort;
 import com.deportlink.deportlink.application.port.out.PlayerGateway;
 import com.deportlink.deportlink.application.port.out.PlayerGateway.PlayerSnapshot;
 import com.deportlink.deportlink.application.port.out.ScheduleGateway;
@@ -47,11 +48,13 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 class BookReservationUseCaseTest {
+    @Mock private com.deportlink.deportlink.application.port.out.ClassRecurrencePort classRecurrence;
 
     @Mock private ReservationRepositoryPort reservationRepository;
     @Mock private CourtGateway courtGateway;
     @Mock private PlayerGateway playerGateway;
     @Mock private ScheduleGateway scheduleGateway;
+    @Mock private CourtOccupancyPort courtOccupancyPort;
 
     @InjectMocks private BookReservationUseCase useCase;
 
@@ -227,5 +230,55 @@ class BookReservationUseCaseTest {
                 .hasMessage("El horario ya está reservado");
 
         verify(reservationRepository, never()).save(any());
+    }
+
+    // ─── Etapa 1C: integración con CourtOccupancyPort ──────────────────────────────
+
+    @Test
+    void execute_canchaOcupadaPorUnaClase_lanzaSlotNotAvailableConMensajeGenericoYNoPersisteNada() {
+        when(courtGateway.findByIdForUpdate(COURT_ID)).thenReturn(Optional.of(court()));
+        when(playerGateway.findById(PLAYER_ID)).thenReturn(Optional.of(player()));
+        when(scheduleGateway.findByCourtAndDay(COURT_ID, DAY.getDayOfWeek())).thenReturn(Optional.of(slotConfig()));
+        when(reservationRepository.findBookedSlots(COURT_ID, DAY)).thenReturn(Set.of());
+        when(courtOccupancyPort.existsOccupancy(COURT_ID, DAY, START_TIME)).thenReturn(true);
+
+        // Mensaje genérico, sin mencionar "clase" — existsOccupancy() solo devuelve un booleano,
+        // no identifica el origen (ver docs/class-management-stage-1c-persistence-design.md, 6.1).
+        assertThatThrownBy(() -> useCase.execute(COURT_ID, PLAYER_ID, DAY, START_TIME))
+                .isInstanceOf(SlotNotAvailableException.class)
+                .hasMessage("El horario ya está ocupado");
+
+        verify(reservationRepository, never()).save(any());
+        verify(courtOccupancyPort, never()).registerForReservation(any(), any(), any(), any());
+    }
+
+    @Test
+    void execute_reservaValida_registraLaOcupacionConElIdRealDeLaReservaGuardada() {
+        when(courtGateway.findByIdForUpdate(COURT_ID)).thenReturn(Optional.of(court()));
+        when(playerGateway.findById(PLAYER_ID)).thenReturn(Optional.of(player()));
+        when(scheduleGateway.findByCourtAndDay(COURT_ID, DAY.getDayOfWeek())).thenReturn(Optional.of(slotConfig()));
+        when(reservationRepository.findBookedSlots(COURT_ID, DAY)).thenReturn(Set.of());
+        when(reservationRepository.save(any())).thenReturn(savedReservation(new TimeSlot(DAY, START_TIME, Duration.ofHours(1))));
+
+        useCase.execute(COURT_ID, PLAYER_ID, DAY, START_TIME);
+
+        // savedReservation() usa id=99L — confirma que se usa el id devuelto por save(), no uno propio.
+        verify(courtOccupancyPort).registerForReservation(99L, COURT_ID, DAY, START_TIME);
+    }
+
+    @Test
+    void execute_verificaOcupacionAntesDeGuardarLaReserva() {
+        when(courtGateway.findByIdForUpdate(COURT_ID)).thenReturn(Optional.of(court()));
+        when(playerGateway.findById(PLAYER_ID)).thenReturn(Optional.of(player()));
+        when(scheduleGateway.findByCourtAndDay(COURT_ID, DAY.getDayOfWeek())).thenReturn(Optional.of(slotConfig()));
+        when(reservationRepository.findBookedSlots(COURT_ID, DAY)).thenReturn(Set.of());
+        when(reservationRepository.save(any())).thenReturn(savedReservation(new TimeSlot(DAY, START_TIME, Duration.ofHours(1))));
+
+        useCase.execute(COURT_ID, PLAYER_ID, DAY, START_TIME);
+
+        InOrder order = inOrder(courtOccupancyPort, reservationRepository);
+        order.verify(courtOccupancyPort).existsOccupancy(COURT_ID, DAY, START_TIME);
+        order.verify(reservationRepository).save(any());
+        order.verify(courtOccupancyPort).registerForReservation(any(), any(), any(), any());
     }
 }
