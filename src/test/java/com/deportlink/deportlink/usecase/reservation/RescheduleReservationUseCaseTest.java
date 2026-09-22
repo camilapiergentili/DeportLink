@@ -2,6 +2,7 @@ package com.deportlink.deportlink.usecase.reservation;
 
 import com.deportlink.deportlink.application.port.out.CourtGateway;
 import com.deportlink.deportlink.application.port.out.CourtGateway.CourtSnapshot;
+import com.deportlink.deportlink.application.port.out.CourtOccupancyPort;
 import com.deportlink.deportlink.application.port.out.PlayerGateway;
 import com.deportlink.deportlink.application.port.out.PlayerGateway.PlayerSnapshot;
 import com.deportlink.deportlink.application.port.out.ScheduleGateway;
@@ -19,6 +20,7 @@ import com.deportlink.deportlink.exception.SlotNotAvailableException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -43,11 +45,13 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 class RescheduleReservationUseCaseTest {
+    @Mock private com.deportlink.deportlink.application.port.out.ClassRecurrencePort classRecurrence;
 
     @Mock private ReservationRepositoryPort reservationRepository;
     @Mock private CourtGateway courtGateway;
     @Mock private PlayerGateway playerGateway;
     @Mock private ScheduleGateway scheduleGateway;
+    @Mock private CourtOccupancyPort courtOccupancyPort;
 
     @InjectMocks private RescheduleReservationUseCase useCase;
 
@@ -237,5 +241,49 @@ class RescheduleReservationUseCaseTest {
         assertThat(newSaved.ticket().totalPrice()).isEqualTo(100.0);
 
         assertThat(result).isEqualTo(newSaved);
+    }
+
+    // ─── Etapa 1C: integración con CourtOccupancyPort ──────────────────────────────
+
+    @Test
+    void execute_nuevoSlotOcupadoPorUnaClase_lanzaSlotNotAvailableAntesDeTocarNadaExistente() {
+        Reservation existing = existingReservation(StatusReservation.RESERVADO, PLAYER_ID);
+        mockUntilCourtLockAndPlayerAndReservation(existing);
+        when(courtGateway.findByIdForUpdate(COURT_ID)).thenReturn(Optional.of(court()));
+        when(scheduleGateway.findByCourtAndDay(COURT_ID, NEW_DAY.getDayOfWeek())).thenReturn(Optional.of(slotConfig()));
+        when(reservationRepository.findBookedSlots(COURT_ID, NEW_DAY)).thenReturn(Set.of());
+        when(courtOccupancyPort.existsOccupancy(COURT_ID, NEW_DAY, NEW_START_TIME)).thenReturn(true);
+
+        assertThatThrownBy(() -> useCase.execute(RESERVATION_ID, PLAYER_ID, NEW_DAY, NEW_START_TIME))
+                .isInstanceOf(SlotNotAvailableException.class)
+                .hasMessage("El horario ya está ocupado");
+
+        // Ningún save ni release/register — el chequeo corre antes de mutar cualquier fila existente.
+        verify(reservationRepository, never()).save(any());
+        verify(courtOccupancyPort, never()).releaseForReservation(any());
+        verify(courtOccupancyPort, never()).registerForReservation(any(), any(), any(), any());
+    }
+
+    @Test
+    void execute_flujoValido_liberaLaOcupacionViejaYRegistraLaNuevaConLosIdsReales() {
+        Reservation existing = existingReservation(StatusReservation.RESERVADO, PLAYER_ID);
+        mockUntilCourtLockAndPlayerAndReservation(existing);
+        when(courtGateway.findByIdForUpdate(COURT_ID)).thenReturn(Optional.of(court()));
+        when(scheduleGateway.findByCourtAndDay(COURT_ID, NEW_DAY.getDayOfWeek())).thenReturn(Optional.of(slotConfig()));
+        when(reservationRepository.findBookedSlots(COURT_ID, NEW_DAY)).thenReturn(Set.of());
+        // La reserva vieja ya trae id (RESERVATION_ID) vía markAsRescheduled(); la nueva nace con
+        // id null (Reservation.create) — se le asigna 555L acá, simulando la asignación real de
+        // persistencia, para poder verificar que registerForReservation usa el id devuelto.
+        when(reservationRepository.save(any())).thenAnswer(inv -> {
+            Reservation arg = inv.getArgument(0);
+            return arg.id() == null ? arg.withId(555L) : arg;
+        });
+
+        useCase.execute(RESERVATION_ID, PLAYER_ID, NEW_DAY, NEW_START_TIME);
+
+        InOrder order = inOrder(reservationRepository, courtOccupancyPort);
+        order.verify(reservationRepository, times(2)).save(any());
+        order.verify(courtOccupancyPort).releaseForReservation(RESERVATION_ID);
+        order.verify(courtOccupancyPort).registerForReservation(555L, COURT_ID, NEW_DAY, NEW_START_TIME);
     }
 }

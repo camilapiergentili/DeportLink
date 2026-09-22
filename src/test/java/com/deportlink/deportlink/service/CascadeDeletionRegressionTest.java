@@ -3,8 +3,14 @@ package com.deportlink.deportlink.service;
 import com.deportlink.deportlink.application.usecase.branch.DeleteBranchUseCase;
 import com.deportlink.deportlink.application.usecase.court.DeleteCourtUseCase;
 import com.deportlink.deportlink.application.usecase.player.DeletePlayerUseCase;
+import com.deportlink.deportlink.enums.ActiveStatus;
+import com.deportlink.deportlink.enums.ClassAttendanceStatus;
+import com.deportlink.deportlink.enums.ClassSessionStatus;
+import com.deportlink.deportlink.enums.Level;
 import com.deportlink.deportlink.enums.StatusReservation;
+import com.deportlink.deportlink.exception.BranchHasClassSlotsException;
 import com.deportlink.deportlink.exception.BranchHasReservationsException;
+import com.deportlink.deportlink.exception.CourtHasClassSlotsException;
 import com.deportlink.deportlink.exception.CourtHasReservationsException;
 import com.deportlink.deportlink.model.entity.*;
 import com.deportlink.deportlink.persistence.repository.*;
@@ -44,6 +50,11 @@ public class CascadeDeletionRegressionTest {
     @Autowired private ClubRepository clubRepository;
     @Autowired private SportRepository sportRepository;
     @Autowired private OwnerRepository ownerRepository;
+    @Autowired private InstructorRepository instructorRepository;
+    @Autowired private ClassSlotRepository classSlotRepository;
+    @Autowired private ClassEnrollmentRepository classEnrollmentRepository;
+    @Autowired private ClassSessionRepository classSessionRepository;
+    @Autowired private ClassAttendanceRepository classAttendanceRepository;
     @Autowired private EntityManager entityManager;
 
     private PlayerEntity testPlayer;
@@ -225,5 +236,102 @@ public class CascadeDeletionRegressionTest {
         assertTrue(branchRepository.findById(testBranch.getId()).isEmpty());
         assertTrue(courtRepository.findById(testCourt.getId()).isEmpty(),
                 "La cancha vacía debe eliminarse junto con la sucursal (cascade Branch→Court intacto)");
+    }
+
+    // ─── Etapa 1C: ClassSlot/ClassEnrollment/ClassAttendance no deben perderse ni bloquear
+    // el borrado con el mensaje genérico de integridad referencial ────────────────────────
+
+    private InstructorEntity createInstructor() {
+        InstructorEntity instructor = new InstructorEntity();
+        instructor.setEmail("instructor-cascade-" + System.nanoTime() + "@example.com");
+        instructor.setPassword("password123");
+        instructor.setFirstName("Test");
+        instructor.setLastName("Instructor");
+        return instructorRepository.save(instructor);
+    }
+
+    private ClassSlotEntity createClassSlotFor(CourtEntity court, InstructorEntity instructor) {
+        ClassSlotEntity slot = new ClassSlotEntity();
+        slot.setInstructor(instructor);
+        slot.setCourt(court);
+        slot.setDayOfWeek(java.time.DayOfWeek.THURSDAY);
+        slot.setStartTime(LocalTime.of(15, 0));
+        slot.setDuration(Duration.ofHours(1));
+        slot.setLevel(Level.INTERMEDIO);
+        slot.setCapacity(4);
+        slot.setActiveStatus(ActiveStatus.ACTIVE);
+        return classSlotRepository.save(slot);
+    }
+
+    @Test
+    void deleteCourt_conClassSlot_falla() {
+        InstructorEntity instructor = createInstructor();
+        createClassSlotFor(testCourt, instructor);
+        reloadPersistenceContext();
+
+        assertThrows(CourtHasClassSlotsException.class,
+                () -> deleteCourtUseCase.execute(testCourt.getId()));
+        assertTrue(courtRepository.findById(testCourt.getId()).isPresent(),
+                "La cancha no debe eliminarse si tiene un ClassSlot asociado");
+    }
+
+    @Test
+    void deleteBranch_conClassSlotEnAlgunaCourt_falla() {
+        InstructorEntity instructor = createInstructor();
+        createClassSlotFor(testCourt, instructor);
+        reloadPersistenceContext();
+
+        assertThrows(BranchHasClassSlotsException.class,
+                () -> deleteBranchUseCase.execute(testBranch.getId()));
+        assertTrue(branchRepository.findById(testBranch.getId()).isPresent(),
+                "La sucursal no debe eliminarse si alguna de sus canchas tiene un ClassSlot asociado");
+    }
+
+    @Test
+    void deletePlayer_noEliminaSusClassEnrollments() {
+        InstructorEntity instructor = createInstructor();
+        ClassSlotEntity slot = createClassSlotFor(testCourt, instructor);
+        ClassEnrollmentEntity enrollment = new ClassEnrollmentEntity();
+        enrollment.setClassSlot(slot);
+        enrollment.setPlayer(testPlayer);
+        enrollment.setActive(true);
+        enrollment = classEnrollmentRepository.save(enrollment);
+        Long enrollmentId = enrollment.getId();
+        reloadPersistenceContext();
+
+        deletePlayerUseCase.execute(testPlayer.getId());
+
+        assertTrue(classEnrollmentRepository.findById(enrollmentId).isPresent(),
+                "El ClassEnrollment debe seguir existiendo después de anonimizar al jugador");
+        assertEquals(testPlayer.getId(), classEnrollmentRepository.findById(enrollmentId).orElseThrow()
+                        .getPlayer().getId(),
+                "El ClassEnrollment debe seguir apuntando al mismo player_id (anonimizado, no borrado)");
+    }
+
+    @Test
+    void deletePlayer_noEliminaSusClassAttendances() {
+        InstructorEntity instructor = createInstructor();
+        ClassSlotEntity slot = createClassSlotFor(testCourt, instructor);
+
+        ClassSessionEntity session = new ClassSessionEntity();
+        session.setClassSlot(slot);
+        session.setSessionDate(LocalDate.now().plusDays(3));
+        session.setStartTime(LocalTime.of(15, 0));
+        session.setDuration(Duration.ofHours(1));
+        session.setStatus(ClassSessionStatus.SCHEDULED);
+        session = classSessionRepository.save(session);
+
+        ClassAttendanceEntity attendance = new ClassAttendanceEntity();
+        attendance.setClassSession(session);
+        attendance.setPlayer(testPlayer);
+        attendance.setStatus(ClassAttendanceStatus.PENDING);
+        attendance = classAttendanceRepository.save(attendance);
+        Long attendanceId = attendance.getId();
+        reloadPersistenceContext();
+
+        deletePlayerUseCase.execute(testPlayer.getId());
+
+        assertTrue(classAttendanceRepository.findById(attendanceId).isPresent(),
+                "El ClassAttendance debe seguir existiendo después de anonimizar al jugador");
     }
 }

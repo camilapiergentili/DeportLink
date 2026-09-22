@@ -2,6 +2,7 @@ package com.deportlink.deportlink.application.usecase.reservation;
 
 import com.deportlink.deportlink.application.port.out.CourtGateway;
 import com.deportlink.deportlink.application.port.out.CourtGateway.CourtSnapshot;
+import com.deportlink.deportlink.application.port.out.CourtOccupancyPort;
 import com.deportlink.deportlink.application.port.out.PlayerGateway;
 import com.deportlink.deportlink.domain.model.Reservation;
 import com.deportlink.deportlink.domain.port.out.ReservationRepositoryPort;
@@ -23,6 +24,7 @@ public class CancelReservationUseCase {
     private final ReservationRepositoryPort reservationRepository;
     private final PlayerGateway playerGateway;
     private final CourtGateway courtGateway;
+    private final CourtOccupancyPort courtOccupancyPort;
 
     @Transactional
     public Reservation execute(Long reservationId, Long playerId) {
@@ -53,6 +55,12 @@ public class CancelReservationUseCase {
         Reservation cancelled = reservation.cancel(LocalDateTime.now(), court.cancellationWindowHours());
 
         Reservation saved = reservationRepository.save(cancelled);
+
+        // Solo se libera si cancel() tuvo éxito — si lanzó (ventana excedida / estado inválido),
+        // este punto nunca se alcanza. Ver docs/class-management-stage-1c-persistence-design.md,
+        // sección 6.2.
+        courtOccupancyPort.releaseForReservation(reservationId);
+
         log.info("Reservation cancelled: id={}", saved.id());
         return saved;
     }

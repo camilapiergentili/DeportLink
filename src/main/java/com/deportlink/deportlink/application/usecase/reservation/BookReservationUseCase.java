@@ -2,6 +2,7 @@ package com.deportlink.deportlink.application.usecase.reservation;
 
 import com.deportlink.deportlink.application.port.out.CourtGateway;
 import com.deportlink.deportlink.application.port.out.CourtGateway.CourtSnapshot;
+import com.deportlink.deportlink.application.port.out.CourtOccupancyPort;
 import com.deportlink.deportlink.application.port.out.PlayerGateway;
 import com.deportlink.deportlink.application.port.out.PlayerGateway.PlayerSnapshot;
 import com.deportlink.deportlink.application.port.out.ScheduleGateway;
@@ -32,6 +33,8 @@ public class BookReservationUseCase {
     private final CourtGateway courtGateway;
     private final PlayerGateway playerGateway;
     private final ScheduleGateway scheduleGateway;
+    private final CourtOccupancyPort courtOccupancyPort;
+    private final com.deportlink.deportlink.application.port.out.ClassRecurrencePort classRecurrence;
 
     @Transactional
     public Reservation execute(Long courtId, Long playerId, LocalDate day, LocalTime startTime) {
@@ -58,6 +61,15 @@ public class BookReservationUseCase {
             throw new SlotNotAvailableException("El horario ya está reservado");
         }
 
+        // Conflicto contra una ClassSession en el mismo court/día/hora exacto — ver
+        // docs/class-management-stage-1c-persistence-design.md, sección 6.1. Se reutiliza
+        // SlotNotAvailableException con un mensaje genérico: existsOccupancy() devuelve un
+        // booleano, no identifica el origen, y este use case no necesita saberlo ni comunicarlo.
+        if (classRecurrence.findActiveStarts(courtId, day.getDayOfWeek()).contains(startTime)
+                || courtOccupancyPort.existsOccupancy(courtId, day, startTime)) {
+            throw new SlotNotAvailableException("El horario ya está ocupado");
+        }
+
         TimeSlot timeSlot = new TimeSlot(day, startTime, slotConfig.slotDuration());
 
         // Reservation.create() valida que la fecha sea futura — regla de dominio, no del servicio.
@@ -76,6 +88,11 @@ public class BookReservationUseCase {
         );
 
         Reservation saved = reservationRepository.save(reservation.withTicket(ticket));
+
+        // Registrada recién con el id real de la reserva persistida — mismo orden que
+        // CreateClassSessionUseCase (guardar primero, registrar ocupación después).
+        courtOccupancyPort.registerForReservation(saved.id(), courtId, day, startTime);
+
         log.info("Reservation booked: id={}", saved.id());
         return saved;
     }

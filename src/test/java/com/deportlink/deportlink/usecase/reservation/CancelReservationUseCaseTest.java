@@ -2,6 +2,7 @@ package com.deportlink.deportlink.usecase.reservation;
 
 import com.deportlink.deportlink.application.port.out.CourtGateway;
 import com.deportlink.deportlink.application.port.out.CourtGateway.CourtSnapshot;
+import com.deportlink.deportlink.application.port.out.CourtOccupancyPort;
 import com.deportlink.deportlink.application.port.out.PlayerGateway;
 import com.deportlink.deportlink.application.port.out.PlayerGateway.PlayerSnapshot;
 import com.deportlink.deportlink.application.usecase.reservation.CancelReservationUseCase;
@@ -16,6 +17,7 @@ import com.deportlink.deportlink.exception.ReservationNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -35,6 +37,7 @@ class CancelReservationUseCaseTest {
     @Mock private ReservationRepositoryPort reservationRepository;
     @Mock private PlayerGateway playerGateway;
     @Mock private CourtGateway courtGateway;
+    @Mock private CourtOccupancyPort courtOccupancyPort;
 
     @InjectMocks private CancelReservationUseCase useCase;
 
@@ -136,6 +139,39 @@ class CancelReservationUseCaseTest {
         assertThat(result.status()).isEqualTo(StatusReservation.CANCELADO);
         assertThat(captor.getValue().status()).isEqualTo(StatusReservation.CANCELADO);
         verify(reservationRepository).save(any());
+    }
+
+    // ─── Etapa 1C: integración con CourtOccupancyPort ──────────────────────────────
+
+    @Test
+    void execute_reservaValida_liberaLaOcupacionDespuesDeGuardar() {
+        Reservation existing = reservationWithHoursUntil(100, PLAYER_ID);
+
+        when(playerGateway.findById(PLAYER_ID)).thenReturn(Optional.of(player()));
+        when(reservationRepository.findById(RESERVATION_ID)).thenReturn(Optional.of(existing));
+        when(courtGateway.findById(COURT_ID)).thenReturn(Optional.of(courtWithWindow(12)));
+        when(reservationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        useCase.execute(RESERVATION_ID, PLAYER_ID);
+
+        InOrder order = inOrder(reservationRepository, courtOccupancyPort);
+        order.verify(reservationRepository).save(any());
+        order.verify(courtOccupancyPort).releaseForReservation(RESERVATION_ID);
+    }
+
+    @Test
+    void execute_ventanaDeCancelacionExcedida_noLiberaLaOcupacion() {
+        // ~100hs de anticipación, ventana mockeada de 200hs -> cancel() lanza antes de save().
+        Reservation existing = reservationWithHoursUntil(100, PLAYER_ID);
+
+        when(playerGateway.findById(PLAYER_ID)).thenReturn(Optional.of(player()));
+        when(reservationRepository.findById(RESERVATION_ID)).thenReturn(Optional.of(existing));
+        when(courtGateway.findById(COURT_ID)).thenReturn(Optional.of(courtWithWindow(200)));
+
+        assertThatThrownBy(() -> useCase.execute(RESERVATION_ID, PLAYER_ID))
+                .isInstanceOf(CancellationTimeExceededException.class);
+
+        verifyNoInteractions(courtOccupancyPort);
     }
 
     // ─── La ventana usada es la del CourtSnapshot del mock, no un valor fijo ──────

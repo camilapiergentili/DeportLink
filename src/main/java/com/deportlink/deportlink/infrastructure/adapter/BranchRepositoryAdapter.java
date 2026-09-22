@@ -9,6 +9,7 @@ import com.deportlink.deportlink.exception.BranchNotFoundException;
 import com.deportlink.deportlink.model.entity.AddressEntity;
 import com.deportlink.deportlink.model.entity.BranchEntity;
 import com.deportlink.deportlink.persistence.repository.BranchRepository;
+import com.deportlink.deportlink.persistence.repository.ClassSlotRepository;
 import com.deportlink.deportlink.persistence.repository.ClubRepository;
 import com.deportlink.deportlink.persistence.repository.CourtRepository;
 import com.deportlink.deportlink.persistence.repository.ReservationRepository;
@@ -26,6 +27,7 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
     private final ClubRepository clubRepository;
     private final ReservationRepository reservationRepository;
     private final CourtRepository courtRepository;
+    private final ClassSlotRepository classSlotRepository;
 
     @Override
     public Branch save(Branch branch) {
@@ -66,6 +68,11 @@ public class BranchRepositoryAdapter implements BranchRepositoryPort {
     @Override
     public boolean hasReservations(Long branchId) {
         return reservationRepository.existsByCourt_Branch_Id(branchId);
+    }
+
+    @Override
+    public boolean hasClassSlots(Long branchId) {
+        return classSlotRepository.existsByCourt_Branch_Id(branchId);
     }
 
     @Override
