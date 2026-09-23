@@ -12,6 +12,7 @@ import java.time.LocalTime;
 public class ReservationResponseDto {
 
     private Long id;
+    private Long courtId;
     private LocalDate day;
     private LocalTime startTime;
     private long durationMinutes;
